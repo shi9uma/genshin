@@ -1,3 +1,13 @@
+
+
+# diy
+*.binary
+*.gdb_history
+
+# dir
+pwn/000_elaina
+pwn/006_blog6-heap-easy
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

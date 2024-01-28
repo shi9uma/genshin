@@ -1,3 +1,20 @@
+
+.DS_Store
+
+# venv
+.venv
+
+# diy
+*.gdb_history
+
+# python venv
+venv_*
+
+# dir
+online/archive
+binary/archive
+artificial-intelligence/archive
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

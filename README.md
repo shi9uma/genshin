@@ -7,3 +7,5 @@
 -   [Quick Reference](https://reference.shanwer.top/)
 -   [GTFOBins](https://gtfobins.github.io/)
 -   [cyberchef](https://icyberchef.com/)
+-   [glibc search](https://libc.rip/)
+-   [提问的智慧](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way.git)

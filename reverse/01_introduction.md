@@ -19,9 +19,9 @@
      3.   **jadx**，[skylot/jadx](https://github.com/skylot/jadx.git)；用于将 Android 应用程序的 DEX 文件反编译成可读的 Java 源代码，有助于理解和修改 Android 应用程序
      4.   **dnspy**，[dnSpy/dnSpy](https://github.com/dnSpy/dnSpy.git)；用于 .NET 程序的反编译器和调试器，允许逆向工程 .NET 应用程序，查看和修改源代码
 2.   动态
-     1.   **gdb**，[介绍、下载](https://www.sourceware.org/gdb/)；用于调试程序，支持多种编程语言，可用于跟踪程序的执行过程、检查内存和寄存器状态等，一般不会只使用 gdb，更多是插件
+     1.   **gdb**，[official](https://www.sourceware.org/gdb/)；用于调试程序，支持多种编程语言，可用于跟踪程序的执行过程、检查内存和寄存器状态等，一般不会只使用 gdb，更多要配合插件
      2.   **ollydbg**，[OllyDbg](https://www.ollydbg.de/)；Windows，动态调试器，用于分析和修改程序的运行时行为，主要用于反汇编和跟踪
-     3.   **x64dbg/x32dbg**，[x64dbg/x64dbg](https://github.com/x64dbg/x64dbg.git)；开源，支持多种指令集，有用户友好的图形界面，用于调试和分析二进制文件
+     3.   **x64dbg/x32dbg**，[x64dbg/x64dbg](https://github.com/x64dbg/x64dbg.git)；开源，支持多种指令集，和 ollydbg 像
      4.   **windbg**，[official](http://www.windbg.org/)；分析 Windows 系统和应用程序
      5.   **cheat engine**，[official](https://www.cheatengine.org/)；改游戏挺常用的
 3.   other

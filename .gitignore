@@ -5,6 +5,7 @@
 *.gdb_history
 
 # dir
+online/archives
 pwn/000_elaina
 pwn/006_blog6-heap-easy
 

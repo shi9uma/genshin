@@ -27,4 +27,4 @@
 3.   other
      1.   **z3**，[Z3Prover/z3](https://github.com/Z3Prover/z3.git)；用于自动推理和解决数学问题的定理证明器，可用于逆向工程中的符号执行、模型检测等约束求解问题
      2.   **angr**，[angr/angr](https://github.com/angr/angr.git)；开源的二进制分析框架，用于自动化逆向工程任务，包括符号执行、路径探索和程序分析
-
+     3.   **binwalk**，[ReFirmLabs/binwalk](https://github.com/ReFirmLabs/binwalk.git)；固件提取工具

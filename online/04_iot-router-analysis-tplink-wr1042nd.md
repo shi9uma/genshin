@@ -2,7 +2,7 @@
 
 >   就是从模仿开始打怪积累经验
 
-get firmware here：[TP-Link TL-WR1042NDv1 Router Firmware 130923](https://drivers.softpedia.com/get/Router-Switch-Access-Point/TP-Link/TP-Link-TL-WR1042NDv1-Router-Firmware-130923.shtml)
+get firmware here：[TP-Link TL-WR1042NDv1 Router Firmware 130923](https://drivers.softpedia.com/get/Router-Switch-Access-Point/TP-Link/TP-Link-TL-WR1042NDv1-Router-Firmware-130923.shtml)；以 `$` 为宿主机，`$$` 为 guest 虚拟环境
 
 ## front
 
@@ -57,7 +57,7 @@ drwxrwxr-x  2   501   502 4.0K Sep 23  2013 var
 drwxrwxr-x  9   501   502 4.0K Sep 23  2013 web
 ```
 
->   尝试看一下超级管理员的口令
+尝试看一下超级管理员的口令
 
 ```bash
 $ cat ./etc/shadow
@@ -94,14 +94,28 @@ ap71:NO PASSWORD:10933:0:99999:7:::
 7 password hashes cracked, 0 left
 ```
 
->检查一下有无可利用的 binary
+检查一下有无可利用的 binary
 
 ```bash
 $ file /bin/busybox
 busybox: ELF 32-bit MSB executable, MIPS, MIPS-I version 1 (SYSV), dynamically linked, interpreter /lib/ld-uClibc.so.0, no section header
 ```
 
-这是一个 mips 架构的 binary，需要使用模拟器来装载和使用，这里选择 qemu，在 debian 上使用 `apt-get install qemu-system` 安装 qemu，安装完成后，使用 `qemu-system-mipsel --version` 检查安装结果
+这是一个 mips 架构的 binary，需要使用模拟器来装载和使用，这里选择 [qemu]()，以 system 模式装载该固件：
+
+```bash
+$ sudo qemu-system-mips -M malta -append "root=/dev/sda1 console=tty0" -net nic -net tap,ifname=tap0,script=no,downscript=no -kernel vmlinux-3.2.0-4-4kc-malta -hda debian-mips-wheezy-standard.qcow2
+$ tar -cvf firmware.tar squashfs-root
+$ scp firmware.tar root@172.17.0.2:/root
+
+$$ tar -xvf firmware.tar
+$$ cd /root/squashfs-root
+$$ chroot . bin/sh
+busybox v1.01 built-in shell (msh)
+Enter 'help' for a list of built-in commands.
+$$ help
+Build-in commands: break cd continue eval exec exit export help login newgrp read readonly set shift times trap umask wait
+```
 
 
 

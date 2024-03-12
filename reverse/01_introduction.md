@@ -27,6 +27,7 @@
      3.   **x64dbg/x32dbg**，[x64dbg/x64dbg](https://github.com/x64dbg/x64dbg.git)；开源，支持多种指令集，和 ollydbg 像
      4.   **windbg**，[official](http://www.windbg.org/)；分析 Windows 系统和应用程序
      5.   **cheat engine**，[official](https://www.cheatengine.org/)；改游戏挺常用的
+     6.   **frida**，[frida/frida](https://github.com/frida/frida.git)；动态插桩
 3.   other
      1.   **z3**，[Z3Prover/z3](https://github.com/Z3Prover/z3.git)；用于自动推理和解决数学问题的定理证明器，可用于逆向工程中的符号执行、模型检测等约束求解问题
      2.   **angr**，[angr/angr](https://github.com/angr/angr.git)；开源的二进制分析框架，用于自动化逆向工程任务，包括符号执行、路径探索和程序分析

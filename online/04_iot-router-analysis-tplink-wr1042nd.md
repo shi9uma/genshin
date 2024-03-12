@@ -117,8 +117,6 @@ $$ help
 Build-in commands: break cd continue eval exec exit export help login newgrp read readonly set shift times trap umask wait
 ```
 
-
-
 ## end
 
 破解出路由器的超管口令后，可以尝试在 shodan 之类测绘引擎中搜索该路由器并利用；亦或者修改路由器的 hash，再刷回路由器获取 root；再高级一点的，往往可以从固件中嗅探出源码，找到 api 密钥、互联网痕迹等信息

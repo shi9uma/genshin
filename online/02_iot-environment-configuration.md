@@ -321,6 +321,14 @@ get src here：[firmadyne/firmadyne](https://github.com/firmadyne/firmadyne.git)
 
 安装完成后，直接通过 `/home/app/fat/fat.py firmware.bin` 来解析固件
 
+## frida
+
+get src here：[frida/frida](https://github.com/frida/frida.git)；Android、Linux、Windows 等平台上的动态插桩工具，拦截应用程序的函数调用、监视数据传输以及修改应用程序的行为，从而进行各种各样的分析和测试操作；`pip install frida-tools`，安装完成后将其添加到环境变量：`export PATH=$PATH:/home/user/.local/bin`，也可以写到 `~/.bashrc` 中
+
+要解析固件时，需要到 [release](https://github.com/frida/frida/releases/) 中下载 frida-server 对应的 platform 和 structure；例如要解析是 mips linux 固件，则下载 `frida-server-x.x.x-linux-mips.xz`，解压得到 `frida-server` 将其复制到固件中，后台运行之 `sudo /tmp/frida-server &`（需要 root 权限）
+
+具体使用方式参考另一篇文章 [app | frida-handbook]()；
+
 ## references
 
 1.   配置固件分析环境（1），[一步一步PWN路由器之环境搭建](https://xz.aliyun.com/t/1508)

@@ -1,5 +1,7 @@
 # Router device introduction
 
+写这些理论的东西感觉不如直接上手样本来得实在，慢慢补充吧
+
 ## introduction
 
 路由器，是比较容易接触到的智能设备，路由器的挖掘有：

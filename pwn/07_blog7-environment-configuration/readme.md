@@ -4,19 +4,12 @@
 
 
 
-
-
-
-
-
-
-
-
 ## tmp
 
-1.   pwntools
-2.   pwndbg，splitmind，angelheap，tmux
-3.   pwn exp templates
-4.   some cli command
+1.   pwntools，pwndbg，splitmind，angelheap，tmux 安装配置
+2.   pwn exp templates
+3.   pwndbg cli command
+4.   other cli command
 5.   patchelf，LE_PRELOAD
 6.   用 nc 直接开一个端口来交互
+7.   python，ord chr bin u64 p64 字符串转 bytes

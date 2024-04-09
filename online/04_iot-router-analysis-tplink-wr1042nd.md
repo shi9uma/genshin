@@ -33,7 +33,7 @@ DECIMAL       HEXADECIMAL     DESCRIPTION
 
 对 output-rootfs.sqfs 进行分析，列出固件内容：`unsquashfs -l output-rootfs.sqfs`；提取固件：`sudo unsquashfs output-rootfs.sqfs`，也可以 `binwalk -Me wr1042nv1_en_3_15_7_up_boot\(130923\).bin`
 
-## middle
+## before front
 
 ```bash
 $ sudo unsquashfs output-rootfs.sqfs
@@ -117,11 +117,17 @@ $$ help
 Build-in commands: break cd continue eval exec exit export help login newgrp read readonly set shift times trap umask wait
 ```
 
-## end
+## not yet
 
 破解出路由器的超管口令后，可以尝试在 shodan 之类测绘引擎中搜索该路由器并利用；亦或者修改路由器的 hash，再刷回路由器获取 root；再高级一点的，往往可以从固件中嗅探出源码，找到 api 密钥、互联网痕迹等信息
+
+## main
+
+
 
 ## references
 
 1.   [IoT hacking — Reversing a router firmware](https://kavigihan.medium.com/iot-hacking-reversing-a-router-firmware-df6e06cc0dc9)
 2.   [john handbook](https://www.kali.org/tools/john/)
+3.   [逆向分析工具 Ghidra 实战教程 以破解注册码题目为例介绍分析技巧和方法](https://www.bilibili.com/video/av865759744)
+4.   

@@ -4,6 +4,9 @@
 *.binary
 *.gdb_history
 
+# python venv
+venv_*
+
 # dir
 online/archives
 pwn/00_elaina

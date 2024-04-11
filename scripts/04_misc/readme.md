@@ -11,4 +11,4 @@
      8.   `rename show`，预览所有被添加到处理队列的文件名
      9.   `rename -w 3 sort`，快速地对当前目录下所有可识别的文件进行排序并添加 width 为 3 的前缀
      10.   `rename test`，测试用，使用 `touch` 生成一些可能的文件名
-2.   模拟 `ls -alh`，`alias python ls_alh.py`
+2.   模拟 `ls -alh`，`alias alh="python ls_alh.py"`

@@ -5,6 +5,12 @@ import ctypes
 from datetime import datetime
 from colorama import Fore, Style
 
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument('-d', '--dir', nargs='?', default='.', type=str, help='默认列出当前目录下文件，如果指定了 --dir 则根据具体路径来')
+ap.add_argument('-a', '--all', action='store_true', help='列出所有文件，包括隐藏')
+args = vars(ap.parse_args())
+
 def human_readable_size(size, decimal_places=2):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size < 1024.0:
@@ -21,7 +27,7 @@ def is_hidden(filepath):
         result = False
     return result
 
-def ls_alh(path="."):
+def ls_alh(path=".", show_all = False):
     with os.scandir(path) as entries:
         print(f"{Fore.GREEN}{'Name':<25} {'Mode':<10} {'Size':<10} {'Last Modified'}{Style.RESET_ALL}")
         for entry in entries:
@@ -38,11 +44,10 @@ def ls_alh(path="."):
             # 检查是否为隐藏文件或文件夹
             if is_hidden(entry.path):
                 entry_name = f"{entry.name} [hide]"
-                print(f"{Fore.YELLOW}{entry_name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
+                if show_all:
+                    print(f"{Fore.YELLOW}{entry_name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
             else:
                 print(f"{Fore.CYAN}{entry.name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
 
 if __name__ == "__main__":
-    ls_alh()
-
-# 针对 windows 下没有 ls -alh 很难受, 使用 python 模拟之
+    ls_alh(args['dir'], args['all'])

@@ -30,6 +30,7 @@ def is_hidden(filepath):
 def ls_alh(path=".", show_all = False):
     with os.scandir(path) as entries:
         print(f"{Fore.GREEN}{'Name':<25} {'Mode':<10} {'Size':<10} {'Last Modified'}{Style.RESET_ALL}")
+        entries = sorted(entries, key=lambda entry: entry.is_dir(), reverse=True)
         for entry in entries:
             info = entry.stat()
             # 确定模式（目录或文件）
@@ -45,9 +46,11 @@ def ls_alh(path=".", show_all = False):
             if is_hidden(entry.path):
                 entry_name = f"{entry.name} [hide]"
                 if show_all:
-                    print(f"{Fore.YELLOW}{entry_name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
+                    print(f"{Fore.RED}{entry_name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
+            elif entry.is_dir():
+                print(f"{Fore.YELLOW}{entry.name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
             else:
-                print(f"{Fore.CYAN}{entry.name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
+                print(f"{Fore.BLUE}{entry.name:<25} {mode:<10} {size:<10} {last_mod}{Style.RESET_ALL}")
 
 if __name__ == "__main__":
     ls_alh(args['dir'], args['all'])

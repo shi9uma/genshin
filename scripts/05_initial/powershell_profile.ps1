@@ -19,6 +19,7 @@ $env:PATH += ";$MINGW64PATH;$NODEJSPATH;$TYPORAPATH;$GITPATH;$NOTEPADPATH;$VIMPA
 
 # env export
 $env:PIP_DOWNLOAD_CACHE = "E:/lang/python/pip-cache"
+$env:GIT_EDITOR = "E:/toolkit/vim/vim90/vim.exe"
 $env:http_proxy="http://127.0.0.1:7890"
 $env:https_proxy="http://127.0.0.1:7890"
 
@@ -33,10 +34,11 @@ Set-Alias p ipython
 function poweroff { Stop-Computer }
 function reboot { Restart-Computer }
 function hash { certutil -hashfile $args }
-function password { python E:/code/python/password.py $args }
+function password { python E:/code/python/password_generator.py $args }
 function itx { ssh -p 6022 wkyuu@majo.im }
 function tree { E:/toolkit/tree/bin/tree.exe -N $args }
 function rename { python E:/code/python/interact_rename.py $args}
+function encrypt { python E:/code/python/encrypt.py $args }
 function ftp { python E:/code/python/ftp.py $args }
 function magnet { echo magnet:?xt=urn:btih:$args }
 function code { E:/software/vscode/binary/Code.exe --extensions-dir "E:/software/vscode/extensions" $args }

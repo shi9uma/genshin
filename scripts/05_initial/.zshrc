@@ -305,6 +305,8 @@ alias size="du -abh -d 1"
 alias x="curl"
 alias xi="curl -I"
 alias reg="grep -ir"
+alias zshrc="source ~/.zshrc"
+alias wkyuu="sudo su wkyuu"
 # end diy
 
 # proxy

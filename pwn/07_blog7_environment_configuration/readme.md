@@ -5,37 +5,100 @@
 目录拓扑如下：
 
 ```bash
+.
+├── glibc_all_in_one
+│   ├── ...
+│   ├── download
+│   ├── libs
+│   │   └── 2.27-3ubuntu1_amd64
+│   ├── ...
+│   └── update_list
+└── pwndbg
+    ├── plugins
+    │   └── splitmind
+    └── repo
+        ├── ...
+        ├── gdbinit.py
+        ├── pwndbg
+        ├── setup.sh
+        └── ...
 ```
 
 为了方便，下列全部使用 wkyuu 作为用户名，注意修改之
 
 ## pwntools
 
-1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin` 已经安装过了的会跳过，安就是了
+1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin python3-ropgadget` 已经安装过了的会跳过，安就是了
 2.   更新 python 环境：
      1.   确定已有的 python 环境：`which python` 返回 */usr/bin/python*，进一步查看 `ls /usr/bin/python*`，确定只有 */usr/bin/python3.x*、*/usr/bin/python3*、*/usr/bin/python* 等几个选项，以免乱环境
      2.   `python3 -m pip install --upgrade pip`，`pip install ipython setuptools setuptools_rust`，`pip install --upgrade pwntools`
      3.   验证是否安装成功：`python -c "from pwn import *;print(asm('ret'))"`，返回操作码 *b'\xc3'* 即为成功
-     4.   一些其他 package：`pip install r2pipe `
+     4.   一些其他 package：`pip install r2pipe python3-ropgadget`
 
 ## pwndbg
 
+get src here：[pwndbg/pwndbg](https://github.com/pwndbg/pwndbg.git)
+
 ### main
 
-1.   创建环境根目录：`sudo mkdir -p /home/app/pwnenv`，`sudo chown -R wkyuu:wkyuu /home/app`
-2.   `git clone https://github.com/pwndbg/pwndbg.git /home/app/pwnenv/pwndbg`
-3.   `cd /home/app/pwnenv/pwndbg`，`chmod +x ./setup.sh`，`sudo ./setup.sh` 执行安装
+1.   创建环境根目录：`sudo mkdir -p /home/app/pwnenv/pwndbg`，`sudo chown -R wkyuu:wkyuu /home/app`
+2.   `git clone https://github.com/pwndbg/pwndbg.git /home/app/pwnenv/pwndbg/repo`
+3.   `cd /home/app/pwnenv/pwndbg/repo`，`chmod +x ./setup.sh`，`sudo ./setup.sh` 执行安装
 4.   一般来说网络通畅的条件下都可以正常安装，如果不行就配置 `export all_proxy="addr:port"`
 
 ### plugins
 
-[pwngdb](https://github.com/scwuaptx/Pwngdb.git) 和 [splitmind](https://github.com/jerdna-regeiz/splitmind.git)（搭配 tmux）
+[pwngdb](https://github.com/scwuaptx/Pwngdb.git)（和新版本的 pwndbg 不是很适配，旧版本的可以用） 和 [splitmind](https://github.com/jerdna-regeiz/splitmind.git)（搭配 tmux）
 
-1.   pwngdb 包含 angelheap，有两种安装方式
-     1.   通过 curl 直接获取，确保 pwndbg 的根路径是 `/home/app/pwnenv/pwndbg`
-          1.   `curl -o /home/app/pwnenv/pwndbg/pwndbg/pwngdb.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/pwngdb.py`、`curl -o /home/app/pwnenv/pwndbg/pwndbg/commands/pwngdb.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/commands/pwngdb.py`
-          2.   `curl -o /home/app/pwnenv/pwndbg/pwndbg/angelheap.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/angelheap.py`、`curl -o /home/app/pwnenv/pwndbg/pwndbg/commands/angelheap.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/commands/angelheap.py`
-          3.   
+1.   ~~pwngdb 包含 angelheap，通过 curl 直接获取，确保 pwndbg 的根路径是 `/home/app/pwnenv/pwndbg`~~
+
+     1.   ~~`curl -o /home/app/pwnenv/pwndbg/repo/pwndbg/pwngdb.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/pwngdb.py`、`curl -o /home/app/pwnenv/pwndbg/repo/pwndbg/commands/pwngdb.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/commands/pwngdb.py`~~
+     2.   ~~`curl -o /home/app/pwnenv/pwndbg/repo/pwndbg/angelheap.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/angelheap.py`、`curl -o /home/app/pwnenv/pwndbg/repo/pwndbg/commands/angelheap.py https://raw.githubusercontent.com/scwuaptx/Pwngdb/master/pwndbg/commands/angelheap.py`~~
+
+2.   splitmind 的主要作用是在使用 tmux 时方便将各种 pwndbg 输出重定向到不同的区块
+
+     1.   获取插件内容：`git clone https://github.com/jerdna-regeiz/splitmind.git /home/app/pwnenv/pwndbg/plugins/splitmind`
+
+     2.   `echo "source /home/app/pwnenv/pwndbg/plugins/splitmind/gdbinit.py" >> ~/.gdbinit`
+
+     3.   然后需要在 `~/.gdbinit` 里写上 splitmind 的生成脚本，内容参考如下：
+
+          ```ini
+          python
+          import splitmind
+          (splitmind.Mind()
+            .below(display="backtrace")
+            .right(display="stack")
+            .right(display="regs")
+            .right(of="main", display="disasm")
+            .show("legend", on="disasm")
+          ).build()
+          end
+          ```
+
+     4.   使用时需要先开 tmux；python exp 中需要如下语句：`context.terminal = ['tmux', 'splitw', '-h']`
+
+
+完整的 `~/.gdbinit` 文件如下：
+
+```ini
+source /home/app/pwnenv/pwndbg/repo/gdbinit.py
+
+# splitmind
+source /home/app/pwnenv/pwndbg/plugins/splitmind/gdbinit.py
+python
+import splitmind
+(splitmind.Mind()
+  .below(display="backtrace")
+  .right(display="stack")
+  .right(display="regs")
+  .right(of="main", display="disasm")
+  .show("legend", on="disasm")
+).build()
+end
+```
+
+`curl -o ~/.gdbinit https://raw.githubusercontent.com/shi9uma/genshin/main/pwn/07_blog7_environment_configuration/.gdbinit`
 
 ## glibc all in one
 
@@ -65,10 +128,10 @@
 
 ## tmp
 
-1.   pwntools，pwndbg，splitmind，angelheap，tmux 安装配置
+1.   ~~pwntools，pwndbg，splitmind，angelheap，tmux 安装配置~~
 2.   pwn exp templates
 3.   pwndbg cli command
 4.   other cli command
-5.   patchelf，LE_PRELOAD
+5.   ~~patchelf，LE_PRELOAD~~
 6.   用 nc 直接开一个端口来交互
 7.   python，ord chr bin u64 p64 字符串转 bytes

@@ -4,6 +4,9 @@
 *.binary
 *.gdb_history
 
+# other git repos
+articles/1earn
+
 # python venv
 venv_*
 

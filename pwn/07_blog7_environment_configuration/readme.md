@@ -28,7 +28,7 @@
 
 ## pwntools
 
-1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin python3-ropgadget` 已经安装过了的会跳过，安就是了
+1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libncurses-dev make cmake libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin python3-ropgadget` 已经安装过了的会跳过，安就是了
 2.   更新 python 环境：
      1.   确定已有的 python 环境：`which python` 返回 */usr/bin/python*，进一步查看 `ls /usr/bin/python*`，确定只有 */usr/bin/python3.x*、*/usr/bin/python3*、*/usr/bin/python* 等几个选项，以免乱环境
      2.   `python3 -m pip install --upgrade pip`，`pip install ipython setuptools setuptools_rust`，`pip install --upgrade pwntools`
@@ -61,44 +61,86 @@ get src here：[pwndbg/pwndbg](https://github.com/pwndbg/pwndbg.git)
 
      2.   `echo "source /home/app/pwnenv/pwndbg/plugins/splitmind/gdbinit.py" >> ~/.gdbinit`
 
-     3.   然后需要在 `~/.gdbinit` 里写上 splitmind 的生成脚本，内容参考如下：
+     3.   然后需要在 `~/.gdbinit` 里写上 splitmind 的生成脚本，[内容参考](https://bbs.kanxue.com/thread-276203-1.htm) 如下：
 
           ```ini
+          set context-clear-screen on
+          set follow-fork-mode parent
           python
           import splitmind
           (splitmind.Mind()
-            .below(display="backtrace")
-            .right(display="stack")
-            .right(display="regs")
-            .right(of="main", display="disasm")
-            .show("legend", on="disasm")
-          ).build()
+            .tell_splitter(show_titles=True)
+            .tell_splitter(set_title="Main")
+            .right(display="backtrace", size="25%")
+            .above(of="main", display="disasm", size="80%", banner="top")
+            .show("code", on="disasm", banner="none")
+            .right(cmd='tty; tail -f /dev/null', size="65%", clearing=False)
+            .tell_splitter(set_title='Input / Output')
+            .above(display="stack", size="75%")
+            .above(display="legend", size="25")
+            .show("regs", on="legend")
+            .below(of="backtrace", cmd="ipython", size="30%")
+          ).build(nobanner=True)
           end
+          set context-code-lines 30
+          set context-source-code-lines 30
+          set context-sections  "regs args code disasm stack backtrace"
           ```
-
+     
      4.   使用时需要先开 tmux；python exp 中需要如下语句：`context.terminal = ['tmux', 'splitw', '-h']`
 
 
-完整的 `~/.gdbinit` 文件如下：
+完整的 `~/.gdbinit` 文件如下，参考了 [NoneShell/OwnConfigs](https://github.com/NoneShell/OwnConfigs/blob/main/.gdbinit) 的配置，一键 `curl -o ~/.gdbinit https://raw.githubusercontent.com/shi9uma/genshin/main/pwn/07_blog7_environment_configuration/.gdbinit`：
 
 ```ini
 source /home/app/pwnenv/pwndbg/repo/gdbinit.py
+source /home/app/pwnenv/pwndbg/plugins/splitmind/gdbinit.py
 
 # splitmind
-source /home/app/pwnenv/pwndbg/plugins/splitmind/gdbinit.py
+set context-clear-screen off
+set debug-events off
+
 python
+sections = "regs"
+mode = input("source/disasm/mixed mode:?(s/d/m)") or "d"
 import splitmind
-(splitmind.Mind()
-  .below(display="backtrace")
-  .right(display="stack")
-  .right(display="regs")
-  .right(of="main", display="disasm")
-  .show("legend", on="disasm")
-).build()
+spliter = splitmind.Mind()
+spliter.select("main").right(display="regs", size="50%").below(cmd="ipython", size="30%")
+gdb.execute("set context-stack-lines 10")
+legend_on = "code"
+
+if mode == "d":
+    legend_on = "disasm"
+    sections += " disasm"
+    spliter.select("main").above(display="disasm", size="40%", banner="none")
+    gdb.execute("set context-code-lines 15")
+elif mode == "s":
+    sections += " code"
+    spliter.select("main").above(display="code", size="40%", banner="none")
+    gdb.execute("set context-source-code-lines 15")
+else:
+    sections += " disasm code"
+    spliter.select("main").above(display="code", size="70%")
+    spliter.select("code").below(display="disasm", size="40%")
+    gdb.execute("set context-code-lines 8")
+    gdb.execute("set context-source-code-lines 20")
+
+sections += " args stack backtrace expressions"
+
+spliter.show("legend", on=legend_on)
+spliter.show("stack", on="regs")
+spliter.show("backtrace", on="regs")
+spliter.show("args", on="regs")
+spliter.show("expressions", on="args")
+
+gdb.execute("set context-sections \"%s\"" % sections)
+gdb.execute("set show-retaddr-reg on")
+
+spliter.build()
 end
 ```
 
-`curl -o ~/.gdbinit https://raw.githubusercontent.com/shi9uma/genshin/main/pwn/07_blog7_environment_configuration/.gdbinit`
+在使用 tmux 时，按 ctrl + b 进入命令模式，然后直接输入 `:set -g mouse on` 开启鼠标滚轮的滑动
 
 ## glibc all in one
 

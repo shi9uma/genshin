@@ -5,3 +5,10 @@
 3.   ssh：`curl -o ~/.ssh/authorized_keys https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/05_initial/authorized_keys`
      1.   root：`chmod 700 /root/.ssh`，`chmod 600 /root/.ssh/authorized_keys`
      2.   user：`chmod 655 ~/.ssh`，`chmod 640 ~/.ssh/authorized_keys`
+4.   vim
+     1.   配色：
+          1.   `curl -o ~/.vim/colors/gruvbox.vim https://raw.githubusercontent.com/morhetz/gruvbox/master/autoload/gruvbox.vim`
+          2.   `curl -o ~/.vim/autoload/gruvbox.vim https://raw.githubusercontent.com/morhetz/gruvbox/master/autoload/gruvbox.vim`
+          3.   `curl -o ~/.vim/autoload/airline/themes/gruvbox.vim https://raw.githubusercontent.com/morhetz/gruvbox/master/autoload/airline/themes/gruvbox.vim`
+          4.   `curl -o ~/.vim/autoload/lightline/colorscheme/gruvbox.vim https://raw.githubusercontent.com/morhetz/gruvbox/master/autoload/lightline/colorscheme/gruvbox.vim`
+     2.   `curl -o ~/.vimrc https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/05_initial/vimrc`

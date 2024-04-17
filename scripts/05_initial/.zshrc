@@ -301,7 +301,7 @@ alias l="ls -alh"
 alias ll="ls -alh"
 alias cls="clear"
 alias c="clear"
-alias size="du -abh -d 1"
+alias size="du -abh -d 1" # exclude file size under 1G: size -t 1G | exclude reg files: size --exclude=*backups*
 alias x="curl"
 alias xi="curl -I"
 alias reg="grep -ir"

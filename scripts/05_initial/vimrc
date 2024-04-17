@@ -1,0 +1,101 @@
+" Vim with all enhancements
+source $VIMRUNTIME/vimrc_example.vim
+
+" 01. 配置基础路径
+" 修改 windows 下备份、撤销、临时文件的目录
+set backupdir=E:/toolkit/vim/tmp
+set undodir=E:/toolkit/vim/tmp
+set directory=E:/toolkit/vim/tmp
+
+let $configs_dir = "E:/toolkit/vim/configs"
+let $vim_base_dir = "E:/toolkit/vim"
+let $vim_runtime_dir = "E:/toolkit/vim/vim90"
+
+let $VIM = $vim_base_dir
+let $HOME = $configs_dir
+let $VIMRUNTIME = $vim_runtime_dir
+
+" 02. 基础配置
+set shortmess=atI	" 启动不显示乌干达那个
+behave mswin
+winpos 50 50	" 启动位置
+set lines=40 columns=210	" 启动大小
+
+set encoding=UTF-8	" Encoding
+set nocompatible	" Don't try to be vi compatible
+filetype off	" Helps force plugins to load correctly when it is turned back on below
+syntax on	" Turn on syntax highlighting
+filetype plugin indent on	" For plugins to load correctly
+
+set modelines=0	" Security
+set number	" Show line numbers
+set ruler	" Show file stats
+" set visualbell	" a1 高闪
+set guicursor=a:hor50-Cursor/lCursor
+
+" Whitespace
+set wrap
+set textwidth=1000
+set formatoptions=tcqrn1
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+set expandtab
+set noshiftround
+
+" Cursor motion
+set scrolloff=3
+set backspace=indent,eol,start
+set matchpairs+=<:> " use % to jump between pairs
+runtime! macros/matchit.vim
+
+" Move up/down editor lines
+nnoremap j gj
+nnoremap k gk
+
+set hidden	" Allow hidden buffers
+set ttyfast	" Rendering
+set laststatus=2	" Status bar
+
+" Last line
+set showmode
+set showcmd
+
+" Searching
+nnoremap / /\v
+vnoremap / /\v
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set showmatch
+map <leader><space> :let @/=''<cr> " clear search
+
+" Remap help key.
+inoremap <F1> <ESC>:set invfullscreen<CR>a
+nnoremap <F1> :set invfullscreen<CR>
+vnoremap <F1> :set invfullscreen<CR>
+
+" Textmate holdouts
+
+map <leader>q gqip	" Formatting
+
+" Visualize tabs and newlines
+set listchars=tab:▸\ ,eol:¬
+" Uncomment this to enable by default:
+" set list " To enable by default
+" Or use your leader key + l to toggle on/off
+map <leader>l :set list!<CR> " Toggle tabs and EOL
+
+" Color scheme (terminal)
+set t_Co=256
+set background=dark
+colorscheme gruvbox
+
+" TODO: Pick a leader key
+" let mapleader = ","
+
+" 03. plugins
+call plug#begin('E:/toolkit/vim/plugins')
+Plug 'junegunn/fzf.vim', {'dir': 'E:/toolkit/vim/plugins/fzf', 'do': { -> fzf#install() }}
+call plug#end()

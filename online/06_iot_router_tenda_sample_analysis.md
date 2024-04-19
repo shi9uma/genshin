@@ -82,7 +82,7 @@ $ checksec faggot
 
 砸壳以后再用 ida 去看就有可分析的地方了，首先 shift + f12 查看字符串，拉到最底下找到 `/bin/sh`，溯源到 `sub_40CF54+B3` 位置，该函数反编译后源码 [在此](https://paste.majo.im/uzoreyebar.cpp)，在 0x40D00C 下断，简单看了一下，很多数据都是临时装载，因此必须要上动调
 
-在 pwndbg 里运行了一下，图示为 _start 中 __libc_start_main 常见引导格式，发现在运行到 0x4001A2 的时候就会 segmentation fault 并且自动删除该 elf
+在 pwndbg 里运行了一下，图示为 _start 中 __libc_start_main 常见引导格式
 
 ![image-20240415201022362](E:\Pictures\markdown\image-20240415201022362.png)
 
@@ -90,4 +90,110 @@ $ checksec faggot
 
 ![image-20240415203433946](E:\Pictures\markdown\image-20240415203433946.png)
 
-经过对比，确定 `mov rdi, 0x406780` 为 [main](https://paste.majo.im/okapozixun.cpp) 函数地址，第一个函数 [sub_408D5C](https://paste.majo.im/utiqubuzeq.cpp) 进去就是一个 `sys_unlink(*argv)`，也就是说这个 elf 一运行就会自动删除自己，这里在 ida 中将其 nop 掉，右键 patching 导出成 `unpack_faggot_patch`，后续继续分析
+经过对比，确定 `mov rdi, 0x406780` 为 [main](https://paste.majo.im/okapozixun.cpp) 函数地址，第一个函数 [sub_408D5C](https://paste.majo.im/utiqubuzeq.cpp) 进去就是一个 `sys_unlink(*argv)`，也就是说这个 elf 一运行就会自动删除自己，这里在 ida 中将其 nop 掉，右键 patching 导出成 `unpack_faggot_patch`，后续继续分析；由于在字符串中看到了网络痕迹，在分析之前需要做点准备，隔绝网络 io 行为：
+
+1.   创建一个新的网络命名空间：`sudo ip netns add iot`
+2.   使用该网络命名空间来启一个 tmux，由于子进程完全继承父进程的网络设定，因此可以创建一个比较安全的网络隔绝环境：`sudo ip netns exec iot sudo -u wkyuu tmux`，（这里使用 user 来启动 wkyuu 才能启动 splitmind）
+
+确定了 main：`b *0x406780` 即可正式开始分析，在分析过程还发现，程序运行完成必定 seg fault，之后系统无法新建文件、写入文件，通过 `ps -aux` 可以找到 `l5cnt6cn4hcn ck_faggot_patch` 的进程（会随机变化，手动将其 `kill` 后系统可以正常写入，后续需要将其导出成 elf 进一步分析），进一步在 pwndbg 中通过 `catch exec syscall fork load` 来监测其行为，catch 即 catchpoints，检测到以上行为会发起中断
+
+有以下行为：
+
+1.   在进入到 main 之前，会在 0x408af3 处发起 syscall ioctl
+
+2.   在 0x408b89 发起 syscall open，args 为 `/dev/watchdog`
+
+3.   在 0x408970 发起 syscall chdir，args 为 `0x40f8c3`，`hexdump 0x40f8c3` 得到以下输出
+
+     ```bash
+     pwndbg> hexdump 0x40f8c3
+     +0000 0x40f8c3  2f 00 2f 70 72 6f 63 2f  25 73 2f 63 6d 64 6c 69  │/./proc/│%s/cmdli│
+     +0010 0x40f8d3  6e 65 00 77 67 65 74 00  63 75 72 6c 00 6e 65 74  │ne.wget.│curl.net│
+     +0020 0x40f8e3  73 74 61 74 00 70 73 00  6c 73 00 6d 76 00 65 63  │stat.ps.│ls.mv.ec│
+     +0030 0x40f8f3  68 6f 00 62 61 73 68 00  72 65 62 6f 6f 74 00 73  │ho.bash.│reboot.s│
+     pwndbg>
+     +0040 0x40f903  68 75 74 64 6f 77 6e 00  68 61 6c 74 00 70 6f 77  │hutdown.│halt.pow│
+     +0050 0x40f913  65 72 6f 66 66 00 66 61  67 67 6f 74 20 67 6f 74  │eroff.fa│ggot.got│
+     +0060 0x40f923  20 6d 61 6c 77 61 72 65  27 64 00 2f 74 6d 70 00  │.malware│'d./tmp.│
+     +0070 0x40f933  2f 6f 70 74 00 2f 68 6f  6d 65 00 2f 64 65 76 00  │/opt./ho│me./dev.│
+     pwndbg>
+     +0080 0x40f943  2f 76 61 72 00 2f 73 62  69 6e 00 2f 70 72 6f 63  │/var./sb│in./proc│
+     +0090 0x40f953  2f 73 65 6c 66 2f 65 78  65 00 2f 6d 6e 74 00 2f  │/self/ex│e./mnt./│
+     +00a0 0x40f963  72 6f 6f 74 00 2f 64 65  76 2f 6e 75 6c 6c 00 2f  │root./de│v/null./│
+     +00b0 0x40f973  64 65 76 2f 63 6f 6e 73  6f 6c 65 00 00 00 00 00  │dev/cons│ole.....│
+     pwndbg>
+     +00c0 0x40f983  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+     ... ↓            skipped 2 identical lines (32 bytes)
+     +00f0 0x40f9b3  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+     pwndbg>
+     ```
+
+     在尝试切换 dir 到 `/`，以上地址块可以大概猜测到这个 elf 将要进行的一些操作，基本都是敏感操作
+
+4.   在 0x40b4e5 处发起 syscall socket，并在 0x40b379 发起 syscall connect，args 得到地址 `0x7fffffffdba0`，对其进一步查看得到以下内容
+
+     ```bash
+     pwndbg> x/10xg $rsi
+     0x7fffffffdba0: 0x0808080835000002      0x0000000010000000
+     0x7fffffffdbb0: 0x0000000000000000      0x0000001000000000
+     0x7fffffffdbc0: 0x0000000000000000      0x00000000ffffffff
+     0x7fffffffdbd0: 0x0000000000000001      0x0000000000406843
+     0x7fffffffdbe0: 0x0000000000000000      0x0000000000000000
+     ```
+
+     其中的开头：`08080808 35000002` 就是 `00 02 35 00 | 08 08 08 08`，是一个经典的 sockaddr，转成 ipv4 就是：`8.8.8.8:13312`，虽然不了解为什么访问了 8.8.8.8，这是 google 的 dns 服务器，但是一般来说访问的也是 53 端口，目前认为是可能做了伪装，看似连接合法的服务器来规避网络监控和分析，使用 `dig example.com @8.8.8.8` 可以模拟 dns 查询，可以发现使用的是 `8.8.8.8#53` 端口
+
+     使用 proc 可以看到句柄 fd[3] 为 `socker:[22002]`
+
+5.   在 0x4085d1 处 syscall getsockname，
+
+
+
+用到的 syscall
+
+```bash
+ioctl
+rt_sigprocmask
+rt_sigaction
+open
+chdir
+socket
+getsockname
+
+```
+
+
+
+### tmp
+
+pwndbg
+
+```bash
+
+
+$ x/30gx = e[x]amine / 30 [opt]x，[opt]: [b]yte，[h]alfword，[w]ord，[g]iant word(64-bit)
+$ watch 0x7fffffffdfe0
+
+define peek
+x/30xg 0x7fffffffdfe0
+end
+
+set $rdi=1
+
+args
+xinfo
+proc
+patch <addr> 'nop; nop; '
+backtrace
+i r：info registers
+regs
+```
+
+tmux
+
+```bash
+ctrl + b + d
+
+tmux attach
+```
+

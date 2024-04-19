@@ -28,7 +28,7 @@
 
 ## pwntools
 
-1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libncurses-dev make cmake libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin python3-ropgadget` 已经安装过了的会跳过，安就是了
+1.   基础必备环境：`sudo apt install curl aptitude`，`sudo aptitude install python3 python3-pip python3-venv python3-dev git libssl-dev libffi-dev build-essential gcc-multilib libncurses-dev make cmake libc6-dbg libc6-dbg:i386 gdb patchelf tmux radare2 ghidra rizin python3-ropgadget fzf ripgrep` 已经安装过了的会跳过，安就是了
 2.   更新 python 环境：
      1.   确定已有的 python 环境：`which python` 返回 */usr/bin/python*，进一步查看 `ls /usr/bin/python*`，确定只有 */usr/bin/python3.x*、*/usr/bin/python3*、*/usr/bin/python* 等几个选项，以免乱环境
      2.   `python3 -m pip install --upgrade pip`，`pip install ipython setuptools setuptools_rust`，`pip install --upgrade pwntools`

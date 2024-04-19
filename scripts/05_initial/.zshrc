@@ -312,6 +312,8 @@ alias chwky="chown -R wkyuu:wkyuu"
 
 # proxy
 export all_proxy="http://172.28.240.1:7890"
+export FZF_DEFAULT_COMMAND="rg --files"
+export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 
 # path
 export PATH=$PATH:/home/wkyuu/.local/bin

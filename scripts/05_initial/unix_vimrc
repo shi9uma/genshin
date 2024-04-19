@@ -2,24 +2,13 @@
 source $VIMRUNTIME/vimrc_example.vim
 
 " 01. 配置基础路径
-" 修改 windows 下备份、撤销、临时文件的目录
-set backupdir=E:/toolkit/vim/tmp
-set undodir=E:/toolkit/vim/tmp
-set directory=E:/toolkit/vim/tmp
-
-let $configs_dir = "E:/toolkit/vim/configs"
-let $vim_base_dir = "E:/toolkit/vim"
-let $vim_runtime_dir = "E:/toolkit/vim/vim90"
-
-let $VIM = $vim_base_dir
-let $HOME = $configs_dir
-let $VIMRUNTIME = $vim_runtime_dir
+" 修改备份、撤销、临时文件的目录
+set backupdir=~/.vim/tmp
+set undodir=~/.vim/tmp
+set directory=~/.vim/tmp
 
 " 02. 基础配置
 set shortmess=atI	" 启动不显示乌干达那个
-behave mswin
-winpos 50 50	" 启动位置
-set lines=40 columns=210	" 启动大小
 
 set encoding=UTF-8	" Encoding
 set nocompatible	" Don't try to be vi compatible
@@ -29,9 +18,11 @@ filetype plugin indent on	" For plugins to load correctly
 
 set modelines=0	" Security
 set number	" Show line numbers
+" set relativenumber " 相对行号
 set ruler	" Show file stats
 " set visualbell	" a1 高闪
-set guicursor=a:hor50-Cursor/lCursor
+set guicursor=a:hor20-Cursor/lCursor
+set guifont=Consolas:h12
 
 " Whitespace
 set wrap
@@ -97,5 +88,30 @@ colorscheme gruvbox
 
 " 03. plugins
 call plug#begin('E:/toolkit/vim/plugins')
-Plug 'junegunn/fzf.vim', {'dir': 'E:/toolkit/vim/plugins/fzf', 'do': { -> fzf#install() }}
+Plug 'junegunn/fzf.vim'	" fzf 联动
+Plug 'junegunn/fzf', {'do': { -> fzf#install() }}	" fzf core
+Plug 'frazrepo/vim-rainbow'	" 括号高亮
 call plug#end()
+
+let g:rainbow_active = 1	" 括号高亮控制
+
+" 04. diy 键盘映射
+" leader 键
+let mapleader=","
+" 使用 ctrl + s 保存, windows only
+nnoremap <silent> <C-S> :w!<CR>
+" 使用 fzf 文件查看器
+nnoremap <silent> <C-f> :Files<CR>
+" 使用 ripgrep 查找
+nnoremap <silent> <Leader>f :Rg<CR>
+set grepprg=rg\ --vimgrep\ --smart-case\ --follow
+" 按 ,, 通过输入内容查找所有行
+nnoremap <silent> <leader>, :BLines<CR>
+" 按 ,b 打开 buffers 列表
+nnoremap <silent> <leader>b :Buffers<CR>
+" 按 ,h 选择历史文件
+nnoremap <silent> <leader>h :History<CR>
+" 按 ,c 选择历史指令
+nnoremap <silent> <leader>c :History:<CR>
+" 按 ,r 选择历史正则表达式
+nnoremap <silent> <leader>r :History/<CR>

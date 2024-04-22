@@ -296,6 +296,20 @@ tmp() {
     cd /tmp/tmp
 }
 
+lcd() {
+    if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
+        curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/cd.py
+    fi
+    if [[ "$1" == "cd" && ! -z "$2" ]]; then
+        target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{print $3}')
+        cd "$target_dir"
+    elif [[ "$1" == "l" ]]; then
+        python $HOME/.genshin/misc/lcd.py -l
+    else
+        python $HOME/.genshin/misc/lcd.py "$@"
+    fi
+}
+
 # diy
 alias l="ls -alh"
 alias ll="ls -alh"

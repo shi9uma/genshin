@@ -49,7 +49,6 @@ function code { E:/software/vscode/binary/Code.exe --extensions-dir "E:/software
 function rmrf { Remove-Item -Recurse -Force $args }
 function ll { python E:/code/python/ls_alh.py $args }
 function l { python E:/code/python/ls_alh.py $args }
-function lcd { python E:/code/python/cd.py $args }
 function home {
 	$current_path = Get-Location
 	$home_path = "C:/Users/wkyuu/Desktop"
@@ -65,6 +64,18 @@ function tmp {
     }
     Write-Host "old pwd > $current_path" -ForegroundColor Blue
     Set-Location -Path $path
+}
+function lcd {
+	$script_path = "E:/code/python/lcd.py"
+    
+    if ($args[0] -eq "cd" -and $args[1]) {
+        $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '\S+$' | ForEach-Object { $_.Matches[0].Value }
+        Set-Location $targetDir
+    } elseif ($args[0] -eq "l") {
+        python $script_path -l
+    } else {
+        python $script_path $args
+    }
 }
 
 # wsl

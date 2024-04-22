@@ -49,6 +49,7 @@ function code { E:/software/vscode/binary/Code.exe --extensions-dir "E:/software
 function rmrf { Remove-Item -Recurse -Force $args }
 function ll { python E:/code/python/ls_alh.py $args }
 function l { python E:/code/python/ls_alh.py $args }
+function lcd { python E:/code/python/cd.py $args }
 function home {
 	$current_path = Get-Location
 	$home_path = "C:/Users/wkyuu/Desktop"

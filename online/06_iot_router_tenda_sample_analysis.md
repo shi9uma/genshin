@@ -360,7 +360,27 @@ $ checksec faggot
      3.   [nanosleep](https://www.ibm.com/docs/en/zos/3.1.0?topic=functions-nanosleep-high-resolution-sleep)：让当前线程暂停一段时间
      4.   [bind](https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-bind-bind-name-socket)：将 socket 绑定到一个本地地址，并且 bind 后再 `syscall_close(socket);` 不会导致失去连接；`syscall_bind(socket, &v7, 16LL);`，也就是说到这一步程序准备好与服务器进行 tcp 连接了
      
-     该 elf 首先通过打开一个 socket 连接 `tcpfin.xyz` 检查网络 io 状态并获取自己的 socket 连接地址，然后绑定该 socket 地址用于后续直接打开 tcp 连接。由于使用了网络 io 隔离的环境，无法在程序顺利运行的状态下进入到含有 tcp 载荷的地址，需要手动设置 eip 进行分析：在 
+     该 elf 首先通过打开一个 socket 连接 `tcpfin.xyz` 检查网络 io 状态并获取自己的 socket fd，然后绑定该 socket 地址用于后续直接打开 tcp 连接，在 0x4064d5 下断，检查 `v7` 内容如下：
+     
+     ```bash
+     pwndbg> args
+      rdi = 0x3
+      rsi = 0x7fffffffdaf0 ◂— 0x100007fd3980002
+      rdx = 0x10
+      rcx = 0x4088eb ◂— cmp rax, -0x1000 /* 'H=' */
+       r8 = 0x4
+       r9 = 0x0
+     
+     pwndbg> hexdump $rsi
+     +0000 0x7fffffffdaf0  02 00 98 d3 7f 00 00 01  b8 e2 ff ff ff 7f 00 00  │........│........│
+     +0010 0x7fffffffdb00  d0 e0 ff ff ff 7f 00 00  01 00 00 00 01 00 00 00  │........│........│
+     +0020 0x7fffffffdb10  80 67 40 00 00 00 00 00  ff ff ff ff 00 00 00 00  │.g@.....│........│
+     +0030 0x7fffffffdb20  01 00 00 00 00 00 00 00  5e 68 40 00 00 00 00 00  │........│^h@.....│
+     ```
+     
+     到这里 0x4064d5 之后的内容与一开始发起 socket 相同，即如果 bind 地址失败，会再次尝试发起 socket 然后重新调用当前函数，如果成功 bind，则发起 syscall listen 监听该 socket_fd；然后该函数返回 socket_fd
+     
+8.   0x40685e 处的 [sub_4071c0](https://paste.majo.im/xokixuyogi.cpp)，发起了 syscall time、syscall getpid、syscall [getppid](https://www.ibm.com/docs/en/aix/7.2?topic=g-getpid-getpgrp-getppid-subroutine)、syscall [times](https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-times-get-process-child-process-times)，分别获取当前时间、当前进程 pid、当前进程的父 pid、当前进程运行经过的时间
 
 
 ## z

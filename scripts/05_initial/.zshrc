@@ -253,12 +253,15 @@ if [ -f /etc/zsh_command_not_found ]; then
 fi
 
 
-# scripts
+# functions
 cmd() {
     sed -n '/^# diy$/,/^# end diy$/p' ~/.zshrc
 }
 
 update_adb() {
+    if [[ $(hostname | awk '{print $1}') != "kali" ]]; then
+        return
+    fi
     adb_result=$(adb devices 2>&1)
     if echo "$adb_result" | grep -q 'missing udev rules'; then
         lsusb_output=$(lsusb)
@@ -326,8 +329,24 @@ alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
 # end diy
 
+# specific diy
+if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
+    alias mc="python /home/games/minecraft/tools/rcon.py"
+fi
+
 # proxy
-export all_proxy="http://172.28.240.1:7890"
+
+ip_addr=$(hostname -I | awk '{ print $1 }')
+case $ip_addr in
+    172.28.240.*)
+        proxy_addr=172.28.240.1
+        ;;
+    *)
+        proxy_addr=127.0.0.1
+        ;;
+esac
+export all_proxy="http://$proxy_addr:7890"
+
 export FZF_DEFAULT_COMMAND="rg --files"
 export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 

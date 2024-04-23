@@ -298,13 +298,15 @@ tmp() {
 
 lcd() {
     if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
-        curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/cd.py
+        curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{print $3}')
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
         python $HOME/.genshin/misc/lcd.py -l
+    elif [[ "$1" == "d" && ! -z "$2" ]]; then
+        python $HOME/.genshin/misc/lcd.py -d -n "$2"
     else
         python $HOME/.genshin/misc/lcd.py "$@"
     fi

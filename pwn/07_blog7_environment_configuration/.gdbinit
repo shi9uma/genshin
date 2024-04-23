@@ -12,19 +12,18 @@ sections = "regs"
 mode = "d"
 import splitmind
 spliter = splitmind.Mind()
-spliter.select("main").right(display="regs", size="50%").below(cmd="ipython",
-size="20%")
+spliter.select("main").right(display="regs", size="50%").below(cmd="ipython", size="20%")
 gdb.execute("set context-stack-lines 10")
 legend_on = "code"
 
 if mode == "d":
     legend_on = "disasm"
     sections += " disasm"
-    spliter.select("main").above(display="disasm", size="40%", banner="none")
+    spliter.select("main").above(display="disasm", size="55%", banner="none")
     gdb.execute("set context-code-lines 15")
 elif mode == "s":
     sections += " code"
-    spliter.select("main").above(display="code", size="40%", banner="none")
+    spliter.select("main").above(display="code", size="55%", banner="none")
     gdb.execute("set context-source-code-lines 15")
 else:
     sections += " disasm code"

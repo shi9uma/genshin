@@ -28,20 +28,23 @@
      3.   `lcd -l`，列出所有路径记录；`lcd -l -n 3`，列出第 3 条记录，主要是配合以下 bash function
 
           ```bash
-          
           lcd() {
               if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
-                  curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/cd.py
+                  curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/lcd.py
               fi
               if [[ "$1" == "cd" && ! -z "$2" ]]; then
                   target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{print $3}')
                   cd "$target_dir"
               elif [[ "$1" == "l" ]]; then
                   python $HOME/.genshin/misc/lcd.py -l
+              elif [[ "$1" == "d" && ! -z "$2" ]]; then
+                  python $HOME/.genshin/misc/lcd.py -d -n "$2"
               else
                   python $HOME/.genshin/misc/lcd.py "$@"
               fi
           }
           ```
+
+          `lcd l`、`lcd cd 2`、`lcd d 2`、`lcd $args`
 
      4.   `lcd -d /tmp/tmp`，删除路径记录；`lcd -d /tmp/tmp -n 3`，删除第三条记录，此时指定的 `/tmp/tmp` 无效

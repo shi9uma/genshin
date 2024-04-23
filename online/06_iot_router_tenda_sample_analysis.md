@@ -95,8 +95,6 @@ $ checksec faggot
 
 确定了 main：`b *0x406780` 即可正式开始分析，在分析过程还发现，程序运行完成必定 segmentation fault，之后系统无法新建文件、写入文件，通过 `ps -aux` 可以找到 `l5cnt6cn4hcn ck_faggot_patch` 的进程（名称会随机变化，手动将其 `kill` 后系统可以正常写入，后续需要将其导出成 elf 进一步分析），进一步在 pwndbg 中通过 `catch exec syscall fork load` 来监测其行为，catch 即 catchpoints，检测到以上行为会发起中断
 
-有以下行为：
-
 1.   进入到 main 之后，会在 0x4067A9 处发起 syscall ioctl，经检查是一些内存初始化内容
 
 2.   之后三个函数 0x40b504、0x408c8c、0x40b53c 都在初始化一些内容，例如地址内容、信号行为，主要概况为进行了一些处理上的 hook
@@ -145,28 +143,224 @@ $ checksec faggot
 
      在尝试切换 dir 到 `/`，以上地址块可以大概猜测到这个 elf 将要进行的一些操作，其中不乏敏感路径
 
-5.   在 0x40683e 的 [sub_408570](https://paste.majo.im/uwuqajomib.cpp) 及其子函数 [sub_40b4d4](https://paste.majo.im/mireladali.cpp) 函数主要行为是发起了 syscall `socket(2LL, 2LL, 0LL)`，并在 0x4085c2 调用的函数 [0x40v36c](https://paste.majo.im/dexasucoyo.cpp) 发起 syscall `connect(socket_fd, [2, 13568], 16LL)`，args 得到地址 `0x7fffffffdba0`，对其进一步查看得到以下内容
+5.   在 0x40683e 的 [sub_408570](https://paste.majo.im/uqaxawupiy.cpp) 及其子函数 [sub_40b4d4](https://paste.majo.im/mireladali.cpp) 函数主要行为是发起了 syscall `socket(2LL, 2LL, 0LL)`，并在 0x4085c2 调用的函数 [0x40v36c](https://paste.majo.im/dexasucoyo.cpp) 发起 syscall `connect(socket_fd, [2, 0x3500], 16LL)`，args 得到地址 stack 上地址 `0x7fffffffdba0`，对其进一步查看得到以下内容
 
      ```bash
-     pwndbg> x/10xg $rsi
-     0x7fffffffdba0: 0x0808080835000002      0x0000000010000000
-     0x7fffffffdbb0: 0x0000000000000000      0x0000001000000000
-     0x7fffffffdbc0: 0x0000000000000000      0x00000000ffffffff
-     0x7fffffffdbd0: 0x0000000000000001      0x0000000000406843
-     0x7fffffffdbe0: 0x0000000000000000      0x0000000000000000
+     pwndbg> pdisass
+      ► 0x40b377    syscall  <SYS_connect>
+     				fd: 0x3 (socket:[13568])
+     				addr: 0x7fffffffdaf0 ◂— 0x808080835000002
+     				len: 0x10
+     pwndbg> hexdump $rsi
+     +0000 0x7fffffffdaf0  02 00 00 35 08 08 08 08  00 00 00 10 00 00 00 00  │...5....│........│
+     +0010 0x7fffffffdb00  00 00 00 00 00 00 00 00  00 00 00 00 10 00 00 00  │........│........│
+     +0020 0x7fffffffdb10  00 00 00 00 00 00 00 00  ff ff ff ff 00 00 00 00  │........│........│
+     +0030 0x7fffffffdb20  01 00 00 00 00 00 00 00  43 68 40 00 00 00 00 00  │........│Ch@.....│
      ```
 
-     其中的开头：`08080808 35000002` 就是 `00 02 35 00 | 08 08 08 08`，是一个经典的 sockaddr，转成 ipv4 就是：`8.8.8.8:13312`，这印证了逆向查看的内容，虽然不了解为什么访问了 8.8.8.8，这是 google 的 dns 服务器，但是一般来说访问的也是 53 端口，目前认为是可能做了伪装，看似连接合法的服务器来规避网络监控和分析，使用 `dig example.com @8.8.8.8` 可以模拟 dns 查询，可以发现使用的是 `8.8.8.8#53` 端口
+     其中的开头：`02 00 00 35 | 08 08 08 08`，是一个经典的 [sock addr](https://www.ibm.com/docs/fr/i/7.4?topic=family-af-inet-address)，`02` 代表 `AF_INET`，转成 ipv4 就是：`8.8.8.8:53`，这是 google 的 dns 服务器，在后续分析可以找到 domain 关键字：`tcpfin.xyz`，使用 `dig tcpfin.xyz @8.8.8.8` 可以模拟 dns 查询，可以发现使用的就是 `8.8.8.8#53` 端口；
 
-     使用 proc 可以看到句柄 fd[3] 为 `socker:[22002]`
+     ![image-20240422164331194](E:\Pictures\markdown\image-20240410164331194.png)
+
+     这里还有个有趣的事情，过度解读一下这个 tcpfin，可以猜测到这个 domain 可能是一个用于测试连接的网站，tcpfin 即 tcp 的 fin 报文，接受到这个报文后会直接关闭 tcp 连接，结合 elf 的行为，可能就是为了测试当前主机能否连接 dns 服务器，换句话说就是能否上网；以下内容摘自 [getsockname](https://www.ibm.com/docs/en/zos/2.5.0?topic=functions-getsockname-get-name-socket)
+
+     >   The getsockname() call is often used to discover the port assigned to a socket after the socket has been implicitly bound to a port. For example, an application can call connect() without previously calling bind(). In this case, the connect() call completes the binding necessary by assigning a port to the socket. This assignment can be discovered with a call to getsockname().
+
+     也就是在发起 connet() 后，可以使用 getsockname() 获取 tcp 连接的套接信息；但是在一些网络状况不是很好的地方，自然是无法连接到 google 的 dns 的，由于一开始就是隔离网络 io 的条件下进行 dbg 的，自然无法连接
 
      ```cpp
      socket(int domain, int type, int protocol);	// 套接字的协议族（AF_INET、AF_INET6、AF_UNIX）、指定套接字的类型（SOCK_STREAM）、协议
      connect(socket_fd, package_addr, len);	// 打开的 socket_fd、载荷开始地址、载荷长度
+     getsockname(int socket, struct sockaddr *__restrict__ name, socklen_t *__restrict__ namelen);	// socket_fd、载荷开始地址、载荷长度
+     
+     struct sockaddr_in {	
+       short          sin_family;	// 00 02，2 Bytes
+       u_short        sin_port;		// 00 35，2 Bytes，0 ~ 65535，也就是 port
+       struct in_addr sin_addr;		// 08 08 08 08，4 Bytes，也就是 ipv4 addr
+       char           sin_zero[8];
+     };
      ```
 
-6.   在 0x4085d1 处的 [sub_40b398](https://paste.majo.im/umudaziqup.cpp) 函数中调用了 syscall `getsockname(socket_fd, [2, 13568], [0x10, 0, 0, ...])`，
+     编写了一段 [socket.c](https://paste.majo.im/aluhanuxak.cpp) 如下，动调到 connect() 函数查看 sockaddr_in 结构体如下：
 
+     ```c
+     pwndbg> display servaddr
+     1: servaddr = {
+       sin_family = 2,
+       sin_port = 13568,	// 35 00
+       sin_addr = {
+         s_addr = 134744072	// 08 08 08 08
+       },
+       sin_zero = "\000\000\000\000\000\000\000"
+     }
+     ```
+
+     由于网络状况不好，没能连接到 `8.8.8.8:53`，于是将其修改成阿里的 `223.5.5.5`，重新编译并执行，成功显示
+
+     ```bash
+     $ ./socket_test
+     Connected to 223.5.5.5:53
+     Local IP address: 172.28.255.219
+     Local port: 41674
+     ```
+
+     其对应的内存信息如下：
+
+     ```bash
+     pwndbg> hexdump $rsi
+     +0000 0x7fffffffdfd0  02 00 ca a2 ac 1c ff db  00 00 00 00 00 00 00 00  │........│........│
+     +0010 0x7fffffffdfe0  02 00 00 35 df 05 05 05  00 00 00 00 00 00 00 00  │...5....│........│
+     +0020 0x7fffffffdff0  00 00 00 00 00 00 00 00  b0 da ff f7 03 00 00 00  │........│........│
+     +0030 0x7fffffffe000  01 00 00 00 00 00 00 00  ca d6 df f7 ff 7f 00 00  │........│........│
+     
+     ipython> 
+     In[1]: 0xac, 0x1c, 0xff, 0xdb, 0xa2ca
+     Out[1]: 172, 28, 255, 219, 41674
+     ```
+
+6.   在 0x406849 处的 [sub_407d20](https://paste.majo.im/vijitazaje.cpp) 函数中多次调用了 [sub_40b6a0](https://paste.majo.im/xidoqihihe.cpp) 和 [sub_4084a0](https://paste.majo.im/evewikigac.cpp)，看起来很麻烦，大概也是一种减损分析员寿命的幻术，只要 catch syscall 和地址读写来观察关键的内容
+
+     1.   观察到其主要是循环了以下逻辑：
+
+          ```c
+          int64 vx;
+          long long num; 
+          
+          vx = sub_40b6a0(num);
+          sub_4084a0(vx, &addr, num);
+          qword_addr2 = vx;
+          word_addr3 = num;
+          ```
+
+     2.   `sub_40b6a0(num)` 运算得出 `vx` 返回
+
+          ```bash
+          pwndbg> xinfo 0x526010
+          Virtual address 0x526010 is not mapped.
+          
+          pwndbg> c
+          Continuing.
+          Catchpoint 6 (call to syscall brk), 0x000000000040edf1 in ?? ()
+          
+          pwndbg> c
+          Continuing.
+          Catchpoint 6 (returned from syscall brk), 0x000000000040edf1 in ?? ()
+          
+          pwndbg> c
+          Continuing.
+          Catchpoint 6 (call to syscall brk), 0x000000000040edf1 in ?? ()
+          
+          pwndbg> c
+          Continuing.
+          Catchpoint 6 (returned from syscall brk), 0x000000000040edf1 in ?? ()
+          
+          pwndbg> xinfo 0x526010
+          Extended information for virtual address 0x526010:
+            Containing mapping:
+                    0x513000           0x527000 rw-p    14000      0 [heap]
+            Offset information:
+                   Mapped Area 0x526010 = 0x513000 + 0x13010
+          ```
+
+          `sub_40b6a0` 函数中多次发起了 syscall brk，确实是分配了一段 heap 地址，并在后续操作该动态地址
+
+     3.   调用 `sub_4084a0(byte *vx, int8 *addr, int num)`，在其中进行了数据拼接：拼接长度是 num，拼接基地址是 *vx，拼接内容是 *addr
+
+          ```bash
+          pwndbg> args
+           rdi = 0x526010 ◂— 0x0
+           rsi = 0x410c80 ◂— jbe 0x410cf3
+           rdx = 0x15
+           rcx = 0xfe1
+            r8 = 0x0
+            r9 = 0x0
+          
+          pwndbg> hexdump 0x526010
+          +0000 0x526010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          +0010 0x526020  00 00 00 00 00 00 00 00  e1 0f 00 00 00 00 00 00  │........│........│
+          +0020 0x526030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          +0030 0x526040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          
+          pwndbg> hexdump 0x410c80
+          +0000 0x410c80  76 71 4d 57 50 41 47 02  67 4c 45 4b 4c 47 02 73  │vqMWPAG.│gLEKLG.s│
+          +0010 0x410c90  57 47 50 5b 22 00 51 4a  47 4e 4e 22 00 47 4c 43  │WGP[".QJ│GNN".GLC│
+          +0020 0x410ca0  40 4e 47 22 00 51 5b 51  56 47 4f 22 00 51 4a 22  │@NG".Q[Q│VGO".QJ"│
+          +0030 0x410cb0  00 0d 40 4b 4c 0d 40 57  51 5b 40 4d 5a 02 6f 6b  │..@KL.@W│Q[@MZ.ok│
+          
+          pwndbg> n
+          0x0000000000407d40 in ?? ()
+          
+          pwndbg> hexdump 0x526010
+          +0000 0x526010  76 71 4d 57 50 41 47 02  67 4c 45 4b 4c 47 02 73  │vqMWPAG.│gLEKLG.s│
+          +0010 0x526020  57 47 50 5b 22 00 00 00  e1 0f 00 00 00 00 00 00  │WGP["...│........│
+          +0020 0x526030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          +0030 0x526040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          ```
+
+          了解了基本逻辑，只需要观察几个输入和输出即可，如上文输出所示，`0x4084a0` 函数确实往 *vx 地址写入了 &addr 处的内容
+
+     4.   得到了单个循环的逻辑，只要抓住几个地址进行查看即可：
+
+          ```bash
+          pwndbg> hexdump 0x526010
+          +0000 0x526010  76 71 4d 57 50 41 47 02  67 4c 45 4b 4c 47 02 73  │vqMWPAG.│gLEKLG.s│
+          +0010 0x526020  57 47 50 5b 22 00 00 00  71 00 00 00 00 00 00 00  │WGP["...│q.......│
+          +0020 0x526030  0f 02 11 23 9f dd 10 09  33 fe 1f 8f ba 00 00 00  │...#....│3.......│
+          +0030 0x526040  00 00 00 00 00 00 00 00  00 ff ee 31 41 00 00 41  │........│...1A..A│
+          
+          pwndbg>
+          +0040 0x526050  0f 02 11 23 9f dd 10 09  33 fe 1f 8f ba 00 00 00  │...#....│3.......│
+          +0050 0x526060  00 00 00 00 00 00 00 00  00 ff ee 31 41 00 00 41  │........│...1A..A│
+          +0060 0x526070  0f 02 11 23 9f dd 10 09  33 fe 1f 8f ba 00 00 00  │...#....│3.......│
+          +0070 0x526080  00 00 00 00 00 00 00 00  00 ff ee 31 41 00 00 41  │........│...1A..A│
+          
+          pwndbg>
+          +0080 0x526090  00 00 00 00 00 00 00 00  21 00 00 00 00 00 00 00  │........│!.......│
+          +0090 0x5260a0  51 4a 47 4e 4e 22 00 00  00 00 00 00 00 00 00 00  │QJGNN"..│........│
+          +00a0 0x5260b0  00 00 00 00 00 00 00 00  21 00 00 00 00 00 00 00  │........│!.......│
+          +00b0 0x5260c0  47 4c 43 40 4e 47 22 00  00 00 00 00 00 00 00 00  │GLC@NG".│........│
+          
+          pwndbg>
+          +00c0 0x5260d0  00 00 00 00 00 00 00 00  21 00 00 00 00 00 00 00  │........│!.......│
+          +00d0 0x5260e0  51 5b 51 56 47 4f 22 00  00 00 00 00 00 00 00 00  │Q[QVGO".│........│
+          +00e0 0x5260f0  00 00 00 00 00 00 00 00  21 00 00 00 00 00 00 00  │........│!.......│
+          +00f0 0x526100  51 4a 22 00 00 00 00 00  00 00 00 00 00 00 00 00  │QJ".....│........│
+          
+          pwndbg>
+          +0100 0x526110  00 00 00 00 00 00 00 00  21 00 00 00 00 00 00 00  │........│!.......│
+          +0110 0x526120  0d 40 4b 4c 0d 40 57 51  5b 40 4d 5a 02 6f 6b 70  │.@KL.@WQ│[@MZ.okp│
+          +0120 0x526130  63 6b 22 00 00 00 00 00  21 00 00 00 00 00 00 00  │ck".....│!.......│
+          +0130 0x526140  6f 6b 70 63 6b 18 02 43  52 52 4e 47 56 02 4c 4d  │okpck..C│RRNGV.LM│
+          
+          pwndbg>
+          +0140 0x526150  56 02 44 4d 57 4c 46 22  21 00 00 00 00 00 00 00  │V.DMWLF"│!.......│
+          +0150 0x526160  4c 41 4d 50 50 47 41 56  22 00 00 00 00 00 00 00  │LAMPPGAV│".......│
+          +0160 0x526170  00 00 00 00 00 00 00 00  91 0e 00 00 00 00 00 00  │........│........│
+          +0170 0x526180  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  │........│........│
+          ```
+
+7.   在 0x406859 处的 [sub_406420](https://paste.majo.im/icupomewog.cpp) 及其子函数发起了 syscall socket、syscall setsockopt、syscall fcntl、syscall bind、syscall connect、syscall close、syscall nanosleep、[syscall listen](https://www.ibm.com/docs/en/zos/2.4.0?topic=calls-listen)，后续这几个 syscall 都以 socket 执行成功后的返回的 socket fd 为依据，操作链如下：
+
+     ```c
+     syscall_setsockopt(socket, 1LL, 2LL, v8, 4LL);
+     // ...
+     unsigned int v1 = syscall_fcntl(socket, 3u, 0LL);
+     syscall_fcntl(socket, 4u, v1);
+     // ...
+     syscall_bind(socket, &v7, 16LL);
+     // ...
+     syscall_connect(socket, &v7, 16);
+     // ...
+     syscall_close(socket);
+     syscall_open("/proc/net/tcp", 0, 0);
+     ```
+
+     1.   [setsockopt](https://www.ibm.com/docs/en/zos/2.4.0?topic=calls-setsockopt)：配置 socket 的选项，例如缓冲区大小、重用地址、超时时间等，这里是 `syscall_setsockopt(socket, 1LL, 2LL, v8, 4LL);`，对应 SOL_SOCKET 和 SO_REUSEADDR，即设置该 socket 为地址重用模式，让程序短时间内重启可以继续占用同一端口
+     2.   [fcntl](https://www.ibm.com/docs/en/zos/2.5.0?topic=calls-fcntl)：主要是操作 fd，具体到这里是操作 socket fd，首先 `unsigned int v1 = syscall_fcntl(socket, 3u, 0LL);` 指定了 F_GETFL，即获取文件描述符的状态，`syscall_fcntl(socket, 4u, v1);` 指定 F_SETFL，将 socket 设置为了 [非阻塞模式](https://github.com/balloonwj/CppGuide/blob/master/articles/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/socket%E7%9A%84%E9%98%BB%E5%A1%9E%E6%A8%A1%E5%BC%8F%E5%92%8C%E9%9D%9E%E9%98%BB%E5%A1%9E%E6%A8%A1%E5%BC%8F.md)
+     3.   [nanosleep](https://www.ibm.com/docs/en/zos/3.1.0?topic=functions-nanosleep-high-resolution-sleep)：让当前线程暂停一段时间
+     4.   [bind](https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-bind-bind-name-socket)：将 socket 绑定到一个本地地址，并且 bind 后再 `syscall_close(socket);` 不会导致失去连接；`syscall_bind(socket, &v7, 16LL);`，也就是说到这一步程序准备好与服务器进行 tcp 连接了
+     
+     该 elf 首先通过打开一个 socket 连接 `tcpfin.xyz` 检查网络 io 状态并获取自己的 socket 连接地址，然后绑定该 socket 地址用于后续直接打开 tcp 连接。由于使用了网络 io 隔离的环境，无法在程序顺利运行的状态下进入到含有 tcp 载荷的地址，需要手动设置 eip 进行分析：在 
 
 
 ## z
@@ -174,20 +368,18 @@ $ checksec faggot
 用到的 syscall
 
 ```c
-ioctl(int fd, unsigned long request, ...)，request 是请求码，要做的设备请求
-    
-rt_sigprocmask(int how, sigset_t *set, sigset_t *oldset)，how 修改信号掩码的方式、指向新的信号掩码、存储旧的信号掩码
-    
-rt_sigaction(int signum, sigaction, oldact)，要操作的信号、指向信号处理行为、旧的信号处理行为
-    
-open(char *path, int flags, mode_t mode)，打开的路径、打开方式（a、w、r）、文件的权限（仅在创建时使用，例如 0666）
-    
-chdir(path)
-    
-socket(int domain, int type, int protocol)，套接字的协议族（AF_INET、AF_INET6、AF_UNIX）、指定套接字的类型（SOCK_STREAM）、协议
-    
-getsockname(int sockfd, struct sockaddr *addr)，套接字描述符、套接字地址的结构体指针、地址长度
-
+ioctl(int fd, unsigned long request, ...);	// request 是请求码，要做的设备请求
+rt_sigprocmask(int how, sigset_t *set, sigset_t *oldset);	// how 修改信号掩码的方式、指向新的信号掩码、存储旧的信号掩码
+rt_sigaction(int signum, sigaction, oldact);	// 要操作的信号、指向信号处理行为、旧的信号处理行为
+open(char *path, int flags, mode_t mode);	// 打开的路径、打开方式（a、w、r）、文件的权限（仅在创建时使用，例如 0666）
+chdir(path);
+socket(int domain, int type, int protocol);	// 套接字的协议族（AF_INET、AF_INET6、AF_UNIX）、指定套接字的类型（SOCK_STREAM）、协议
+getsockname(int sockfd, struct sockaddr *addr);	// 套接字描述符、套接字地址的结构体指针、地址长度
+setsockopt();	// 1
+fcntl();	// 2
+bind();		// 3
+close();	// 4
+nanosleep();	// 5
 ```
 
 ### tmp
@@ -197,7 +389,7 @@ pwndbg
 ```bash
 
 # watch
-x/30gx = e[x]amine / 30 [opt]x，[opt]: [b]yte，[h]alfword，[w]ord，[g]iant word(64-bit)
+x/30gx = e[x]amine / count [opt]x: [b]yte，[h]alfword，[w]ord，[g]iant word(64-bit)
 watch 0x7fffffffdfe0
 hexdump $rdi+$rdx*8
 set $rdi=1
@@ -215,14 +407,15 @@ patch <addr> 'nop; nop; '
 backtrace，bt
 i r，info registers
 regs
+display args
 ```
 
 tmux
 
 ```bash
-ctrl + b + d
-
+ctrl + b + d，set -g mouse on
 tmux attach
+左键选中，右键复制
 ```
 
 我正在分析一份 elf 病毒样本，架构为 x86_64，请你辅助我分析。

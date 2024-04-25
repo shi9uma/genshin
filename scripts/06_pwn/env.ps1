@@ -1,0 +1,1 @@
+. ./venv_pwn/Scripts/activate

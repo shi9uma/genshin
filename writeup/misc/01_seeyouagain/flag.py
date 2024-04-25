@@ -9,7 +9,7 @@ def get_diff(s1, s2):
 
 
 def b64_stego_decode():
-    file = open("a/flag.txt","rb")
+    file = open("flag.txt","rb")
     x = ''
     lines =  file.readlines()
     for line in lines:

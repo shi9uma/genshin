@@ -310,6 +310,8 @@ lcd() {
         python $HOME/.genshin/misc/lcd.py -l
     elif [[ "$1" == "d" && ! -z "$2" ]]; then
         python $HOME/.genshin/misc/lcd.py -d -n "$2"
+    elif [[ "$1" == "a" && ! -z "$2" ]]; then
+        python $HOME/.genshin/misc/lcd.py -a "$2"
     else
         python $HOME/.genshin/misc/lcd.py "$@"
     fi

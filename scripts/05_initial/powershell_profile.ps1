@@ -76,6 +76,8 @@ function lcd {
         python $script_path -l
     } elseif ($args[0] -eq "d" -and $args[1]) {
         python $script_path -d -n $args[1]
+    } elseif ($args[0] -eq "a" -and $args[1]) {
+        python $script_path -a $args[1]
     } else {
         python $script_path $args
     }

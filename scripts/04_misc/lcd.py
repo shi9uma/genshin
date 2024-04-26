@@ -52,13 +52,17 @@ def save_paths(paths):
 
 
 def show_config(path_color):
+    import json
     print(f"{color('|', flag_color)} config file: {color(config_file, path_color)}")
+    with open(config_file, mode = 'r', encoding='utf-8') as file:
+        print(json.dumps(json.load(file), indent=4, ensure_ascii=False))
 
 
 def add_path(path, path_color):
     current_dir = os.getcwd()
     path = os.path.join(current_dir, path)
     path = os.path.abspath(path)
+    path = clean_path(path)
     paths = load_paths()
     if path in paths:
         print(f"{color('|', flag_color)} path [{color(path, path_color)}] already exists.")
@@ -95,6 +99,9 @@ def list_paths(path_color, num):
     paths = load_paths()
     if paths:
         if num != 0:
+            if num > len(paths):
+                print(f"{color('|', flag_color)} path number [{color(str(num), 4)}] out of range.")
+                return
             count = 1
             for path in paths:
                 if count == num:
@@ -125,7 +132,7 @@ def main():
     parser.add_argument("-c", "--config", action='store_true', help="show config file path")
     parser.add_argument("-p", "--plain", action='store_true', help="dont show color in output")
     args = vars(parser.parse_args())
-
+    
     path_color = 0 if args['plain'] else 3
 
     if any(args.values()):

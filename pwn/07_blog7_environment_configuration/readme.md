@@ -168,6 +168,17 @@ end
      1.   在编译时指定链接器：`gcc -o elf elf.c -Wl,--dynamic-linker=2.27-3ubuntu1_amd64/ld-2.27.so`
      2.   在使用时劫持环境变量：`export LD_LIBRARY_PATH=2.27-3ubuntu1_amd64/libc-2.27.so:$LD_LIBRARY_PATH`，然后 `./elf`
 
+## exp templates
+
+:wq
+
+## useful
+
+1.   https://ropemporium.com/challenge/split.html
+2.   ropgadget
+3.   [david942j/one_gadget](https://github.com/david942j/one_gadget.git)
+4.   
+
 ## tmp
 
 1.   ~~pwntools，pwndbg，splitmind，angelheap，tmux 安装配置~~

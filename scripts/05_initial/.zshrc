@@ -336,21 +336,38 @@ if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"
 fi
 
+### exports
 # proxy
-
-ip_addr=$(hostname -I | awk '{ print $1 }')
-case $ip_addr in
-    172.28.240.*)
-        proxy_addr=172.28.240.1
-        ;;
-    *)
+source_proxy() {
+    if [[ "$(uname -o)" == "Darwin" ]]; then
         proxy_addr=127.0.0.1
-        ;;
-esac
-export all_proxy="http://$proxy_addr:7890"
+    else
+        ip_addr=$(hostname -I | awk '{ print $1 }')
+        case $ip_addr in
+            172.28.240.*)
+                proxy_addr=172.28.240.1
+                ;;
+            *)
+                proxy_addr=127.0.0.1
+                ;;
+        esac
+    fi
+    export all_proxy="http://$proxy_addr:7890"
+}
+source_proxy
 
+# vim
 export FZF_DEFAULT_COMMAND="rg --files"
 export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 
 # path
-export PATH=$PATH:/home/wkyuu/.local/bin
+os_type=$(uname -o)
+case $os_type in
+    "Darwin")
+        export_path=/opt/homebrew/bin:$PATH:/Users/wkyuu/.local/bin
+        ;;
+    "GNU/Linux")
+        export_path=$PATH:/home/wkyuu/.local/bin
+        ;;
+esac
+export PATH=$export_path

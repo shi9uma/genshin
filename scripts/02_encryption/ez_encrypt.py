@@ -114,14 +114,14 @@ def get_system_uuid() -> str:
         exit()
 
 
-def get_salt(key: str, salt_file='salt') -> str:
-    if os.path.exists(salt_file):
+def get_salt(key: str, salt_file='salt', is_use_salt = True) -> str:
+    if os.path.exists(salt_file) and is_use_salt:
         with open(salt_file, 'rb') as file:
             salt = file.read()
             if salt != b'':
                 return salt
 
-    uuid = get_system_uuid()
+    uuid = get_system_uuid() if is_use_salt else key
     salt_sha256_obj = hashes.Hash(hashes.SHA256(), backend=default_backend())
     salt_sha256_obj.update(uuid.encode())
     salt_sha256_obj.update(key.encode())
@@ -159,9 +159,9 @@ def main():
             password = args['key']
 
     if args['salt'] is not None:
-        salt = get_salt(password, args['salt'])
+        salt = get_salt(password, args['salt'], is_use_salt=True)
     else:
-        salt = password.encode()
+        salt = get_salt(password, is_use_salt=False)
 
     if os.path.isdir(args['input']):
         if args['output'] is None:

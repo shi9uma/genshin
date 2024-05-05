@@ -336,6 +336,10 @@ if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"
 fi
 
+if [[ -f "$HOME/Schale" ]]; then
+    alias schale="cd $HOME/Schale"
+fi
+
 ### exports
 # proxy
 source_proxy() {
@@ -364,10 +368,10 @@ export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(h
 os_type=$(uname -o)
 case $os_type in
     "Darwin")
-        export_path=/opt/homebrew/bin:$PATH:/Users/wkyuu/.local/bin
+        export_path=$HOME/.bin:/opt/homebrew/bin:$PATH:$HOME/.local/bin
         ;;
     "GNU/Linux")
-        export_path=$PATH:/home/wkyuu/.local/bin
+        export_path=$HOME/.bin:$PATH:$HOME/.local/bin
         ;;
 esac
 export PATH=$export_path

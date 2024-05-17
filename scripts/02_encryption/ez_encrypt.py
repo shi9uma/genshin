@@ -39,7 +39,14 @@ def derive_key(password: str, salt: bytes) -> bytes:
     return kdf.derive(password.encode())
 
 
+def pad_salt(salt: bytes, desired_length: int = 16) -> bytes:
+    if len(salt) < desired_length:
+        salt += b'\x00' * (desired_length - len(salt))
+    return salt
+
+
 def encrypt_file(input_path: str, output_path: str, password: str, salt: bytes):
+    salt = pad_salt(salt)
     key = derive_key(password, salt)
     initialization_vector = salt[:16]
     cipher = Cipher(
@@ -67,6 +74,7 @@ def decrypt_file(input_path: str, output_path: str, password: str, salt: bytes =
         salt_read = f.read(16)
         cipher_text = f.read()
 
+    salt_read = pad_salt(salt_read)
     key = derive_key(password, salt_read)
     initialization_vector = salt_read[:16]
     cipher = Cipher(
@@ -106,6 +114,9 @@ def get_system_uuid() -> str:
         elif sys.platform == "linux":
             cmd = 'cat /proc/sys/kernel/random/uuid'
             uuid = subprocess.check_output(cmd, shell=True).decode().strip()
+        elif sys.platform == "Darwin":
+            cmd = "system_profiler SPHardwareDataType | awk '/UUID/ { print $3; }'"
+            uuid = subprocess.check_output(cmd, shell=True).decode().strip()
         else:
             raise Exception("Unsupported OS")
         return uuid
@@ -114,7 +125,7 @@ def get_system_uuid() -> str:
         exit()
 
 
-def get_salt(key: str, salt_file='salt', is_use_salt = True) -> str:
+def get_salt(key: str, salt_file='salt', is_use_salt=False) -> str:
     if os.path.exists(salt_file) and is_use_salt:
         with open(salt_file, 'rb') as file:
             salt = file.read()
@@ -126,9 +137,11 @@ def get_salt(key: str, salt_file='salt', is_use_salt = True) -> str:
     salt_sha256_obj.update(uuid.encode())
     salt_sha256_obj.update(key.encode())
     salt = salt_sha256_obj.finalize()
+    print(uuid, salt)
 
-    with open(salt_file, 'wb') as file:
-        file.write(salt[:16])
+    if is_use_salt:
+        with open(salt_file, 'wb') as file:
+            file.write(salt[:16])
     return salt
 
 

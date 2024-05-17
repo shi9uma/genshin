@@ -78,7 +78,7 @@ def fast_rename(directory, type, width=3):
         src = os.path.join(directory, filename)
         dst = os.path.join(directory, new_filename)
         os.rename(src, dst)
-        print('{}{} => {}'.format(color('|'), color(filename), color(new_filename)))
+        print('{} {} => {}'.format(color('|'), filename, color(new_filename)))
 
 
 def prefix_rename(file_list, width=3, mode='add', start_num=1):
@@ -95,7 +95,7 @@ def prefix_rename(file_list, width=3, mode='add', start_num=1):
             src = os.path.join(work_dir, filename)
             dst = os.path.join(work_dir, new_filename)
             os.rename(src, dst)
-            print('{}{} => {}'.format(color('|'),
+            print('{} {} => {}'.format(color('|'),
                   filename, color(new_filename)))
     elif mode == 'remove':
         for filename in file_list:
@@ -104,8 +104,8 @@ def prefix_rename(file_list, width=3, mode='add', start_num=1):
             src = os.path.join(work_dir, filename)
             dst = os.path.join(work_dir, new_filename)
             os.rename(src, dst)
-            print('{}{} => {}'.format(color('|'),
-                  color(filename), color(new_filename)))
+            print('{} {} => {}'.format(color('|'),
+                  filename, color(new_filename)))
 
 
 def interact_rename(file_list):
@@ -171,10 +171,12 @@ def replace_file_name(file_list, old, new):
     assert old is not None and new is not None, 'old 和 new 不能为空'
     for file_name in file_list:
         new_filename = file_name.replace(old, new)
+        if new_filename == file_name:
+            continue
         src = os.path.join(work_dir, file_name)
         dst = os.path.join(work_dir, new_filename)
         os.rename(src, dst)
-        print('{}{} => {}'.format(color('|'), file_name, new_filename))
+        print('{} {} => {}'.format(color('|'), file_name, color(new_filename)))
 
 
 def sort_file(file_list, width=3):
@@ -185,7 +187,7 @@ def sort_file(file_list, width=3):
         src = os.path.join(work_dir, file_name)
         dst = os.path.join(work_dir, new_filename)
         change_list.append([index, src, dst])
-        print('{}{} => {}'.format(color('|'), file_name, new_filename))
+        print('{} {} => {}'.format(color('|'), file_name, new_filename))
 
     if input('是否确认以上修改?(输入 {} 以确认, 输入其他(回车等)则退出): '.format(color('[Y]'))) == 'Y':
         for index, src, dst in change_list:
@@ -216,9 +218,10 @@ def make_test_file(workdir):
         touch(os.path.join(directory, filename))
 
     if len(filename_list) == len(os.listdir(directory)):
-        print('已创建 {} 个测试文件，目录 {}'.format(len(filename_list), color(directory)))
+        print('已创建 {} 个测试文件, 目录 {}'.format(
+            len(filename_list), color(directory)))
     else:
-        print('创建测试文件失败，目录 {}'.format(color(directory)))
+        print('创建测试文件失败, 目录 {}'.format(color(directory)))
 
 
 # ================================ main =================================
@@ -238,39 +241,50 @@ ap.add_argument('-x', '--exclude', nargs='+',
                 default=[], help='指定要排除的文件名, 如果有多个需要多次指定, 且必须写在 foobar 后面')
 ap.add_argument('-o', '--old', type=str, help='要替换的旧字符')
 ap.add_argument('-n', '--new', type=str, help='要替换成的新字符')
+ap.add_argument('-d', '--directory', action='store_true',
+                help='是否处理文件夹, 添加即处理')
 args = vars(ap.parse_args())
 
 # ignore some files
+if args['directory']:
+    assert input('{}'.format(color(
+        '注意, 指定了 --directory 选项, 这会包含文件夹, 是否继续? [y/n]'))) == 'y', '{}'.format('已取消操作')
+
 temp_file_list = [
     filename
     for filename in os.listdir(work_dir)
-    if os.path.isfile(os.path.join(work_dir, filename))
+    if os.path.isfile(os.path.join(work_dir, filename)) or (args['directory'] and os.path.isdir(os.path.join(work_dir, filename)))
 ]
-[temp_file_list.append(filename) for filename in args['exclude']
- if os.path.isfile(os.path.join(work_dir, filename))]
+[temp_file_list.append(filename)
+ for filename in args['exclude']
+ if os.path.isfile(os.path.join(work_dir, filename)) or (args['directory'] and os.path.isdir(os.path.join(work_dir, filename)))
+ ]
 temp_file_list.sort()
 ignore_file_list = ignore_file_list + ex_ignore_file_list
+
 file_list = []
 for file_item in temp_file_list:
     if is_ignore(file_item, ignore_file_list):
         continue
     file_list.append(file_item)
 
-
-if args['foobar'] == 'fast':
-    fast_rename(work_dir, args['type'], args['width'])
-elif args['foobar'] == 'prefix':
-    prefix_rename(file_list, args['width'], args['mode'], args['start_num'])
-elif args['foobar'] == 'interact':
-    show_files(file_list)
-    interact_rename(file_list)
-elif args['foobar'] == 'replace':
-    replace_file_name(file_list, args['old'], args['new'])
-elif args['foobar'] == 'show':
-    show_files(file_list)
-elif args['foobar'] == 'sort':
-    sort_file(file_list, args['width'])
-elif args['foobar'] == 'test':
-    make_test_file(work_dir)
+if any(args.values()):
+    if args['foobar'] == 'fast':
+        fast_rename(work_dir, args['type'], args['width'])
+    elif args['foobar'] == 'prefix':
+        prefix_rename(file_list, args['width'], args['mode'], args['start_num'])
+    elif args['foobar'] == 'interact':
+        show_files(file_list)
+        interact_rename(file_list)
+    elif args['foobar'] == 'replace':
+        replace_file_name(file_list, args['old'], args['new'])
+    elif args['foobar'] == 'show':
+        show_files(file_list)
+    elif args['foobar'] == 'sort':
+        sort_file(file_list, args['width'])
+    elif args['foobar'] == 'test':
+        make_test_file(work_dir)
+    else:
+        fgx('参数错误', '=')
 else:
-    fgx('参数错误', '=')
+    ap.print_help()

@@ -329,6 +329,7 @@ alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
 alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
+alias temp="sensors"
 # end diy
 
 # specific diy
@@ -336,7 +337,7 @@ if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"
 fi
 
-if [[ -f "$HOME/Schale" ]]; then
+if [[ -d "$HOME/Schale" ]]; then
     alias schale="cd $HOME/Schale"
 fi
 
@@ -346,9 +347,9 @@ source_proxy() {
     if [[ "$(uname -o)" == "Darwin" ]]; then
         proxy_addr=127.0.0.1
     else
-        ip_addr=$(hostname -I | awk '{ print $1 }')
+        ip_addr=$(hostname -I | awk '{ NR==3 print $1 }')
         case $ip_addr in
-            172.28.240.*)
+            172.28.*.*)
                 proxy_addr=172.28.240.1
                 ;;
             *)

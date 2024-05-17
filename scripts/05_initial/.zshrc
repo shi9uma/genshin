@@ -370,6 +370,7 @@ os_type=$(uname -o)
 case $os_type in
     "Darwin")
         export_path=$HOME/.bin:/opt/homebrew/bin:$PATH:$HOME/.local/bin
+	alias python="python3"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$PATH:$HOME/.local/bin

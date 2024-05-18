@@ -371,6 +371,10 @@ case $os_type in
     "Darwin")
         export_path=$HOME/.bin:/opt/homebrew/bin:$PATH:$HOME/.local/bin
 	alias python="python3"
+	alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
+	alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
+	alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
+	alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$PATH:$HOME/.local/bin

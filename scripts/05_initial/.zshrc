@@ -252,44 +252,13 @@ if [ -f /etc/zsh_command_not_found ]; then
     . /etc/zsh_command_not_found
 fi
 
+# ==============================================================
+# |                       custom scripts                       |
+# ==============================================================
 
-# functions
+## functions
 cmd() {
-    sed -n '/^# diy$/,/^# end diy$/p' ~/.zshrc
-}
-
-update_adb() {
-    if [[ $(hostname | awk '{print $1}') != "kali" ]]; then
-        return
-    fi
-    adb_result=$(adb devices 2>&1)
-    if echo "$adb_result" | grep -q 'missing udev rules'; then
-        lsusb_output=$(lsusb)
-
-        while read -r line; do
-            idVendor=$(echo $line | awk '{print $6}' | cut -d ':' -f1)
-            idProduct=$(echo $line | awk '{print $6}' | cut -d ':' -f2)
-
-            if [[ $line == *'ADB'* ]] && [[ ! -z $idVendor ]] && [[ ! -z $idProduct ]]; then
-                echo "Creating /etc/udev/rules.d/90-android.rules file. Please run with sudo permissions."
-                rule='SUBSYSTEM=="usb",ATTRS{idVendor}=="'$idVendor'",ATTRS{idProduct}=="'$idProduct'",MODE="0666",GROUP="plugdev",SYMLINK+="android",SYMLINK+="android_adb"'
-                        rule_path='/etc/udev/rules.d/90-android.rules'
-                        sudo sh -c "echo $rule > $rule_path"
-                if [ $? -eq 0 ]; then
-                    sudo udevadm control --reload-rules
-                    sudo service udev restart
-                    sudo udevadm trigger
-                    adb kill-server
-                    echo "Updated Android adb permissions successfully."
-                else
-                    echo "Error: Permission denied. Please run with sudo permissions."
-                fi
-                break
-                echo "Updated Android adb permissions."
-                break
-            fi
-        done <<< "$lsusb_output"
-    fi
+    sed -n '/^### diy$/,/^# end diy$/p' ~/.zshrc
 }
 
 tmp() {
@@ -317,22 +286,7 @@ lcd() {
     fi
 }
 
-# diy
-alias l="ls -alh"
-alias ll="ls -alh"
-alias cls="clear"
-alias c="clear"
-alias size="du -abh -d 1" # exclude file size under 1G: size -t 1G | exclude reg files: size --exclude=*backups*
-alias x="curl"
-alias xi="curl -I"
-alias reg="grep -ir"
-alias zshrc="source ~/.zshrc"
-alias wky="sudo su wkyuu"
-alias chwky="chown -R wkyuu:wkyuu"
-alias temp="sensors"
-# end diy
-
-# specific diy
+## file, dirs
 if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"
 fi
@@ -341,8 +295,8 @@ if [[ -d "$HOME/Schale" ]]; then
     alias schale="cd $HOME/Schale"
 fi
 
-### exports
-# proxy
+## exports
+### proxy
 source_proxy() {
     if [[ "$(uname -o)" == "Darwin" ]]; then
         proxy_addr=127.0.0.1
@@ -361,11 +315,11 @@ source_proxy() {
 }
 source_proxy
 
-# vim
+### vim
 export FZF_DEFAULT_COMMAND="rg --files"
 export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 
-# path
+### binaries
 os_type=$(uname -o)
 case $os_type in
     "Darwin")
@@ -381,3 +335,24 @@ case $os_type in
         ;;
 esac
 export PATH=$export_path
+
+
+# anchor
+# ==============================================================
+# |                       custom alias                         |
+# ==============================================================
+
+# alias
+alias l="ls -alh"
+alias ll="ls -alh"
+alias cls="clear"
+alias c="clear"
+alias size="du -abh -d 1" # exclude file size under 1G: size -t 1G | exclude reg files: size --exclude=*backups*
+alias x="curl"
+alias xi="curl -I"
+alias reg="grep -ir"
+alias zshrc="source ~/.zshrc"
+alias wky="sudo su wkyuu"
+alias chwky="chown -R wkyuu:wkyuu"
+alias temp="sensors"
+# end anchor

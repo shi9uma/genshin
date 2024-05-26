@@ -258,22 +258,25 @@ fi
 
 ## functions
 cmd() {
-    sed -n '/^### diy$/,/^# end diy$/p' ~/.zshrc
+    sed -n '/^# alias$/,/^# end alias$/p' ~/.zshrc
 }
 
 tmp() {
     if [[ ! -d '/tmp/tmp' ]]; then
-        mkdir '/tmp/tmp'
+        mkdir -p '/tmp/tmp'
     fi
     cd /tmp/tmp
 }
 
 lcd() {
     if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
-        curl -fLo $HOME/.genshin/misc/lcd.py --create-dirs https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/lcd.py
+        curl \
+            -fLo $HOME/.genshin/misc/lcd.py \
+            --create-dirs \
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
-        target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{print $3}')
+        target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
         python $HOME/.genshin/misc/lcd.py -l
@@ -291,8 +294,8 @@ if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"
 fi
 
-if [[ -d "$HOME/Schale" ]]; then
-    alias schale="cd $HOME/Schale"
+if [[ -d "$HOME/repo" ]]; then
+    alias repo="cd $HOME/repo"
 fi
 
 ## exports
@@ -301,7 +304,7 @@ source_proxy() {
     if [[ "$(uname -o)" == "Darwin" ]]; then
         proxy_addr=127.0.0.1
     else
-        ip_addr=$(hostname -I | awk '{ NR==3 print $1 }')
+        ip_addr=$(hostname -I | awk '{ print $1 }')
         case $ip_addr in
             172.28.*.*)
                 proxy_addr=172.28.240.1
@@ -355,4 +358,4 @@ alias zshrc="source ~/.zshrc"
 alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
 alias temp="sensors"
-# end anchor
+# end alias

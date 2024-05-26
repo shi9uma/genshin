@@ -6,7 +6,7 @@ $MINGW64PATH = "E:/lang/mingw64/bin"
 $NODEJSPATH = "E:/lang/node"
 $TYPORAPATH = "E:/software/Typora"
 $GITPATH = "E:/toolkit/git/cmd"
-$NOTEPADPATH = "E:/software/Notepad3"
+$NOTEPADPATH = "E:/software/Notepad_dd"
 $FDPATH = "E:/toolkit/fd"
 $ADBPATH = "E:/toolkit/system_tools/android_root/01_platform_tools"
 $FRIDAPATH = "E:/security/reverse/frida"
@@ -33,7 +33,7 @@ $env:https_proxy="http://127.0.0.1:7890"
 Remove-Item Alias:ls
 
 # Alias diy
-Set-Alias np Notepad3
+Set-Alias np Notepad--
 Set-Alias touch ni
 Set-Alias grep findstr
 Set-Alias p ipython

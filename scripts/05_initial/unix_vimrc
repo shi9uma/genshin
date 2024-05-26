@@ -81,10 +81,13 @@ map <leader>l :set list!<CR> " Toggle tabs and EOL
 " Color scheme (terminal)
 set t_Co=256
 set background=dark
-colorscheme gruvbox
+colorscheme retrobox
+
+" TODO: Pick a leader key
+" let mapleader = ","
 
 " 03. plugins
-call plug#begin('$HOME/.vim/plugged')
+call plug#begin('~/.vim/plugins')
 Plug 'junegunn/fzf.vim'	" fzf 联动
 Plug 'junegunn/fzf', {'do': { -> fzf#install() }}	" fzf core
 Plug 'frazrepo/vim-rainbow'	" 括号高亮

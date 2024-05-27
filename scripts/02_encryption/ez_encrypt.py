@@ -42,6 +42,8 @@ def derive_key(password: str, salt: bytes) -> bytes:
 def pad_salt(salt: bytes, desired_length: int = 16) -> bytes:
     if len(salt) < desired_length:
         salt += b'\x00' * (desired_length - len(salt))
+    elif len(salt) > desired_length:
+        salt = salt[:desired_length]
     return salt
 
 
@@ -137,7 +139,6 @@ def get_salt(key: str, salt_file='salt', is_use_salt=False) -> str:
     salt_sha256_obj.update(uuid.encode())
     salt_sha256_obj.update(key.encode())
     salt = salt_sha256_obj.finalize()
-    print(uuid, salt)
 
     if is_use_salt:
         with open(salt_file, 'wb') as file:

@@ -326,12 +326,15 @@ export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(h
 os_type=$(uname -o)
 case $os_type in
     "Darwin")
-        export_path=$HOME/.bin:/opt/homebrew/bin:$PATH:$HOME/.local/bin
+        export_path=$HOME/.bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
 	alias python="python3"
+    alias pip="pip3"
+
 	alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
 	alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
 	alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
 	alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
+    alias wireshark="sudo /Applications/Wireshark.app/Contents/MacOS/Wireshark"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$PATH:$HOME/.local/bin

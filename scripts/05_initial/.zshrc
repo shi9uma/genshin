@@ -289,6 +289,16 @@ lcd() {
     fi
 }
 
+rename() {
+    if [[ ! -f "$HOME/.genshin/misc/rename.py" ]]; then
+        curl \
+            -fLo $HOME/.genshin/misc/rename.py \
+            --create-dirs \
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/interact_rename.py
+    fi
+    python3 $HOME/.genshin/misc/rename.py "$@"
+}
+
 ## file, dirs
 if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"

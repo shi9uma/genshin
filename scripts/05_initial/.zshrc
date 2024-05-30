@@ -258,7 +258,7 @@ fi
 
 ## functions
 cmd() {
-    sed -n '/^# alias$/,/^# end alias$/p' ~/.zshrc
+    sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc
 }
 
 tmp() {
@@ -279,13 +279,13 @@ lcd() {
         target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
-        python $HOME/.genshin/misc/lcd.py -l
+        python3 $HOME/.genshin/misc/lcd.py -l
     elif [[ "$1" == "d" && ! -z "$2" ]]; then
-        python $HOME/.genshin/misc/lcd.py -d -n "$2"
+        python3 $HOME/.genshin/misc/lcd.py -d -n "$2"
     elif [[ "$1" == "a" && ! -z "$2" ]]; then
-        python $HOME/.genshin/misc/lcd.py -a "$2"
+        python3 $HOME/.genshin/misc/lcd.py -a "$2"
     else
-        python $HOME/.genshin/misc/lcd.py "$@"
+        python3 $HOME/.genshin/misc/lcd.py "$@"
     fi
 }
 
@@ -326,7 +326,7 @@ export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(h
 os_type=$(uname -o)
 case $os_type in
     "Darwin")
-        export_path=$HOME/.bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
+        export_path=$HOME/.bin:$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
 	alias python="python3"
     alias pip="pip3"
 
@@ -334,7 +334,6 @@ case $os_type in
 	alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
 	alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
 	alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
-    alias wireshark="sudo /Applications/Wireshark.app/Contents/MacOS/Wireshark"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$PATH:$HOME/.local/bin

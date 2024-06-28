@@ -28,13 +28,13 @@ test_filelist = '''
 |-- 07fb14fe76fdb56d727419558dbd24d1.jpg
 |-- 0905a026f284804c008dfa9c614fe840.jpg
 |-- 0cdcf5efe5129a7cc314c80e6705dc8e.jpg
-|-- 106393714_p0.jpg
+|-- 61-111-106393714_p0.jpg
 |-- 110978512_p0.png
 |-- 1150BDAF40C2E5F3B5E75952DB81525E.jpg
 |-- 5FEF561475DD4AE1F4F570B233EC3096.jpg
 |-- 5a8279e190b11769ab06ad50ece263bd.jpg
 |-- 5f2feaf62596df85282ea1389a2c35b1.jpg
-|-- f5e3d3806e0b6939c2fcdc0170e55521.jpg
+|-- f5e3d3806e0b6939c2fcdc0170e55521-1231-sadsa-safhgasjghf.jpg
 `-- {98CA9747-AB19-7815-BBC0-2D6D01A9A2AD}.jpg
 '''
 
@@ -91,7 +91,7 @@ def prefix_rename(file_list, width=3, mode='add', start_num=1):
             index += 1
             if start_num != 1:
                 index += start_num - 1
-            new_filename = '{}_{}'.format(str(index).zfill(width), filename)
+            new_filename = '{}-{}'.format(str(index).zfill(width), filename)
             src = os.path.join(work_dir, filename)
             dst = os.path.join(work_dir, new_filename)
             os.rename(src, dst)
@@ -100,7 +100,7 @@ def prefix_rename(file_list, width=3, mode='add', start_num=1):
     elif mode == 'remove':
         for filename in file_list:
             new_filename = re.sub(
-                r'^\d{{{},}}_(.*)$'.format(width), r'\1', filename)
+                r'^\d{{{},}}-(.*)$'.format(width), r'\1', filename)
             src = os.path.join(work_dir, filename)
             dst = os.path.join(work_dir, new_filename)
             os.rename(src, dst)
@@ -183,11 +183,11 @@ def sort_file(file_list, width=3):
     assert width > 0, 'width 必须大于 0'
     change_list = []  # [ [index, src, dst], []... ]
     for index, file_name in enumerate(file_list):
-        new_filename = '{}_{}'.format(str(index + 1).zfill(width), file_name)
+        new_filename = '{}-{}'.format(str(index + 1).zfill(width), file_name)
         src = os.path.join(work_dir, file_name)
         dst = os.path.join(work_dir, new_filename)
         change_list.append([index, src, dst])
-        print('{} {} => {}'.format(color('|'), file_name, new_filename))
+        print('{} {} => {}'.format(color('|'), file_name, color(new_filename)))
 
     if input('是否确认以上修改?(输入 {} 以确认, 输入其他(回车等)则退出): '.format(color('[Y]'))) == 'Y':
         for index, src, dst in change_list:
@@ -269,20 +269,20 @@ for file_item in temp_file_list:
     file_list.append(file_item)
 
 if any(args.values()):
-    if args['foobar'] == 'fast':
+    if args['foobar'] == 'fast':        # 快速重命名
         fast_rename(work_dir, args['type'], args['width'])
-    elif args['foobar'] == 'prefix':
+    elif args['foobar'] == 'prefix':    # 前缀操作式重命名
         prefix_rename(file_list, args['width'], args['mode'], args['start_num'])
-    elif args['foobar'] == 'interact':
+    elif args['foobar'] == 'interact':  # 交互式重命名
         show_files(file_list)
         interact_rename(file_list)
-    elif args['foobar'] == 'replace':
+    elif args['foobar'] == 'replace':   # 替换文件名中字符
         replace_file_name(file_list, args['old'], args['new'])
-    elif args['foobar'] == 'show':
+    elif args['foobar'] == 'show':      # 列出将要操作文件目录列表
         show_files(file_list)
-    elif args['foobar'] == 'sort':
+    elif args['foobar'] == 'sort':      # 排序，等待确认
         sort_file(file_list, args['width'])
-    elif args['foobar'] == 'test':
+    elif args['foobar'] == 'test':      # 生成测试文件
         make_test_file(work_dir)
     else:
         fgx('参数错误', '=')

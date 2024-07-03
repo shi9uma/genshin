@@ -337,13 +337,13 @@ os_type=$(uname -o)
 case $os_type in
     "Darwin")
         export_path=$HOME/.bin:$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
-	alias python="python3"
-    alias pip="pip3"
+        alias python="python3"
+        alias pip="pip3"
 
-	alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
-	alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
-	alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
-	alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
+        alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
+        alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
+        alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
+        alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$PATH:$HOME/.local/bin

@@ -240,7 +240,7 @@ ap.add_argument('--start_num', type=int, default=1,
 ap.add_argument('-x', '--exclude', nargs='+',
                 default=[], help='指定要排除的文件名, 如果有多个需要多次指定, 且必须写在 foobar 后面')
 ap.add_argument('-o', '--old', type=str, help='要替换的旧字符')
-ap.add_argument('-n', '--new', type=str, help='要替换成的新字符')
+ap.add_argument('-n', '--new', type=str, default='', help='要替换成的新字符')
 ap.add_argument('-d', '--directory', action='store_true',
                 help='是否处理文件夹, 添加即处理')
 args = vars(ap.parse_args())

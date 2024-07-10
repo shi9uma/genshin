@@ -317,7 +317,7 @@ source_proxy() {
         ip_addr=$(hostname -I | awk '{ print $1 }')
         case $ip_addr in
             172.28.*.*)
-                proxy_addr=172.28.240.1
+                proxy_addr=192.168.9.2
                 ;;
             *)
                 proxy_addr=127.0.0.1

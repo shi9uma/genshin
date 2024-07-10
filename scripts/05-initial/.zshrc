@@ -256,6 +256,12 @@ fi
 # |                       custom scripts                       |
 # ==============================================================
 
+# colors
+# ${RED}xxx${NC}
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
 ## functions
 cmd() {
     sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc
@@ -266,6 +272,14 @@ tmp() {
         mkdir -p '/tmp/tmp'
     fi
     cd /tmp/tmp
+}
+
+app() {
+    if [[ ! -d '/home/app' ]]; then
+        echo ${RED}"path /home/app invalid!"${NC}
+    else
+        cd /home/app
+    fi
 }
 
 lcd() {
@@ -360,7 +374,8 @@ export PATH=$export_path
 # alias
 alias l="ls -alh"
 alias ll="ls -alh"
-alias lt="ls -talh"
+alias lt="ls -alht"
+alias lss="ls -alhS"
 alias cls="clear"
 alias c="clear"
 alias size="du -abh -d 1" # exclude file size under 1G: size -t 1G | exclude reg files: size --exclude=*backups*

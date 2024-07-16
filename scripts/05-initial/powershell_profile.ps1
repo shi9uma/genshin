@@ -6,9 +6,10 @@ $MINGW64PATH = "E:/lang/mingw64/bin"
 $NODEJSPATH = "E:/lang/node"
 $TYPORAPATH = "E:/software/Typora"
 $GITPATH = "E:/toolkit/git/cmd"
-$NOTEPADPATH = "E:/software/Notepad_dd"
+$NOTEPADPATH = "E:/software/Notepad3"
+$BTOPPATH = "E:/toolkit/btop4win"
 $FDPATH = "E:/toolkit/fd"
-$ADBPATH = "E:/toolkit/system_tools/android_root/01_platform_tools"
+$ADBPATH = "E:/toolkit/system-tools/android/01-platform-tools"
 $FRIDAPATH = "E:/security/reverse/frida"
 $DOTNETPATH = "E:/software/visual-studio/community/dotnet/net8.0/runtime"
 $GRADLEPATH = "E:/lang/java/gradle-8.7/bin"
@@ -17,7 +18,7 @@ $VIMPATH = "E:/toolkit/vim/vim90"
 $FZFPATH = "E:/toolkit/fzf"
 $RIPGREPPATH = "E:/toolkit/ripgrep"
 
-$env:PATH += ";$MINGW64PATH;$NODEJSPATH;$TYPORAPATH;$GITPATH;$NOTEPADPATH;$FDPATH;$ADBPATH;$FRIDAPATH;$DOTNETPATH;$GRADLEPATH"
+$env:PATH += ";$MINGW64PATH;$NODEJSPATH;$TYPORAPATH;$GITPATH;$NOTEPADPATH;$BTOPPATH;$FDPATH;$ADBPATH;$FRIDAPATH;$DOTNETPATH;$GRADLEPATH"
 $env:PATH += ";$VIMPATH;$FZFPATH;$RIPGREPPATH"
 
 
@@ -33,7 +34,7 @@ $env:https_proxy="http://127.0.0.1:7890"
 Remove-Item Alias:ls
 
 # Alias diy
-Set-Alias np Notepad--
+Set-Alias np Notepad3
 Set-Alias touch ni
 Set-Alias grep findstr
 Set-Alias p ipython
@@ -43,6 +44,9 @@ function poweroff { Stop-Computer }
 function reboot { Restart-Computer }
 function hash { certutil -hashfile $args }
 function password { python E:/code/python/password_generator.py $args }
+function schale { ssh wkyuu@192.168.1.15 }
+function pve { ssh wkyuu@192.168.1.4 }
+function wrt { ssh root@192.168.9.1 }	# 172.20.5.232
 function tree { E:/toolkit/tree/bin/tree.exe -N $args }
 function rename { python E:/code/python/interact_rename.py $args}
 function encrypt { python E:/code/python/encrypt.py $args }
@@ -53,6 +57,10 @@ function rmrf { Remove-Item -Recurse -Force $args }
 function ls { python E:/code/python/ls_alh.py $args }
 function l { python E:/code/python/ls_alh.py $args }
 function la { python E:/code/python/ls_alh.py $args --all }
+function xpath {
+    $convertedPath = $args -replace '\\', '/'
+    Write-Host $convertedPath -ForegroundColor Yellow
+}
 function exp { 
 	if ($args[0]) {
 		& explorer $args[0]

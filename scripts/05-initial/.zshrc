@@ -287,7 +287,7 @@ lcd() {
         curl \
             -fLo $HOME/.genshin/misc/lcd.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/lcd.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-misc/lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
@@ -308,7 +308,7 @@ rename() {
         curl \
             -fLo $HOME/.genshin/misc/rename.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04_misc/interact_rename.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-misc/interact_rename.py
     fi
     python3 $HOME/.genshin/misc/rename.py "$@"
 }
@@ -323,24 +323,7 @@ if [[ -d "$HOME/repo" ]]; then
 fi
 
 ## exports
-### proxy
-source_proxy() {
-    if [[ "$(uname -o)" == "Darwin" ]]; then
-        proxy_addr=127.0.0.1
-    else
-        ip_addr=$(hostname -I | awk '{ print $1 }')
-        case $ip_addr in
-            172.28.*.*)
-                proxy_addr=192.168.9.2
-                ;;
-            *)
-                proxy_addr=127.0.0.1
-                ;;
-        esac
-    fi
-    export all_proxy="http://$proxy_addr:7890"
-}
-source_proxy
+export all_proxy="http://127.0.0.1:7890"
 
 ### vim
 export FZF_DEFAULT_COMMAND="rg --files"
@@ -350,7 +333,7 @@ export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(h
 os_type=$(uname -o)
 case $os_type in
     "Darwin")
-        export_path=$HOME/.bin:$HOME/.local/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
+        export_path=$HOME/.bin:$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
         alias python="python3"
         alias pip="pip3"
 
@@ -360,7 +343,7 @@ case $os_type in
         alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
         ;;
     "GNU/Linux")
-        export_path=$HOME/.bin:$PATH:$HOME/.local/bin
+        export_path=$HOME/.bin:$PATH:$HOME/.local/bin:$HOME/.cargo/bin
         ;;
 esac
 export PATH=$export_path

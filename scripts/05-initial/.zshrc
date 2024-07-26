@@ -282,12 +282,20 @@ app() {
     fi
 }
 
+tsh() {
+    new_shell_script=$PWD/$1
+    if [[ ! -f "$new_shell_script" ]]; then
+        touch $new_shell_script
+        chmod +x $new_shell_script
+    fi
+}
+
 lcd() {
     if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
         curl \
             -fLo $HOME/.genshin/misc/lcd.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-misc/lcd.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
@@ -308,7 +316,7 @@ rename() {
         curl \
             -fLo $HOME/.genshin/misc/rename.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-misc/interact_rename.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/interact-rename.py
     fi
     python3 $HOME/.genshin/misc/rename.py "$@"
 }

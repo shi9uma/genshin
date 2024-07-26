@@ -62,7 +62,7 @@ function magnet { echo magnet:?xt=urn:btih:$args }
 function code { E:/software/vscode/binary/Code.exe --extensions-dir "E:/software/vscode/extensions" $args }
 function rmrf { Remove-Item -Recurse -Force $args }
 function xpath {
-    $convertedPath = $args -replace '//', '/'
+    $convertedPath = $args -replace '\\', '/'
     Write-Host $convertedPath -ForegroundColor Yellow
 }
 function exp { 

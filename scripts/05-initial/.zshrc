@@ -295,7 +295,7 @@ lcd() {
         curl \
             -fLo $HOME/.genshin/misc/lcd.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/lcd.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/02-lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
@@ -316,7 +316,7 @@ rename() {
         curl \
             -fLo $HOME/.genshin/misc/rename.py \
             --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/interact-rename.py
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/03-interact-rename.py
     fi
     python3 $HOME/.genshin/misc/rename.py "$@"
 }

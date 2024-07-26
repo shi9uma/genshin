@@ -59,13 +59,12 @@ def fgx(text='分割线', type=1, length='50', isPrint=True):
 '''
 
 import re
-import splitLine
 
 
 REG = r'([0-9]+)'
 MSG = r'18; 6; 77; 1; 1; 61; 0; 0'
 
-splitLine.fgx(' re.compile 方法 ')
+print(' re.compile 方法 ')
 '''
 完全匹配
 '''
@@ -73,7 +72,7 @@ pattern = re.compile(REG)
 alist = pattern.findall(MSG)
 print(alist)
 
-splitLine.fgx(' re.match 方法 ')
+print(' re.match 方法 ')
 '''
 单次匹配
 re.match 尝试从字符串的起始位置匹配一个模式
@@ -85,7 +84,7 @@ print(pattern.groups())
 print(pattern.group(0))
 
 
-splitLine.fgx(' re.search 方法 ')
+print(' re.search 方法 ')
 '''
 单次匹配
 re.search 扫描整个字符串并返回第一个成功的匹配。

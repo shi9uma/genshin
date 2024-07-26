@@ -8,7 +8,7 @@
 
 ## interact_rename
 
-快速重命名，`python interact_rename.py -h` 看具体
+快速重命名，`python 03-interact-rename.py -h` 看具体
 
 ```powershell
 PS C:\Users\wkyuu\Desktop\mods> rename -h

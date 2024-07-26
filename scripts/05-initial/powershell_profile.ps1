@@ -42,23 +42,27 @@ Set-Alias p ipython
 # diy script
 function poweroff { Stop-Computer }
 function reboot { Restart-Computer }
+
+function password { python E:/project/04-flyMe2theStar/03-genshin/scripts/02-encryption/01-password-generator.py $args }
+function rename { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/03-interact-rename.py $args}
+function encrypt { python E:/project/04-flyMe2theStar/03-genshin/scripts/02-encryption/03-ez-encrypt.py $args }
+function ftp { python E:/project/04-flyMe2theStar/03-genshin/scripts/03-network/02-fast-ftp-server.py $args }
+function l { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args }
+function ll { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args }
+function ls { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args }
+function la { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args --all }
+
 function hash { certutil -hashfile $args }
-function password { python E:/code/python/password_generator.py $args }
 function schale { ssh wkyuu@192.168.1.15 }
-function pve { ssh wkyuu@192.168.1.4 }
-function wrt { ssh root@192.168.9.1 }	# 172.20.5.232
+function pve { ssh wkyuu@192.168.1.9 }
+function genshin { ssh wkyuu@192.168.9.1 }	# 172.20.7.231
+function jiawa { ssh jiawa@172.20.6.123 }
 function tree { E:/toolkit/tree/bin/tree.exe -N $args }
-function rename { python E:/code/python/interact_rename.py $args}
-function encrypt { python E:/code/python/encrypt.py $args }
-function ftp { python E:/code/python/ftp.py $args }
 function magnet { echo magnet:?xt=urn:btih:$args }
 function code { E:/software/vscode/binary/Code.exe --extensions-dir "E:/software/vscode/extensions" $args }
 function rmrf { Remove-Item -Recurse -Force $args }
-function ls { python E:/code/python/ls_alh.py $args }
-function l { python E:/code/python/ls_alh.py $args }
-function la { python E:/code/python/ls_alh.py $args --all }
 function xpath {
-    $convertedPath = $args -replace '\\', '/'
+    $convertedPath = $args -replace '//', '/'
     Write-Host $convertedPath -ForegroundColor Yellow
 }
 function exp { 
@@ -90,7 +94,7 @@ function lcd {
 	$script_path = "E:/code/python/lcd.py"
     
     if ($args[0] -eq "cd" -and $args[1]) {
-        $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '\S+$' | ForEach-Object { $_.Matches[0].Value }
+        $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '/S+$' | ForEach-Object { $_.Matches[0].Value }
         Set-Location $targetDir
     } elseif ($args[0] -eq "l") {
         python $script_path -l

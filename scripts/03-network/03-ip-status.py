@@ -42,10 +42,10 @@ class IPRSSClient:
         '''
         获取本机公网 IP 地址 + 区域
         '''
+        url = f"{self.BASE_URL}/text"
         if args['ip'] != '':
             self.ip = args['ip']
-            return
-        url = f"{self.BASE_URL}/text"
+            url += f"?ip={self.ip}"
         ip, location = self.execute_curl(url).split(',')
         print(color("IP with Location:", 7))
         print(f"{color('ip', 2)}: {color(ip, 3)}; {color('location', 2)}: {color(location, 3)}")

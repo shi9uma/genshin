@@ -291,34 +291,47 @@ tsh() {
 }
 
 lcd() {
-    if [[ ! -f "$HOME/.genshin/misc/lcd.py" ]]; then
+    lcd_path="$HOME/.genshin/cmd-implementation/lcd.py"
+    if [[ ! -f $lcd_path ]]; then
         curl \
-            -fLo $HOME/.genshin/misc/lcd.py \
+            -fLo $lcd_path \
             --create-dirs \
             https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/02-lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
-        target_dir=$(python $HOME/.genshin/misc/lcd.py -pn "$2" | awk '{ print $3 }')
+        target_dir=$(python $lcd_path -pn "$2" | awk '{ print $3 }')
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
-        python3 $HOME/.genshin/misc/lcd.py -l
+        python3 $lcd_path -l
     elif [[ "$1" == "d" && ! -z "$2" ]]; then
-        python3 $HOME/.genshin/misc/lcd.py -d -n "$2"
+        python3 $lcd_path -d -n "$2"
     elif [[ "$1" == "a" && ! -z "$2" ]]; then
-        python3 $HOME/.genshin/misc/lcd.py -a "$2"
+        python3 $lcd_path -a "$2"
     else
-        python3 $HOME/.genshin/misc/lcd.py "$@"
+        python3 $lcd_path "$@"
     fi
 }
 
 rename() {
-    if [[ ! -f "$HOME/.genshin/misc/rename.py" ]]; then
+    rename_path="$HOME/.genshin/cmd-implementation/interact-rename.py"
+    if [[ ! -f $rename_path ]]; then
         curl \
-            -fLo $HOME/.genshin/misc/rename.py \
+            -fLo $rename_path \
             --create-dirs \
             https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/03-interact-rename.py
     fi
-    python3 $HOME/.genshin/misc/rename.py "$@"
+    python3 $rename_path "$@"
+}
+
+cx() {
+    ip_status_path="$HOME/.genshin/network/ip-status.py"
+    if [[ ! -f $ip_status_path ]]; then
+        curl \
+            -fLo $ip_status_path \
+            --create-dirs \
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/03-network/03-ip-status.py
+    fi
+    python3 $ip_status_path "$@"
 }
 
 ## file, dirs

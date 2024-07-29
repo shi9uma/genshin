@@ -46,6 +46,7 @@ function reboot { Restart-Computer }
 function password { python E:/project/04-flyMe2theStar/03-genshin/scripts/02-encryption/01-password-generator.py $args }
 function rename { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/03-interact-rename.py $args}
 function encrypt { python E:/project/04-flyMe2theStar/03-genshin/scripts/02-encryption/03-ez-encrypt.py $args }
+function cx { python E:/project/04-flyMe2theStar/03-genshin/scripts/03-network/03-ip-status.py $args }
 function ftp { python E:/project/04-flyMe2theStar/03-genshin/scripts/03-network/02-fast-ftp-server.py $args }
 function l { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args }
 function ll { python E:/project/04-flyMe2theStar/03-genshin/scripts/04-cmd-implementation/01-ls-alh.py $args }

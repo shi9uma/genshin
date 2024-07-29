@@ -290,6 +290,17 @@ tsh() {
     fi
 }
 
+password() {
+    rename_path="$HOME/.genshin/encryption/password-generator.py"
+    if [[ ! -f $rename_path ]]; then
+        curl \
+            -fLo $rename_path \
+            --create-dirs \
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/02-encryption/01-password-generator.py
+    fi
+    python3 $rename_path "$@"
+}
+
 lcd() {
     lcd_path="$HOME/.genshin/cmd-implementation/lcd.py"
     if [[ ! -f $lcd_path ]]; then

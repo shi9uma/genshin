@@ -4,12 +4,13 @@ import argparse
 import json
 import os
 
+cd_path_name = '.cd-path'
 if os.environ.get('USERPROFILE') != None:
-    config_file = os.environ.get('USERPROFILE').replace('\\', '/') + '/.cd_path'
+    config_file = f'{os.environ.get("USERPROFILE").replace("\\", "/")}/{cd_path_name}'
 elif os.environ.get('HOME') != None:
-    config_file = os.environ.get('HOME') + '/.cd_path'
+    config_file = f'{os.environ.get("HOME")}/{cd_path_name}'
 else:
-    config_file = os.path.dirname(os.path.abspath(__file__)) + '/.cd_path'
+    config_file = f'{os.path.dirname(os.path.abspath(__file__))}/{cd_path_name}'
 
 flag_color = 2
 

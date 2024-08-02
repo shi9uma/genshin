@@ -290,6 +290,11 @@ tsh() {
     fi
 }
 
+clear_history() {
+    echo "" > ~/.zsh_history
+    kill -9 $$
+}
+
 password() {
     rename_path="$HOME/.genshin/encryption/password-generator.py"
     if [[ ! -f $rename_path ]]; then

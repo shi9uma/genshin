@@ -6,7 +6,8 @@ import os
 
 cd_path_name = '.cd-path'
 if os.environ.get('USERPROFILE') != None:
-    config_file = f'{os.environ.get("USERPROFILE").replace("\\", "/")}/{cd_path_name}'
+    windows_user_home = os.environ.get("USERPROFILE").replace("\\", "/")
+    config_file = f'{windows_user_home}/{cd_path_name}'
 elif os.environ.get('HOME') != None:
     config_file = f'{os.environ.get("HOME")}/{cd_path_name}'
 else:

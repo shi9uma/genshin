@@ -20,7 +20,7 @@ ignore_file_list = [
 ]
 
 ex_ignore_file_list = [
-    'rename.py', 'tools.py', 'interact_rename.py'
+    'rename.py', 'tools.py', 'interact-rename.py'
 ]
 
 # test file list; use `tree -L 1`
@@ -238,7 +238,7 @@ ap.add_argument('-m', '--mode', type=str, default='add',
 ap.add_argument('--start_num', type=int, default=1,
                 help='指定快速添加前缀重命名时的起始数字, 默认 1')
 ap.add_argument('-x', '--exclude', nargs='+',
-                default=[], help='指定要排除的文件名, 如果有多个需要多次指定, 且必须写在 foobar 后面')
+                default=[], help='指定要排除的文件名, 必须写在 foobar 后面; {}'.format(color('e.g: rename foobar -x dont_1 dont_2 dont_3')))
 ap.add_argument('-o', '--old', type=str, help='要替换的旧字符')
 ap.add_argument('-n', '--new', type=str, default='', help='要替换成的新字符')
 ap.add_argument('-d', '--directory', action='store_true',
@@ -248,19 +248,16 @@ args = vars(ap.parse_args())
 # ignore some files
 if args['directory']:
     assert input('{}'.format(color(
-        '注意, 指定了 --directory 选项, 这会包含文件夹, 是否继续? [y/n]'))) == 'y', '{}'.format('已取消操作')
+        '注意, 指定了 --directory 选项, 这会包含文件夹, 是否继续? y / [n] '))) == 'y', '{}'.format('已取消操作')
+
+ignore_file_list = ignore_file_list + ex_ignore_file_list + args['exclude']
 
 temp_file_list = [
     filename
     for filename in os.listdir(work_dir)
     if os.path.isfile(os.path.join(work_dir, filename)) or (args['directory'] and os.path.isdir(os.path.join(work_dir, filename)))
 ]
-[temp_file_list.append(filename)
- for filename in args['exclude']
- if os.path.isfile(os.path.join(work_dir, filename)) or (args['directory'] and os.path.isdir(os.path.join(work_dir, filename)))
- ]
 temp_file_list.sort()
-ignore_file_list = ignore_file_list + ex_ignore_file_list
 
 file_list = []
 for file_item in temp_file_list:

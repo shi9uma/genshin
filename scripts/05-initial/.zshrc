@@ -350,6 +350,18 @@ cx() {
     python3 $ip_status_path "$@"
 }
 
+call_bridge() {
+    call_bridge_path="$HOME/.genshin/cmd-implementation/call-bridge.sh"
+    if [[ ! -f $call_bridge_path ]]; then
+        curl \
+            -fLo $call_bridge_path \
+            --create-dirs \
+            https://raw.githubusercontent.com/shi9uma/genshin/main/scripts/04-cmd-implementation/04-call-bridge.sh
+        chmod +x 
+    fi
+    eval "$call_bridge_path $@"
+}
+
 ## file, dirs
 if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/games/minecraft/tools/rcon.py"

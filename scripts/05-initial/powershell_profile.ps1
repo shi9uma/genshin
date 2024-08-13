@@ -127,7 +127,15 @@ function kalidown {
 		Write-Host "no kali wsl instance running, type kali to start one." -ForegroundColor Yellow
     }
 }
-function intel { wsl zsh -l -c "~/.genshin/cmd-implementation/call-bridge.sh $args" }
+function k {
+	$running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
+    if ($running -like "*kali*") {
+		wsl zsh -l -c "~/.genshin/cmd-implementation/call-bridge.sh $args"
+    } else {
+		& kali
+		Write-Host "run you cmd after kali started." -ForegroundColor Yellow
+    }
+}
 # frida
 function frida {
     if ($env:VIRTUAL_ENV -and (python -c "import sys; print(sys.prefix == sys.base_prefix)")) {

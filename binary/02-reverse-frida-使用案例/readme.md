@@ -1,4 +1,4 @@
-# frida handbook
+# frida-使用范例
 
 get src here：[frida/frida](https://github.com/frida/frida.git)；上手用了 frida，有一种万物皆可 debug 的感觉，动态调试玩起来还蛮有意思的，Android、Linux、Windows 等平台上的动态插桩工具，拦截应用程序的函数调用、监视数据传输以及修改应用程序的行为，从而进行各种各样的分析和测试操作
 

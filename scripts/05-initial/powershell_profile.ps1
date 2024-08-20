@@ -115,7 +115,7 @@ function kali {
         wsl --distribution kali
     } else {
         $shell.Run("wsl --distribution kali", 0)
-        Write-Host "Starting Intel 14900k + Windows 11 专业电竞战斗版 instance in background." -ForegroundColor Yellow
+        Write-Host "正在启动：Amd(R) Ryzen(TM)9 14900k + Windows 11 专业电竞战斗版" -ForegroundColor Yellow
     }
 }
 function kalidown {

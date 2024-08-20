@@ -1,4 +1,4 @@
-# pwn-environment-configuration
+# binary-env-config
 
 主要的作业流程迁移到了 kali for wsl 上来，对整个环境的配置重新写一篇文章，包含 pwntools 的配置、pwndbg 的配置与使用、tmux 的配置
 

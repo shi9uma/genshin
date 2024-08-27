@@ -6,7 +6,7 @@ $MINGW64PATH = "d:/lang/mingw64/bin"
 $NODEJSPATH = "d:/lang/node"
 $TYPORAPATH = "d:/software/Typora"
 $GITPATH = "d:/bin/git/cmd"
-$NOTEPADPATH = "d:/software/Notepad3"
+$NOTEPADPATH = "d:/software/kate/bin"
 $BTOPPATH = "d:/bin/btop4win"
 $FDPATH = "d:/bin/fd"
 $ADBPATH = "d:/bin/system-tools/android/01-platform-tools"
@@ -34,7 +34,7 @@ $env:https_proxy="http://127.0.0.1:7890"
 Remove-Item Alias:ls
 
 # Alias diy
-Set-Alias np Notepad3
+Set-Alias np kate
 Set-Alias touch ni
 Set-Alias grep findstr
 Set-Alias p ipython
@@ -58,7 +58,7 @@ function pve { ssh wkyuu@192.168.9.3 }
 function genshin { ssh wkyuu@192.168.9.1 }	# 172.20.7.231
 function tree { d:/bin/tree/bin/tree.exe -N $args }
 function magnet { echo magnet:?xt=urn:btih:$args }
-function code { d:/software/visual-studio-code/binary/Code.exe --extensions-dir "d:/software/visual-studio-code/extensions" $args }
+function code { d:/software/visual-studio-code/binary/Code.exe --extensions-dir "d:/software/visual-studio-code/extension" $args }
 function rmrf { Remove-Item -Recurse -Force $args }
 function xpath {
     $convertedPath = $args -replace '\\', '/'
@@ -77,7 +77,7 @@ function print_old_dir {
 }
 function home {
     & print_old_dir
-	$home_path = "C:/users/wkyuu/desktop"
+	$home_path = "c:/users/wkyuu/desktop"
     Set-Location -Path $home_path
 }
 function tmp {

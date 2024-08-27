@@ -357,7 +357,7 @@ call_bridge() {
             -fLo $call_bridge_path \
             --create-dirs \
             https://raw.githubusercontent.com/shi9uma/genshin/main/script/04-cmd-implementation/04-call-bridge.sh
-        chmod +x 
+        chmod +x "$call_bridge_path"
     fi
     eval "$call_bridge_path $@"
 }

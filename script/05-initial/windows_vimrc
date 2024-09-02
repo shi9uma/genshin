@@ -3,13 +3,13 @@ source $VIMRUNTIME/vimrc_example.vim
 
 " 01. 配置基础路径
 " 修改 windows 下备份、撤销、临时文件的目录
-set backupdir=E:/toolkit/vim/tmp
-set undodir=E:/toolkit/vim/tmp
-set directory=E:/toolkit/vim/tmp
+set backupdir=d:/bin/vim/tmp
+set undodir=d:/bin/vim/tmp
+set directory=d:/bin/vim/tmp
 
-let $configs_dir = "E:/toolkit/vim/configs"
-let $vim_base_dir = "E:/toolkit/vim"
-let $vim_runtime_dir = "E:/toolkit/vim/vim90"
+let $configs_dir = "d:/bin/vim/configs"
+let $vim_base_dir = "d:/bin/vim"
+let $vim_runtime_dir = "d:/bin/vim/vim90"
 
 let $VIM = $vim_base_dir
 let $HOME = $configs_dir
@@ -96,7 +96,7 @@ colorscheme gruvbox " 相近的 retrobox
 
 
 " 03. plugins
-call plug#begin('E:/toolkit/vim/plugins')
+call plug#begin('d:/bin/vim/plugins')
 Plug 'junegunn/fzf.vim'	" fzf 联动
 Plug 'junegunn/fzf', {'do': { -> fzf#install() }}	" fzf core
 Plug 'frazrepo/vim-rainbow'	" 括号高亮

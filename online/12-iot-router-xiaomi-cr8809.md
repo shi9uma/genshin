@@ -1,3 +1,5 @@
+两种办法都搞一下：降级拿 ssh、uart 进 uboot 刷
+
 ## info
 
 ChinaNet-k7cx / 4vs7cb93
@@ -159,10 +161,13 @@ ChinaNet-k7cx / 4vs7cb93
 
      1.   
 
+## wrt
 
+选择的 wrt 固件是 [immortalwrt](https://github.com/immortalwrt/immortalwrt.git)
 
 ## refer
 
 1.   https://github.com/NakanoSanku/StudyShare/blob/master/ax3000/ax3000-cr880x-SSH.md
 2.   https://www.right.com.cn/forum/forum.php?mod=viewthread&tid=8255711&highlight=ttl&mobile=no
-3.   
+3.   https://www.blumia.net/2024/05/25/ax3000t-uboot-immortalwrt.html
+4.   

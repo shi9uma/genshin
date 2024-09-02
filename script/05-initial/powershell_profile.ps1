@@ -1,32 +1,58 @@
-$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding    # Ëã±ÊñáÁî® utf-8
-$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(936)   # ‰∏≠ÊñáÁî®ÊâãÂä®ËÆæÁΩÆ‰∏∫ utf-8
+$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding    # Å0·4Ñ1§7Ñ1§7Ñ1§7Ñ1§7 utf-8
+$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(936)   # Ñ1§7Ñ1§7Ñ1§7Ñ1§7Ñ1§7Ñ1§7Ñ1§7Å0ˆ6Ñ1§7Ñ1§7Ñ1§7Ñ1§7Ñ1§7Å0À2 utf-8
 
 # app export
+###################### lang ######################
+$GRADLEPATH = "d:/lang/java/gradle-8.7/bin"
 $MINGW64PATH = "d:/lang/mingw64/bin"
 $NODEJSPATH = "d:/lang/node"
-$TYPORAPATH = "d:/software/Typora"
-$GITPATH = "d:/bin/git/cmd"
-$NOTEPADPATH = "d:/software/kate/bin"
-$BTOPPATH = "d:/bin/btop4win"
-$FDPATH = "d:/bin/fd"
-$ADBPATH = "d:/bin/system-tools/android/01-platform-tools"
-$FRIDAPATH = "d:/security/reverse/frida"
-$DOTNETPATH = "d:/software/visual-studio/community/dotnet/net8.0/runtime"
-$GRADLEPATH = "d:/lang/java/gradle-8.7/bin"
 
-$VIMPATH = "d:/bin/vim/vim90"
+$env:PATH += "$GRADLEPATH;" + `
+"$MINGW64PATH;" + `
+"$NODEJSPATH;"
+
+$env:PIP_DOWNLOAD_CACHE = "d:/lang/python/pip-cache"
+
+###################### vim ######################
 $FZFPATH = "d:/bin/fzf"
 $RIPGREPPATH = "d:/bin/ripgrep"
+$VIMPATH = "d:/bin/vim/vim90"
 
-$env:PATH += "$MINGW64PATH;$NODEJSPATH;$TYPORAPATH;$GITPATH;$NOTEPADPATH;$BTOPPATH;$FDPATH;$ADBPATH;$FRIDAPATH;$DOTNETPATH;$GRADLEPATH"
-$env:PATH += "$VIMPATH;$FZFPATH;$RIPGREPPATH"
+$env:PATH += "$VIMPATH;" + `
+"$FZFPATH;" + `
+"$RIPGREPPATH;"
 
-
-# env export
-$env:PIP_DOWNLOAD_CACHE = "d:/lang/python/pip-cache"
-$env:GIT_EDITOR = "d:/bin/vim/vim90/vim.exe"
 $env:FZF_DEFAULT_COMMAND = "rg --files"
 $env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
+
+###################### bin ######################
+$BTOPPATH = "d:/bin/btop4win"
+$FDPATH = "d:/bin/fd"
+$GITPATH = "d:/bin/git/cmd"
+
+$env:PATH += "$BTOPPATH;" + `
+"$FDPATH;" + `
+"$GITPATH;"
+
+$env:GIT_EDITOR = "d:/bin/vim/vim90/vim.exe"
+
+###################### software ######################
+$TYPORAPATH = "d:/software/typora"
+$NOTEPADPATH = "d:/software/sublime-text"
+$POTPLAYERPATH = "d:/software/potplayer"
+
+$env:PATH += "$TYPORAPATH;" + `
+"$NOTEPADPATH;" + `
+"$POTPLAYERPATH;"
+
+###################### sec ######################
+$ADBPATH = "d:/sec/android/android-platform-tool"
+$FRIDAPATH = "d:/sec/frida"
+
+$env:PATH += "$ADBPATH;" + `
+"$FRIDAPATH;"
+
+# env export
 $env:http_proxy="http://127.0.0.1:7890"
 $env:https_proxy="http://127.0.0.1:7890"
 
@@ -34,10 +60,11 @@ $env:https_proxy="http://127.0.0.1:7890"
 Remove-Item Alias:ls
 
 # Alias diy
-Set-Alias np kate
+Set-Alias np sublime_text
 Set-Alias touch ni
 Set-Alias grep findstr
 Set-Alias p ipython
+Set-Alias play PotPlayerMini64
 
 # diy script
 function poweroff { Stop-Computer }
@@ -113,16 +140,16 @@ function kali {
         wsl --distribution kali
     } else {
         $shell.Run("wsl --distribution kali", 0)
-        Write-Host "Starting Intel 14900k + Windows 11 ‰∏ì‰∏öÁîµÁ´ûÊàòÊñóÁâà instance in background." -ForegroundColor Yellow
+        Write-Host "Starting Intel 14900k + Windows 11 ◊®“µµÁæ∫’Ω∂∑∞Ê instance in background." -ForegroundColor Yellow
     }
 }
 function kalidown {
     $running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
     if ($running -like "*kali*") {
 		wsl --shutdown kali
-		Write-Host "Shutting down Kali WSL instance." -ForegroundColor Yellow
+		Write-Host "shutting down Intel 14900k + Windows 11 ◊®“µµÁæ∫’Ω∂∑∞Ê instance." -ForegroundColor Yellow
     } else {
-		Write-Host "no kali wsl instance running, type kali to start one." -ForegroundColor Yellow
+		Write-Host "no Intel 14900k + Windows 11 ◊®“µµÁæ∫’Ω∂∑∞Ê instance running, type kali to start one." -ForegroundColor Yellow
     }
 }
 function k {

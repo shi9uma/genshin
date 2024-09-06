@@ -1,5 +1,5 @@
-$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding    # 英文用 utf-8
-$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(936)   # 中文手动修改成 utf-8
+$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding    # 英锟斤拷锟斤拷 utf-8
+$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(936)   # 锟斤拷锟斤拷锟街讹拷锟睫改筹拷 utf-8
 
 # app export
 ###################### lang ######################
@@ -13,44 +13,66 @@ $env:PATH += "$GRADLEPATH;" + `
 
 $env:PIP_DOWNLOAD_CACHE = "d:/lang/python/pip-cache"
 
-###################### vim ######################
-$FZFPATH = "d:/bin/fzf"
-$RIPGREPPATH = "d:/bin/ripgrep"
-$VIMPATH = "d:/bin/vim/vim90"
-
-$env:PATH += "$VIMPATH;" + `
-"$FZFPATH;" + `
-"$RIPGREPPATH;"
-
-$env:FZF_DEFAULT_COMMAND = "rg --files"
-$env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
-
 ###################### bin ######################
 $BTOPPATH = "d:/bin/btop4win"
 $FDPATH = "d:/bin/fd"
+$FFMPEGPATH = "d:/bin/ffmpeg"
+$FZFPATH = "d:/bin/fzf"
 $GITPATH = "d:/bin/git/cmd"
+$RIPGREPPATH = "d:/bin/ripgrep"
+$TREEPATH = "d:/bin/tree/bin"
+$VIMPATH = "d:/bin/vim/vim90"
 
 $env:PATH += "$BTOPPATH;" + `
 "$FDPATH;" + `
-"$GITPATH;"
+"$FFMPEGPATH;" + `
+"$FZFPATH;" + `
+"$GITPATH;" + `
+"$RIPGREPPATH;" + `
+"$TREEPATH;" + `
+"$VIMPATH;"
 
-$env:GIT_EDITOR = "d:/bin/vim/vim90/vim.exe"
+$env:GIT_EDITOR = "$VIMPATH/vim.exe"
+$env:FZF_DEFAULT_COMMAND = "rg --files"
+$env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
 
 ###################### software ######################
-$TYPORAPATH = "d:/software/typora"
-$NOTEPADPATH = "d:/software/sublime-text"
 $POTPLAYERPATH = "d:/software/potplayer"
+$SUBLIMETEXTPATH = "d:/software/sublime-text"
+$SUMATRAPATH = "d:/software/sumatra-pdf"
+$TYPORAPATH = "d:/software/typora"
+$XNVIEWPATH = "d:/software/xnview"
 
-$env:PATH += "$TYPORAPATH;" + `
-"$NOTEPADPATH;" + `
-"$POTPLAYERPATH;"
+$env:PATH += "$POTPLAYERPATH;" + `
+"$SUBLIMETEXTPATH;" + `
+"$SUMATRAPATH;" + `
+"$TYPORAPATH;" + `
+"$XNVIEWPATH;"
+
+Set-Alias play PotPlayerMini64
+Set-Alias np sublime_text
+Set-Alias pdf sumatrapdf
+Set-Alias img xnviewmp
 
 ###################### sec ######################
 $ADBPATH = "d:/sec/android/android-platform-tool"
+$BURPSUITEPATH = "d:/sec/burpsuite"
 $FRIDAPATH = "d:/sec/frida"
+$IDAPATH = "d:/sec/ida"
+$JADXPATH = "d:/sec/jadx"
+$WINHEXPATH = "d:/sec/winhex"
+$WIRESHARKPATH = "d:/sec/wireshark"
 
 $env:PATH += "$ADBPATH;" + `
-"$FRIDAPATH;"
+"$BURPSUITEPATH;" + `
+"$FRIDAPATH;" + `
+"$IDAPATH;" + `
+"$JADXPATH;" + `
+"$WINHEXPATH;" + `
+"$WIRESHARKPATH;"
+
+Set-Alias winhex xwforensics64
+Set-Alias wireshark WiresharkPortable64
 
 # env export
 $env:http_proxy="http://127.0.0.1:7890"
@@ -60,11 +82,11 @@ $env:https_proxy="http://127.0.0.1:7890"
 Remove-Item Alias:ls
 
 # Alias diy
-Set-Alias np sublime_text
 Set-Alias touch ni
 Set-Alias grep findstr
 Set-Alias p ipython
-Set-Alias play PotPlayerMini64
+Set-Alias mgmt compmgmt.msc
+Set-Alias reg regedit
 
 # diy script
 function poweroff { Stop-Computer }
@@ -80,10 +102,14 @@ function ll { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implem
 function ls { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args }
 function la { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args --all }
 
+function genshin { ssh genshin-wkyuu }
+function pve { ssh pve-wkyuu }
+function schale { ssh schale-wkyuu }
+
 function hash { certutil -hashfile $args }
-function pve { ssh wkyuu@192.168.9.3 }
-function genshin { ssh wkyuu@192.168.9.1 }	# 172.20.7.231
 function tree { d:/bin/tree/bin/tree.exe -N $args }
+function geek { d:/bin/geek.exe }
+function env { Start-Process powershell "-Command & {rundll32 sysdm.cpl,EditEnvironmentVariables}" -Verb RunAs }
 function magnet { echo magnet:?xt=urn:btih:$args }
 function code { d:/software/visual-studio-code/binary/Code.exe --extensions-dir "d:/software/visual-studio-code/extension" $args }
 function rmrf { Remove-Item -Recurse -Force $args }
@@ -92,11 +118,11 @@ function xpath {
     Write-Host $convertedPath -ForegroundColor Yellow
 }
 function exp { 
-	if ($args[0]) {
-		& explorer $args[0]
-	} else {
-		& explorer .
-	}
+    if ($args[0]) {
+        & explorer $args[0]
+    } else {
+        & explorer .
+    }
 }
 function print_old_dir {
     $old_dir = Get-Location
@@ -104,7 +130,7 @@ function print_old_dir {
 }
 function home {
     & print_old_dir
-	$home_path = "c:/users/wkyuu/desktop"
+    $home_path = "c:/users/wkyuu/desktop"
     Set-Location -Path $home_path
 }
 function tmp {
@@ -117,7 +143,7 @@ function tmp {
     Set-Location -Path $path
 }
 function lcd {
-	$script_path = "d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/02-lcd.py"
+    $script_path = "d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/02-lcd.py"
     
     if ($args[0] -eq "cd" -and $args[1]) {
         $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '/S+$' | ForEach-Object { $_.Matches[0].Value }
@@ -140,35 +166,35 @@ function kali {
         wsl --distribution kali
     } else {
         $shell.Run("wsl --distribution kali", 0)
-        Write-Host "Starting Intel 14900k + Windows 11 专业电竞战斗版 instance in background." -ForegroundColor Yellow
+        Write-Host "Starting AMD 14900k + Windows 11 instance in background." -ForegroundColor Yellow
     }
 }
 function kalidown {
     $running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
     if ($running -like "*kali*") {
-		wsl --shutdown kali
-		Write-Host "shutting down Intel 14900k + Windows 11 专业电竞战斗版 instance." -ForegroundColor Yellow
+        wsl --shutdown kali
+        Write-Host "shutting down AMD 14900k + Windows 11 instance." -ForegroundColor Yellow
     } else {
-		Write-Host "no Intel 14900k + Windows 11 专业电竞战斗版 instance running, type kali to start one." -ForegroundColor Yellow
+        Write-Host "no AMD 14900k + Windows 11 instance running, type kali to start one." -ForegroundColor Yellow
     }
 }
 function k {
-	$running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
+    $running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
     if ($running -like "*kali*") {
-		wsl zsh -l -c "~/.genshin/cmd-implementation/call-bridge.sh $args"
+        wsl zsh -l -c "~/.genshin/cmd-implementation/call-bridge.sh $args"
     } else {
-		& kali
-		Write-Host "run you cmd after kali started." -ForegroundColor Yellow
+        & kali
+        Write-Host "run you cmd after kali started." -ForegroundColor Yellow
     }
 }
 # frida
 function frida {
     if ($env:VIRTUAL_ENV -and (python -c "import sys; print(sys.prefix == sys.base_prefix)")) {
-        & "$FRIDAPATH/frida/Scripts/frida.exe" $args
+        & "$FRIDAPATH/venv-frida/Scripts/frida.exe" $args
     } else {
         $currentPath = Get-Location
         Set-Location -Path $FRIDAPATH
-        & "./frida/Scripts/Activate"
+        & "./venv-frida/Scripts/Activate"
         Write-Host "`n------------------------------------------------" -ForegroundColor Yellow
         Write-Host " Activated Frida venv environment | $FRIDAPATH" -ForegroundColor Yellow
         Write-Host " Type 'deactivate' to exit" -ForegroundColor Yellow

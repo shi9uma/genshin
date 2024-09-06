@@ -283,7 +283,6 @@ app() {
 }
 
 tsh() {
-
     new_shell_script=$1
     if [[ "$new_shell_script" != /* ]]; then
         new_shell_script="$PWD/$new_shell_script"

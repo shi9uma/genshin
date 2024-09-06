@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# need pip install wsgidav gevent netifaces
 
 def exec(cmd):
     assert type(cmd) == str, 'wrong cmd'

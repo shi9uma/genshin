@@ -11,3 +11,4 @@ def assemble_instruction(instruction):
 instruction = str(input())
 encoded_bytes = assemble_instruction(instruction)
 print(f"Instruction: {instruction}\nEncoded Bytes: {encoded_bytes}")
+    

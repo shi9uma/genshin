@@ -283,7 +283,11 @@ app() {
 }
 
 tsh() {
-    new_shell_script=$PWD/$1
+
+    new_shell_script=$1
+    if [[ "$new_shell_script" != /* ]]; then
+        new_shell_script="$PWD/$new_shell_script"
+    fi
     if [[ ! -f "$new_shell_script" ]]; then
         touch $new_shell_script
         chmod +x $new_shell_script

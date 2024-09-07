@@ -119,7 +119,8 @@ function xpath {
 }
 function exp { 
     if ($args[0]) {
-        & explorer $args[0]
+        $convertedPath = $args[0] -replace '/', '\'
+        & explorer $convertedPath
     } else {
         & explorer .
     }

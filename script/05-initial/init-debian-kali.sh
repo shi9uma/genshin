@@ -33,7 +33,7 @@ apt update
 apt install -y \
 	gnupg2 software-properties-common \
 	build-essential module-assistant gcc-multilib g++-multilib cmake \
-	sudo curl net-tools binutils file fd-find xxd openvpn rsync \
+	sudo curl net-tools binutils file fd-find xxd openvpn rsync btop telnetd  \
 	fzf ripgrep vim \
 	docker.io docker-compose \
 	python3-pip python3-venv python3-shodan \

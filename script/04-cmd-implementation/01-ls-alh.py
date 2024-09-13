@@ -29,15 +29,15 @@ def is_hidden(filepath):
 
 def ls_alh(path=".", show_all=False):
     with os.scandir(path) as entries:
-        name_width = 40  # Name 列的宽度
-        mode_width = 10  # Mode 列的宽度
-        size_width = 15  # Size 列的宽度
+        mode_width = 5  # Mode 列的宽度
+        size_width = 10  # Size 列的宽度
         last_mod_width = 20  # Last Modified 列的宽度
+        name_width = 40  # Name 列的宽度
 
-        header_format = f"{Fore.GREEN}{{:<{name_width}}} {{:<{mode_width}}} {{:<{size_width}}} {{:<{last_mod_width}}}{Style.RESET_ALL}"
-        row_format = f"{{:<{name_width}}} {{:<{mode_width}}} {{:<{size_width}}} {{:<{last_mod_width}}}"
+        header_format = f"{Fore.GREEN}{{:<{mode_width}}} {{:<{size_width}}} {{:<{last_mod_width}}} {{:<{name_width}}}{Style.RESET_ALL}"
+        row_format = f"{{:<{mode_width}}} {{:<{size_width}}} {{:<{last_mod_width}}} {{:<{name_width}}}"
 
-        print(header_format.format('Name', 'Mode', 'Size', 'Last Modified'))
+        print(header_format.format('Mode', 'Size', 'Last Modified', 'Name'))
 
         entries = sorted(entries, key=lambda entry: entry.is_dir(), reverse=True)
         for entry in entries:
@@ -52,11 +52,11 @@ def ls_alh(path=".", show_all=False):
             if is_hidden(entry.path):
                 entry_name = f"{entry.name} [hide]"
                 if show_all:
-                    print(Fore.RED + row_format.format(entry_name, mode, size, last_mod) + Style.RESET_ALL)
+                    print(Fore.RED + row_format.format(mode, size, last_mod, entry_name) + Style.RESET_ALL)
             elif entry.is_dir():
-                print(Fore.YELLOW + row_format.format(entry.name, mode, size, last_mod) + Style.RESET_ALL)
+                print(Fore.YELLOW + row_format.format(mode, size, last_mod, entry.name) + Style.RESET_ALL)
             else:
-                print(Fore.BLUE + row_format.format(entry.name, mode, size, last_mod) + Style.RESET_ALL)
+                print(Fore.BLUE + row_format.format(mode, size, last_mod, entry.name) + Style.RESET_ALL)
 
 if __name__ == "__main__":
     ls_alh(args['dir'], args['all'])

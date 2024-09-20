@@ -4,7 +4,7 @@
 
 ## usage
 
-打開這個 [文檔](./genshin-wishes-calculator.py)，適時地修改其中的信息，然後 `python genshin-wishes-calculator.py` 即可計算出結果
+打開這隻 [文檔](./genshin-wish-calculator.py)，適時地修改其中的信息，然後 `python genshin-wishes-calculator.py` 即可計算出結果
 
 ## tools
 

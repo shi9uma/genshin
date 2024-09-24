@@ -40,7 +40,6 @@ def get_system_uuid() -> str:
     except Exception as e:
         print(f"Error obtaining system UUID: {e}")
         exit()
-        # return base64.b64encode(os.urandom(16)).decode('utf-8')
 
 
 def get_salt(uuid: str, key: str, salt_file='salt') -> str:
@@ -59,8 +58,7 @@ def get_salt(uuid: str, key: str, salt_file='salt') -> str:
     return salt
 
 
-def generate_password(seed: str, length: int, salt_file: str):
-
+def generate_password(seed: str, length: int, salt_file: str, char_set: str = None):
     if salt_file is not None:
         system_uuid = get_system_uuid()
         salt = get_salt(system_uuid, seed, salt_file)
@@ -76,13 +74,16 @@ def generate_password(seed: str, length: int, salt_file: str):
         10000
     )
     base64_bytes = base64.b64encode(hash_bytes)
-    password = ''.join(
-        filter(
-            lambda x: x.isalnum() or x in '-#.',
-            base64_bytes.decode()
-        )
-    )[:length]
-    return password
+    
+    password = ''
+    if char_set:
+        while len(password) < length:
+            password += ''.join(filter(lambda x: x in char_set, base64_bytes.decode()))
+    else:
+        while len(password) < length:
+            password += ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))
+
+    return password[:length]
 
 
 def main():
@@ -93,6 +94,8 @@ def main():
                     type=int, help='Password length')
     ap.add_argument('-s', '--salt', type=str, default=None,
                     help='指定一个含有 salt 的文件路径, 没有则自动创建并写入随机字符')
+    ap.add_argument('--char', type=str, default=None,
+                    help='指定密码生成的字符集, 例如 --char "abcdefg123"')
     args = vars(ap.parse_args())
 
     if args['key'] is None:
@@ -101,7 +104,7 @@ def main():
     else:
         tmp_seed = args['key']
 
-    password = generate_password(tmp_seed, args['length'], args['salt'])
+    password = generate_password(tmp_seed, args['length'], args['salt'], args['char'])
     print('Generated password of length {}: {}'.format(
         color(str(len(password)), 3),
         color(password, 4)

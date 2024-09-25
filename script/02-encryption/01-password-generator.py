@@ -75,13 +75,10 @@ def generate_password(seed: str, length: int, salt_file: str, char_set: str = No
     )
     base64_bytes = base64.b64encode(hash_bytes)
     
-    password = ''
     if char_set:
-        while len(password) < length:
-            password += ''.join(filter(lambda x: x in char_set, base64_bytes.decode()))
+        password = ''.join(filter(lambda x: x in char_set, base64_bytes.decode()))
     else:
-        while len(password) < length:
-            password += ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))
+        password = ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))
 
     return password[:length]
 

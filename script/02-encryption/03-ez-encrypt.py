@@ -156,7 +156,7 @@ def main():
     parser.add_argument('-d', '--delete', action='store_true', help='加密后删除源文件')
     parser.add_argument(
         '-s', '--salt', help='指定一个盐文件，如果添加该选项但路径文件为空，则根据 key 和 uuid 生成盐，并存储到指定路径')
-    parser.add_argument('-k', '--key', help='指定一个密钥文件，或字符（不推荐直接暴露在命令行）')
+    parser.add_argument('-k', '--key', help='指定一个密钥文件，或字符（不推荐直接暴露在命令行）；若不加 -k 选项，默认会要求输入密钥')
     args = vars(parser.parse_args())
 
     # assert

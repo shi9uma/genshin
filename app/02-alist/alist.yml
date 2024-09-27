@@ -1,21 +1,18 @@
 version: '3'
 
 services:
-    alist:
-        image: 'xhofe/alist:latest'
-        container_name: alist
-        volumes:
-            - /home/server/02-alist/data:/opt/alist/data
-            - /home/server/02-alist/storage:/opt/alist/storage
-        ports:
-            - 9420:5244
-        environment:
-            - PUID=1000
-            - PGID=1000
-            - UMASK=022
-            - TZ=Asia/Shanghai
-        restart: always
-
-# sudo docker compose -f /home/server/02-alist/alist.yml up -d
-# sudo docker compose -f /home/server/02-alist/alist.yml down
-# sudo docker compose -f /home/server/02-alist/alist.yml restart
+  alist:
+    image: xhofe/alist:latest
+    container_name: alist
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Asia/Shanghai
+    volumes:
+      - /home/server/02-alist/data:/opt/alist/data
+      - /home/server/02-alist/storage:/opt/alist/storage
+    ports:
+      - 9421:5244
+    restart: unless-stopped
+# sudo docker-compose -p 02-alist -f /home/server/02-alist/alist.yml up -d

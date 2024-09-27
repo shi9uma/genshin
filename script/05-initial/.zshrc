@@ -290,6 +290,7 @@ tsh() {
     if [[ ! -f "$new_shell_script" ]]; then
         touch $new_shell_script
         chmod +x $new_shell_script
+        echo $new_shell_script
     fi
 }
 
@@ -375,7 +376,7 @@ if [[ -d "$HOME/repo" ]]; then
 fi
 
 ## exports
-export all_proxy="http://127.0.0.1:7890"
+# export all_proxy="http://127.0.0.1:7890"
 
 ### vim
 export FZF_DEFAULT_COMMAND="rg --files"

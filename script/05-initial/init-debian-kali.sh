@@ -31,21 +31,48 @@ EOF
 
 apt update
 apt install -y \
-	gnupg2 software-properties-common \
-	build-essential module-assistant gcc-multilib g++-multilib cmake \
-	sudo curl net-tools binutils file fd-find xxd openvpn rsync btop telnetd  \
+    ack antlr3 aria2 asciidoc autoconf automake autopoint \
+	binutils bison build-essential bzip2 \
+	ccache cmake cpio curl \
+	device-tree-compiler \
+	fastjar flex \
+	gawk gettext gcc-multilib g++-multilib gperf \
+	haveged help2man \
+	intltool \
+	libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libpython3-dev \
+	libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
+    module-assistant mkisofs msmtp \
+	ninja-build \
+	p7zip p7zip-full \
+	patch pkgconf python2.7 python3-pip \
+    software-properties-common zlib1g-dev
+
+if [[ -f "/usr/lib/python3.12/EXTERNALLY-MANAGED" ]]; then
+	mv /usr/lib/python3.12/EXTERNALLY-MANAGED /usr/lib/python3.12/EXTERNALLY-MANAGED.backup
+fi
+
+apt install -y \
+	locales curl net-tools openvpn rsync proxychains4 \
+	gnupg2 binutils file fd-find xxd btop rename tmux \
+	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
+	qemu-user-static qemu-system qemu-utils bridge-utils \
+	python3-pip python3-venv python3-shodan \
 	fzf ripgrep vim \
 	docker.io docker-compose \
-	python3-pip python3-venv python3-shodan \
 	nmap hydra john
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs && \
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs npm && \
 npm install -g npm@latest --registry=https://registry.npmmirror.com && \
 npm install cnpm -g --registry=https://registry.npmmirror.com && \
 cnpm install -g pm2
 
 apt purge needrestart -y
+apt autoremove -y
+
 ln -s /usr/bin/fdfind /usr/bin/fd
+ln -s /usr/bin/python3 /usr/bin/python
+ln -s /usr/bin/pip3 /usr/bin/pip
+
 usermod -aG docker wkyuu
 
 # python
@@ -57,7 +84,7 @@ trusted-host = https://mirrors.ustc.edu.cn
 EOF
 
 sudo -u wkyuu pip install \
-	argparse cryptography scapy netifaces wsgidav shodan datetime colorama ipython getpass
+	argparse cryptography scapy netifaces wsgidav shodan datetime colorama ipython getpass4 pwntools
 	
 # git
 git config --global user.email wkyuu@majo.im

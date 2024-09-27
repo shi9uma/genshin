@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  transfer:
+    image: dutchcoders/transfer.sh:latest-noroot
+    container_name: transfer
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Asia/Shanghai
+    command: --provider local --basedir /home/storage
+    volumes:
+      - /home/server/05-transfer/storage:/home/storage
+    ports:
+      - 9425:8080
+    restart: unless-stopped
+
+# sudo docker-compose -p 05-transfer -f /home/server/05-transfer/transfer.yml up -d

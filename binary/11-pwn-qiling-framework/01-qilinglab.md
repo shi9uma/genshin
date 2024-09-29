@@ -6,7 +6,6 @@
 
 1. 参照 [qiling setup guide](https://docs.qiling.io/en/latest/install/) 安装 qiling 框架
 2. 获取 qilinglab release 文件：[x86_64](https://www.shielder.com/attachments/qilinglab-x86_64) / [aarch64](https://www.shielder.com/attachments/qilinglab-aarch64)
-3. 
 
 ## outline
 
@@ -21,6 +20,11 @@
 9. Fix some string operation to make the iMpOsSiBlE come true.
 10. Fake the `cmdline` line file to return the right content.
 11. Bypass CPUID/MIDR_EL1 checks.
+
+## 01
+
+```python
+```
 
 
 

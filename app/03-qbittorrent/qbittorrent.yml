@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   qbittorrent:
@@ -18,5 +18,4 @@ services:
       - 9423:9423
       - 9423:9423/udp
     restart: unless-stopped
-
 # sudo docker-compose -p 03-qbittorrent -f /home/server/03-qbittorrent/qbittorrent.yml up -d

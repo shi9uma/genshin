@@ -13,6 +13,6 @@ create_dir() {
 work_dir=$(dirname $0)
 file_path=$work_dir/$app_name.yml
 if [ ! -f $file_path ]; then
-    create_dir $work_dir/appdata/config
+    create_dir $work_dir/config
     curl -fLo $file_path $url
 fi

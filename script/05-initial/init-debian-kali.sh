@@ -5,7 +5,8 @@ if [ "$(id -u)" -ne 0 ]; then
 	exit 1
 fi
 
-export all_proxy="http://192.168.9.2:7890"
+PROXY_POINT="http://192.168.9.4:7890"
+export all_proxy="$PROXY_POINT"
 
 # init zsh
 curl -fLo $HOME/.zshrc https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
@@ -30,18 +31,19 @@ deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free non-free-fir
 EOF
 
 apt update
+apt remove -y libpython3.11-minimal libpython3.11-stdlib python3.11 python3.11-minimal	# 评价是垃圾
 apt install -y \
     ack antlr3 aria2 asciidoc autoconf automake autopoint \
 	binutils bison build-essential bzip2 \
 	ccache cmake cpio curl \
 	device-tree-compiler \
 	fastjar flex \
-	gawk gettext gcc-multilib g++-multilib gperf \
+	gawk gettext gcc-multilib g++-multilib gdb-multiarch gperf \
 	haveged help2man \
 	intltool \
-	libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libpython3-dev \
-	libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
-    module-assistant mkisofs msmtp \
+	libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libncurses-dev libpython3-dev \
+	libmpfr-dev libc6-dbg libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libffi-dev libtool lrzsz \
+    make module-assistant mkisofs msmtp \
 	ninja-build \
 	p7zip p7zip-full \
 	patch pkgconf python2.7 python3-pip \
@@ -56,9 +58,10 @@ apt install -y \
 	gnupg2 binutils file fd-find xxd btop rename tmux \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \
-	python3-pip python3-venv python3-shodan \
+	python3-pip python3-venv python3-shodan python3-ropgadget \
 	fzf ripgrep vim \
 	docker.io docker-compose \
+	gdb gdbserver ghidra rizin radare2 patchelf \
 	nmap hydra john
 
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs npm && \
@@ -71,9 +74,16 @@ apt autoremove -y
 
 ln -s /usr/bin/fdfind /usr/bin/fd
 ln -s /usr/bin/python3 /usr/bin/python
-ln -s /usr/bin/pip3 /usr/bin/pip
 
+# docker
 usermod -aG docker wkyuu
+mkdir /etc/systemd/system/docker.service.d
+cat << EOF > /etc/systemd/system/docker.service.d/proxy.conf
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:7890"
+Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+Environment="NO_PROXY=localhost,127.0.0.1"
+EOF
 
 # python
 cat << EOF > /etc/pip.conf
@@ -84,7 +94,7 @@ trusted-host = https://mirrors.ustc.edu.cn
 EOF
 
 sudo -u wkyuu pip install \
-	argparse cryptography scapy netifaces wsgidav shodan datetime colorama ipython getpass4 pwntools
+	setuptools setuptools_rust argparse cryptography scapy netifaces wsgidav shodan datetime colorama ipython getpass4 pwntools
 	
 # git
 git config --global user.email wkyuu@majo.im
@@ -105,7 +115,7 @@ USER="wkyuu"
 
 HOME_DIR_PATH="/home"
 APP_DIR_PATH="$HOME_DIR_PATH/app"
-GAME_DIR_PATH="$HOME_DIR_PATH/game"
+# GAME_DIR_PATH="$HOME_DIR_PATH/game"
 REPO_DIR_PATH="$HOME_DIR_PATH/repo"
 SERVER_DIR_PATH="$HOME_DIR_PATH/server"
 
@@ -114,29 +124,39 @@ mkdir -p $APP_DIR_PATH $GAME_DIR_PATH $REPO_DIR_PATH $SERVER_DIR_PATH
 ## app
 mkdir -p \
 	$APP_DIR_PATH/carbonyl \
-	$APP_DIR_PATH/clash \
 	$APP_DIR_PATH/frp \
 	$APP_DIR_PATH/java
 
-## game
-mkdir -p \
-	$GAME_DIR_PATH/genshin \
-	$GAME_DIR_PATH/minecraft \
-	$GAME_DIR_PATH/steam
+# ## game
+# mkdir -p \
+# 	$GAME_DIR_PATH/genshin \
+# 	$GAME_DIR_PATH/minecraft \
+# 	$GAME_DIR_PATH/steam
 
-## server
-mkdir -p \
-	$SERVER_DIR_PATH/01-ddns-go \
-	$SERVER_DIR_PATH/02-alist \
-	$SERVER_DIR_PATH/03-qbittorrent \
-	$SERVER_DIR_PATH/04-synctv \
-	$SERVER_DIR_PATH/05-filebrowser \
-	$SERVER_DIR_PATH/06-transfer \
-	$SERVER_DIR_PATH/07-hedgedoc \
-	$SERVER_DIR_PATH/08-outline \
-	$SERVER_DIR_PATH/09-reference \
-	$SERVER_DIR_PATH/10-cyberchef \
-	$SERVER_DIR_PATH/11-gtfobins \
-	$SERVER_DIR_PATH/12-hastebin
-	
+# ## server
+# mkdir -p \
+# 	$SERVER_DIR_PATH/01-ddns-go \
+# 	$SERVER_DIR_PATH/02-alist \
+# 	$SERVER_DIR_PATH/03-qbittorrent \
+# 	$SERVER_DIR_PATH/04-synctv \
+# 	$SERVER_DIR_PATH/05-filebrowser \
+# 	$SERVER_DIR_PATH/06-transfer \
+# 	$SERVER_DIR_PATH/07-hedgedoc \
+# 	$SERVER_DIR_PATH/08-outline \
+# 	$SERVER_DIR_PATH/09-reference \
+# 	$SERVER_DIR_PATH/10-cyberchef \
+# 	$SERVER_DIR_PATH/11-gtfobins \
+# 	$SERVER_DIR_PATH/12-hastebin
+
+# pwn
+PWN_DIR_PATH="$APP_DIR_PATH/pwn"
+PWNDBG_DIR_PATH="$PWN_DIR_PATH/pwndbg"
+PWNDBG_REPO_DIR_PATH="$PWNDBG_REPO_DIR_PATH/repo"
+
+mkdir -p $PWN_DIR_PATH $PWNDBG_DIR_PATH $PWNDBG_REPO_DIR_PATH
+
+git clone https://github.com/pwndbg/pwndbg.git $PWNDBG_REPO_DIR_PATH
+cd $PWNDBG_REPO_DIR_PATH && chmod +x ./setup.sh && all_proxy="$PROXY_POINT" ./setup.sh
+
+
 chown -R $USER:$USER $HOME_DIR_PATH

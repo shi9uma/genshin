@@ -10,32 +10,31 @@ if (-not (Test-IsAdministrator)) {
 }
 
 $pathsToAdd = @(
-    "$env:USERPROFILE/AppData/Local/Microsoft/WindowsApps",
-    "d:/lang/python/Scripts",
-    "d:/lang/python"
+    "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps",
+    "d:\lang\python\Scripts",
+    "d:\lang\python"
 )
 
 $systemPathsToAdd = @(
-    "%SystemRoot%/system32",
+    "%SystemRoot%\system32",
     "%SystemRoot%",
-    "%SystemRoot%/System32/Wbem",
-    "%SYSTEMROOT%/System32/WindowsPowerShell/v1.0",
-    "%SYSTEMROOT%/System32/OpenSSH",
-    "c:/Program Files/NVIDIA Corporation/NVIDIA NvDLISR",
-    "c:/Program Files (x86)/NVIDIA Corporation/PhysX/Common",
-    "c:/Program Files/dotnet",
-    "d:/lang/java/java-microsoft-jdk-21.0.2/bin",
-    "d:/bin/git/bin"
-    "d:/software/bandizip/Bandizip",
-    "d:/software/Bandizip",
-    "d:/sec/xftp",
-    "d:/sec/xshell"
+    "%SystemRoot%\System32\Wbem",
+    "%SYSTEMROOT%\System32\WindowsPowerShell\v1.0",
+    "%SYSTEMROOT%\System32\OpenSSH",
+    "c:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR",
+    "c:\Program Files (x86)\NVIDIA Corporation\PhysX\Common",
+    "c:\Program Files\dotnet",
+    "d:\lang\java\java-microsoft-jdk-21.0.2\bin",
+    "d:\bin\git\bin"
+    "d:\software\bandizip",
+    "d:\sec\xftp",
+    "d:\sec\xshell"
 )
 
 # CLASSPATH and JAVA_HOME for system variables
 $systemVars = @{
-    "CLASSPATH" = ".;%JAVA_HOME%/lib/dt.jar;%JAVA_HOME%/lib/tools.jar";
-    "JAVA_HOME" = "d:/lang/java/java-microsoft-jdk-21.0.2";
+    "CLASSPATH" = ".;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar";
+    "JAVA_HOME" = "d:\lang\java\java-microsoft-jdk-21.0.2";
 }
 
 function Add-EnvironmentVariable {
@@ -66,7 +65,7 @@ foreach ($path in $systemPathsToAdd) {
     Add-EnvironmentVariable -VariableName "PATH" -Path $path -Scope "Machine"
 }
 
-# Add/Update System Variables
+# Add\Update System Variables
 foreach ($var in $systemVars.GetEnumerator()) {
     $currentValue = [System.Environment]::GetEnvironmentVariable($var.Key, [System.EnvironmentVariableTarget]::Machine)
     if ($currentValue -ne $var.Value) {

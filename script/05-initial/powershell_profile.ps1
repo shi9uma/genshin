@@ -107,7 +107,7 @@ function pve { ssh pve-wkyuu }
 function schale { ssh schale-wkyuu }
 
 function hash { certutil -hashfile $args }
-function tree { d:/bin/tree/bin/tree.exe -N $args }
+function tree { d:/bin/tree/bin/tree.exe -N -h $args }
 function geek { d:/bin/geek.exe }
 function env { Start-Process powershell "-Command & {rundll32 sysdm.cpl,EditEnvironmentVariables}" -Verb RunAs }
 function magnet { echo magnet:?xt=urn:btih:$args }
@@ -147,7 +147,7 @@ function lcd {
     $script_path = "d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/02-lcd.py"
     
     if ($args[0] -eq "cd" -and $args[1]) {
-        $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '/S+$' | ForEach-Object { $_.Matches[0].Value }
+        $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '([A-Za-z]:\/[^\r\n]+)' | ForEach-Object { $_.Matches[0].Value }
         Set-Location $targetDir
     } elseif ($args[0] -eq "l") {
         python $script_path -l

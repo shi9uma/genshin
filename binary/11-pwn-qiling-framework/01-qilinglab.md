@@ -23,12 +23,32 @@
 
 ## 01
 
+使用 qiling 启动程序：
+
 ```python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+
+from qiling import Qiling
+from qiling.const import QL_VERBOSE
+
+def xpath(path):
+    return os.path.abspath(os.path.normpath(path))
+
+workdir = xpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../', 'archive'))
+elf_path = os.path.join(workdir, 'binary', '01-qilinglab-x86_64')
+rootfs_path = os.path.join(workdir, 'rootfs', 'x8664_linux')
+
+argv = f'{elf_path}'.split(' ')
+ql = Qiling(argv = argv, rootfs = rootfs_path, verbose = QL_VERBOSE.DEBUG, console=False)
+ql.add_fs_mapper('/proc', '/proc')
+
+ql.run()
 ```
 
-
-
-
+添加 ``
 
 
 

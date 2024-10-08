@@ -71,6 +71,7 @@ $env:PATH += "$ADBPATH;" + `
 "$WINHEXPATH;" + `
 "$WIRESHARKPATH;"
 
+Set-Alias ida ida64
 Set-Alias winhex xwforensics64
 Set-Alias wireshark WiresharkPortable64
 

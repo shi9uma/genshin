@@ -376,7 +376,7 @@ if [[ -d "$HOME/repo" ]]; then
 fi
 
 ## exports
-# export all_proxy="http://127.0.0.1:7890"
+export all_proxy="http://198.18.0.1:7890"
 
 ### vim
 export FZF_DEFAULT_COMMAND="rg --files"

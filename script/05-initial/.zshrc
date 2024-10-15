@@ -319,7 +319,7 @@ lcd() {
             https://raw.githubusercontent.com/shi9uma/genshin/main/script/04-cmd-implementation/02-lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
-        target_dir=$(python $lcd_path -pn "$2" | awk '{ print $3 }')
+        target_dir=$(python $lcd_path -pn "$2")
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
         python3 $lcd_path -l

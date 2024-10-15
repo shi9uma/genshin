@@ -19,6 +19,7 @@ $FDPATH = "d:/bin/fd"
 $FFMPEGPATH = "d:/bin/ffmpeg"
 $FZFPATH = "d:/bin/fzf"
 $GITPATH = "d:/bin/git/cmd"
+$NMAPPATH = "d:/bin/nmap"
 $RIPGREPPATH = "d:/bin/ripgrep"
 $TREEPATH = "d:/bin/tree/bin"
 $VIMPATH = "d:/bin/vim/vim90"
@@ -28,6 +29,7 @@ $env:PATH += "$BTOPPATH;" + `
 "$FFMPEGPATH;" + `
 "$FZFPATH;" + `
 "$GITPATH;" + `
+"$NMAPPATH;" + `
 "$RIPGREPPATH;" + `
 "$TREEPATH;" + `
 "$VIMPATH;"

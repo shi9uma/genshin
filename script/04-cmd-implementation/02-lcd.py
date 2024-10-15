@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 
-cd_path_name = '.cd-path'
+cd_path_name = '.lcd-path'
 if os.environ.get('USERPROFILE') != None:
     windows_user_home = os.environ.get("USERPROFILE").replace("\\", "/")
     config_file = f'{windows_user_home}/{cd_path_name}'
@@ -39,24 +39,24 @@ def clean_path(path: str):
     return path.replace('\\', '/').strip()
 
 
-def load_paths() -> list:
+def load_path() -> list:
     if not os.path.exists(config_file):
         with open(config_file, 'w') as file:
             json.dump([], file, indent=4)
     with open(config_file, 'r') as file:
-        paths = json.load(file)
-    return paths
+        path = json.load(file)
+    return path
 
 
-def save_paths(paths):
+def save_path(path):
     with open(config_file, 'w') as file:
-        json.dump(paths, file, indent=4)
+        json.dump(path, file, indent=4)
 
 
 def show_config(path_color):
     import json
     print(f"{color('|', flag_color)} config file: {color(config_file, path_color)}")
-    with open(config_file, mode = 'r', encoding='utf-8') as file:
+    with open(config_file, mode='r', encoding='utf-8') as file:
         print(json.dumps(json.load(file), indent=4, ensure_ascii=False))
 
 
@@ -65,59 +65,66 @@ def add_path(path, path_color):
     path = os.path.join(current_dir, path)
     path = os.path.abspath(path)
     path = clean_path(path)
-    paths = load_paths()
-    if path in paths:
-        print(f"{color('|', flag_color)} path [{color(path, path_color)}] already exists.")
+    path_list = load_path()
+    if path in path_list:
+        print(
+            f"{color('|', flag_color)} path [{color(path, path_color)}] already exists.")
     else:
         path = clean_path(path)
-        paths.append(path)
-        save_paths(paths)
-        print(f"{color('|', flag_color)} path [{color(path, path_color)}] added.")
+        path_list.append(path)
+        save_path(path_list)
+        print(
+            f"{color('|', flag_color)} path [{color(path, path_color)}] added.")
 
 
 def delete_path(path, path_color, num=0):
-    paths = load_paths()
+    path_list = load_path()
 
     if num != 0:
-        if num > len(paths):
-            print(f"{color('|', flag_color)} path number [{color(str(num), 4)}] out of range.")
+        if num > len(path_list):
+            print(
+                f"{color('|', flag_color)} path number [{color(str(num), 4)}] out of range.")
             return
         count = 1
-        for _path in paths:
+        for _path in path_list:
             if count == num:
                 path = _path
                 break
             count += 1
 
-    if path in paths:
-        paths.remove(path)
-        save_paths(paths)
-        print(f"{color('|', flag_color)} path [{color(path, path_color)}] deleted.")
+    if path in path_list:
+        path_list.remove(path)
+        save_path(path_list)
+        print(
+            f"{color('|', flag_color)} path [{color(path, path_color)}] deleted.")
     else:
-        print(f"{color('|', flag_color)} path [{color(path, path_color)}] doesn't exist.")
+        print(
+            f"{color('|', flag_color)} path [{color(path, path_color)}] doesn't exist.")
 
 
-def list_paths(path_color, num):
-    paths = load_paths()
-    if paths:
+def list_path(path_color, num):
+    path_list = load_path()
+    if path_list:
         if num != 0:
-            if num > len(paths):
-                print(f"{color('|', flag_color)} path number [{color(str(num), 4)}] out of range.")
+            if num > len(path_list):
+                print(
+                    f"{color('|', flag_color)} path number [{color(str(num), 4)}] out of range.")
                 return
             count = 1
-            for path in paths:
+            for path in path_list:
                 if count == num:
                     abs_path = os.path.abspath(path)
-                    print(f"{color('|', flag_color)} [{color(str(count), 4)}] {color(abs_path, path_color)}")
+                    print(f"{color(abs_path, path_color)}")
                     return
                 count += 1
         count = 1
-        for path in paths:
+        for path in path_list:
             abs_path = os.path.abspath(path)
-            print(f"{color('|', flag_color)} [{color(str(count), 4)}] {color(abs_path, path_color)}")
+            print(
+                f"{color('|', flag_color)} [{color(str(count), 4)}] {color(abs_path, path_color)}")
             count += 1
-    elif paths == []:
-        print(f"{color('|', flag_color)} no stored paths.")
+    elif path_list == []:
+        print(f"{color('|', flag_color)} no stored path.")
     else:
         print(f"{color('|', flag_color)} config file: {color(config_file, path_color)} doesn't exist. use -a to add one path and auto generate config file.")
 
@@ -128,13 +135,17 @@ def main():
     parser.add_argument("-a", "--add", nargs='?',
                         const=os.getcwd(), type=str, help="store your path, default '.'")
     parser.add_argument("-d", "--delete", nargs='?',
-                        const=os.getcwd(), type=str, help="delete a path from storage, default '.'，if you specify a number, it will delete the path by number.")
-    parser.add_argument("-n", "--num", type=int, default=0, help="specify the number of path to operate")
-    parser.add_argument("-l", "--list", action='store_true', help="list all stored paths")
-    parser.add_argument("-c", "--config", action='store_true', help="show config file path")
-    parser.add_argument("-p", "--plain", action='store_true', help="dont show color in output")
+                        const=os.getcwd(), type=str, help="delete a path from storage, default '.', if you specify a number, it will delete the path by number.")
+    parser.add_argument("-n", "--num", type=int, default=0,
+                        help="specify the number of path to operate.")
+    parser.add_argument("-l", "--list", action='store_true',
+                        help="list all stored path.")
+    parser.add_argument("-c", "--config", action='store_true',
+                        help="show config file path.")
+    parser.add_argument("-p", "--plain", action='store_true',
+                        help="dont show color in output.")
     args = vars(parser.parse_args())
-    
+
     path_color = 0 if args['plain'] else 3
 
     if any(args.values()):
@@ -143,7 +154,7 @@ def main():
         elif args['delete']:
             delete_path(args['delete'], path_color, args['num'])
         elif args['list'] or args['num']:
-            list_paths(path_color, args['num'])
+            list_path(path_color, args['num'])
         elif args['config']:
             show_config(path_color)
     else:

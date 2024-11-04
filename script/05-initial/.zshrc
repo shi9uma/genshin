@@ -343,6 +343,12 @@ rename() {
     python3 $rename_path "$@"
 }
 
+w2u() {
+    windows_path_like="$1"
+    unix_path=$(echo "$windows_path_like" | sed 's|\\|/|g' | sed 's|^\([a-zA-Z]\):|/\L\1|')
+    echo "$unix_path"
+}
+
 cx() {
     ip_status_path="$HOME/.genshin/network/ip-status.py"
     if [[ ! -f $ip_status_path ]]; then

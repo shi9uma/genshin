@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 workdir="$(cd $(dirname $0); pwd)/netstat"
 root_tar_dir_name="$(hostname)-$(date +%m%d-%H%M)"

@@ -1,11 +1,22 @@
 #!/bin/sh
 
+if [ $(id -u) -ne 0 ]; then
+    echo "run as root"
+    exit 1
+fi
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <file_path>"
+    exit 1
+fi
+
 file_path=$1
 file_name=$(basename $file_path)
 
-work_dir=$(cd $(dirname $0); pwd)
+work_dir="$(cd $(dirname $0); pwd)"
 input_dir="$work_dir/input"
 output_dir="$work_dir/output"
+rootfs_dir="$work_dir/$file_name-rootfs"
 
 check_dir() {
     if ! [ -d $1 ]; then
@@ -14,8 +25,8 @@ check_dir() {
 }
 
 _rm() {
-    if [ -f $1 ]; then
-        rm $1
+    if [ -e $1 ]; then
+        rm -rf $1
     fi
 }
 
@@ -25,6 +36,7 @@ _rm $output_dir
 check_dir $work_dir
 check_dir $input_dir
 check_dir $output_dir
+check_dir $rootfs_dir
 
 cp $file_path $input_dir
 docker run \
@@ -34,3 +46,11 @@ docker run \
   -v $output_dir:/data/output \
   -v $input_dir:/data/input \
   ghcr.io/onekey-sec/unblob:latest "/data/input/$file_name"
+
+mv $output_dir/"$file_name"_extract/* $rootfs_dir/
+tar cf $file_name-rootfs.tar $file_name-rootfs
+
+_rm $input_dir
+_rm $output_dir
+
+chown -R $UID:$GID $rootfs_dir $file_name-rootfs.tar

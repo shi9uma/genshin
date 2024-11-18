@@ -12,7 +12,7 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
 
 有两种使用 qemu 运行应用的模式，user mode 和 system mode，前者模拟单个应用，后者模拟一整个 os
 
-1.   **user mode**；需要使用 `chroot` 进行环境切换，在新的环境中运行一个 qemu-mips 模拟器来执行指定的二进制文件（例如 busybox）：
+1.   user mode；需要使用 `chroot` 进行环境切换，在新的环境中运行一个 qemu-mips 模拟器来执行指定的二进制文件（例如 busybox）：
 
      ```bash
      # 将 qemu-mips-static 复制到 提取出的固件的根目录下
@@ -23,11 +23,11 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
      $ sudo chroot . ./qemu-mips-static bin/busybox ash
      ```
 
-2.   **system mode**；主要思路为使用 [现成的](https://people.debian.org/~aurel32/qemu/mips/) kernel 和 img 创建空环境，然后将解压出来的固件挂载上去，方便查看各类性能指标、内存监控、远程调试等
+2.   system mode；主要思路为使用 [现成的](https://people.debian.org/~aurel32/qemu/mips/) kernel 和 img 创建空环境，然后将解压出来的固件挂载上去，方便查看各类性能指标、内存监控、远程调试等
 
-     1.   **为 qemu 配置网络，方便后续 gdb attach 和网络测试等行为**；主要思路为，先在宿主机创建虚拟网桥 br0，然后为该虚拟网桥添加接口 tap0，最后在 qemu 启动时使用该接口，则 qemu 中模拟的系统就可以通过 tap0 与宿主机通信
+     1.   为 qemu 配置网络，方便后续 gdb attach 和网络测试等行为；主要思路为，先在宿主机创建虚拟网桥 br0，然后为该虚拟网桥添加接口 tap0，最后在 qemu 启动时使用该接口，则 qemu 中模拟的系统就可以通过 tap0 与宿主机通信
 
-          1.   **传统派（推荐）**，wsl user 可用，单次开机可用，重启消失，可以写脚本自动执行
+          1.   传统派（推荐），wsl user 可用，单次开机可用，重启消失，可以写脚本自动执行
 
                1.   宿主机创建网桥；注意，不同的分发版本使用的网卡名不同，以下以 ens33 为例，其他的有 eth0 之类的，具体情况具体分析
 
@@ -64,11 +64,11 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
 
                4.   最后在虚拟环境中配置 ip：`sudo ifconfig eth0 192.168.0.3/24 up`，这里的 ip 地址参考上文 ens33 的 ip，要求同一子网
 
-          2.   **维新派**
+          2.   维新派
 
                1.   使用 docker 提供的网桥直接通信，首先安装 docker：`sudo apt-get install docker.io`
 
-               2.   启动 docker：`sudo systemctl start docker.service`，为 docker 添加开机自启动：`sudo systemctl enable docker.service`；**注意，使用 wsl 时，开机自启 docker 容易导致通过 terminal 启动 wsl 时增加冗余，私以为而这种行为明显不符合 wsl 即开即用的逻辑**
+               2.   启动 docker：`sudo systemctl start docker.service`，为 docker 添加开机自启动：`sudo systemctl enable docker.service`；注意，使用 wsl 时，开机自启 docker 容易导致通过 terminal 启动 wsl 时增加冗余，私以为而这种行为明显不符合 wsl 即开即用的逻辑
 
                3.   输入 `ifconfig` 可以至少看到 lo、eth0、docker0 几个接口，记住 docker0 的 inet 地址，这里以 `172.17.0.1` 为例
 
@@ -140,9 +140,9 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
                     echo \"nameserver 172.17.0.1\" > /etc/resolv.conf\e[0m"
                     ```
 
-          3.   **永久修改网络配置**，成功率较低，wsl 用户不可用，不推荐；主要思路是在 `/etc/network/interfaces` 中配置好 ens33 和 br0（网桥），用 br0 取代 ens33，然后创建 tap0 连接到 br0，再使用 tap0 为 qemu 提供网络，由于涉及到 `ifdown eth0` 和 `ifup br0`，而 wsl 的 dhcp 不会自动为 br0 提供 ip，就会导致 wsl 无 ip 可用，直接无网络。因此，私以为使用前两种生命周期为单次开机的方法更值得使用。
+          3.   永久修改网络配置，成功率较低，wsl 用户不可用，不推荐；主要思路是在 `/etc/network/interfaces` 中配置好 ens33 和 br0（网桥），用 br0 取代 ens33，然后创建 tap0 连接到 br0，再使用 tap0 为 qemu 提供网络，由于涉及到 `ifdown eth0` 和 `ifup br0`，而 wsl 的 dhcp 不会自动为 br0 提供 ip，就会导致 wsl 无 ip 可用，直接无网络。因此，私以为使用前两种生命周期为单次开机的方法更值得使用。
 
-     2.   **挂载提取出来的固件**
+     2.   挂载提取出来的固件
 
           1.   按照上文配置好网络并启动 qemu 模拟环境，通过 `ping 172.17.0.2` 可以 ping 通；由于在一些老版本的镜像中 ssh 版本较低，而新版本的 ssh 默认禁用了 `ssh-dss` 算法，可以通过 `ssh -o HostKeyAlgorithms=+ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-dss  user@172.17.0.2` 指定新增算法选项来解决，如果想一劳永逸，还可以修改配置文件 `~/.ssh/config`（没有就创建）：
           

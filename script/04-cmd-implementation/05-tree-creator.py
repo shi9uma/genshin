@@ -109,6 +109,7 @@ def print_tree(data, indent="", is_last=True):
     if isinstance(data, dict):
         for idx, (key, value) in enumerate(data.items()):
             connector = "└── " if is_last and idx == len(data) - 1 else "├── "
+            # key = key.replace("GREEN", "\033[1;32m").replace("EOC", "\033[0m")
             print(f"{indent}{connector}{key}")
             next_indent = indent + ("    " if is_last and idx == len(data) - 1 else "│   ")
             print_tree(value, next_indent, is_last=(idx == len(data) - 1))
@@ -136,6 +137,6 @@ if args['example']:
 
 assert args['filepath'], 'lack of json file path'
 
-with open(args['filepath'], 'r') as f:
+with open(args['filepath'], 'r', encoding = 'utf-8') as f:
     json_data = json.load(f)
     json_to_tree(json_data)

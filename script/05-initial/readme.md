@@ -5,4 +5,4 @@
 3.   ssh：`mkdir -p ~/.ssh && curl -fLo ~/.ssh/authorized_keys https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/authorized_keys && chmod 700 -R $HOME/.ssh`，`sudo curl -fLo /etc/ssh/sshd_config https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/sshd_config`，`systemctl start ssh && systemctl enable ssh`
 4.   vim
      1.   `sudo apt-get install -y vim fzf ripgrep`
-     2.   `curl -fLo /tmp/unix_install_vim.sh https://raw.githubusercontent.com/shi9uma/vim/main/diy/unix_install_vim.sh && chmod +x /tmp/unix_install_vim.sh && /tmp/unix_install_vim.sh`
+     2.   `curl -fLo /tmp/unix-install-vim.sh https://raw.githubusercontent.com/shi9uma/vim/main/diy/unix-install-vim.sh && chmod +x /tmp/unix-install-vim.sh && /tmp/unix-install-vim.sh`

@@ -8,23 +8,26 @@ ap.add_argument('-f', '--filepath', help = 'json 文件路径')
 ap.add_argument('-e', '--example', action = 'store_true', help = '显示示例')
 args = vars(ap.parse_args())
 
-banner = '''传入如下 json 文件:
+banner = '''1. 表示在同目录下，使用 [ file1, file2, dir1, dir2 ] 来界定
+2. 表示某个目录下的子目录，使用 { "dir1": [] }
+3. 组合以上内容，得到以下 json 文件：
+
     {
         "root": [
-            {
-                "diy": [
+            {   # 表示一个文件夹 /root/diy/
+                "diy": [    # 表示文件夹的子文件 /root/diy/*
                     "readme.md",
                     "unix-install-vim.sh",
                     "windows-vimrc"
                 ]
             },
-            "README.md",
+            "README.md",    # 表示文件 /root/README.md
             {
                 "tutorials": [
                     "ch00_read_this_first.md",
                     "ch01_starting_vim.md",
                     "ch24_vim_runtime.md",
-                    {
+                    {   # 文件夹 /root/tutorials/images/*
                         "images": [
                             "diffing-apples.png",
                             "fugitive-git.png",

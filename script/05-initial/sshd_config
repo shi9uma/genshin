@@ -13,7 +13,6 @@ UseDNS no
 SyslogFacility AUTHPRIV
 PermitRootLogin yes
 PasswordAuthentication no
-RSAAuthentication yes
 PubkeyAuthentication yes
 KbdInteractiveAuthentication no
 

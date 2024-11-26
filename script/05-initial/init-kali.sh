@@ -31,7 +31,7 @@ deb-src https://mirrors.ustc.edu.cn/kali kali-rolling main non-free non-free-fir
 EOF
 
 apt update
-apt remove -y libpython3.11-minimal libpython3.11-stdlib python3.11 python3.11-minimal
+# apt remove -y libpython3.11-minimal libpython3.11-stdlib python3.11 python3.11-minimal
 apt install -y \
     ack antlr3 aria2 asciidoc autoconf automake autopoint \
 	binutils bison build-essential bzip2 \

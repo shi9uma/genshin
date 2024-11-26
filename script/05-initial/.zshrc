@@ -360,6 +360,15 @@ cx() {
     python3 $ip_status_path "$@"
 }
 
+sd() {
+    shodan_api_key_path="$HOME/.config/shodan/api_key"
+    if [[ ! -f $shodan_api_key_path ]]; then
+        echo ${RED}"shodan api key not found. run \"shodan init api_key\" first"${NC}
+    else
+        shodan search --fields ip_str,port,org,location $@ | awk "{ print \"http://\"\$1\":\"\$2\", \"\$3\", \"\$4 }"
+    fi
+}
+
 call_bridge() {
     call_bridge_path="$HOME/.genshin/cmd-implementation/call-bridge.sh"
     if [[ ! -f $call_bridge_path ]]; then

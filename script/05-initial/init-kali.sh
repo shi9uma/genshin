@@ -54,7 +54,8 @@ if [[ -f "/usr/lib/python3.12/EXTERNALLY-MANAGED" ]]; then
 fi
 
 apt install -y \
-	locales curl net-tools openvpn rsync proxychains4 \
+	aptitude \
+	locales curl net-tools openvpn rsync proxychains4 jq traceroute \
 	gnupg2 binutils file fd-find xxd btop rename tmux \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \

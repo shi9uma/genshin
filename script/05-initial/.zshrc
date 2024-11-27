@@ -57,7 +57,7 @@ setopt hist_verify            # show command with history expansion to user befo
 #setopt share_history         # share command history data
 
 # force zsh to show the complete history
-alias history="history 0"
+# alias history="history 0"
 
 # configure `time` format
 TIMEFMT=$'\nreal\t%E\nuser\t%U\nsys\t%S\ncpu\t%P'
@@ -240,7 +240,6 @@ if [ -x /usr/bin/dircolors ]; then
     zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 fi
 
-# enable auto-suggestions based on the history
 if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     . /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
     # change suggestion color
@@ -381,9 +380,16 @@ call_bridge() {
     eval "$call_bridge_path $@"
 }
 
+update_zshrc() {
+    zshrc_path="$HOME/.zshrc"
+    curl \
+        -fLo $zshrc_path \
+        https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
+}
+
 ## file, dirs
-if [[ -f "/home/games/minecraft/tools/rcon.py" ]]; then
-    alias mc="python /home/games/minecraft/tools/rcon.py"
+if [[ -f "/home/game/minecraft/tools/rcon.py" ]]; then
+    alias mc="python /home/game/minecraft/tools/rcon.py"
 fi
 
 if [[ -d "$HOME/repo" ]]; then

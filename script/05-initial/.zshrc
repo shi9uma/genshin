@@ -364,7 +364,30 @@ sd() {
     if [[ ! -f $shodan_api_key_path ]]; then
         echo ${RED}"shodan api key not found. run \"shodan init api_key\" first"${NC}
     else
-        shodan search --fields ip_str,port,org,location $@ | awk "{ print \"http://\"\$1\":\"\$2\", \"\$3\", \"\$4 }"
+        shodan search --fields ip_str,port,org,location --separator "<>" "$@" | awk '{
+            split($0, result, "<>");
+
+            ip = result[1];
+            if (ip == "") {
+                next;
+            }
+            
+            port = result[2];
+
+            if (port == "443") {
+                protocol = "https";
+            } else {
+                protocol = "http";
+            }
+
+            org = result[3];
+            location = result[4];            
+
+            print "| " protocol "://" ip ":" port;
+            print "> " org;
+            print "> " location;
+            print "-----------------------------";
+        }'
     fi
 }
 

@@ -255,13 +255,13 @@ fi
 # |                       custom script                       |
 # ==============================================================
 
-# colors
+# color
 # ${RED}xxx${NC}
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-## functions
+## function
 cmd() {
     sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc
 }
@@ -360,10 +360,17 @@ cx() {
 }
 
 sd() {
+
+    if [[ "$1" == "show" ]]; then
+        echo "shodan search --fields ip_str,port,org,location ARGS | awk ' { print \"http://\"\$1\":\"\$2} '"
+        return
+    fi
+
     shodan_api_key_path="$HOME/.config/shodan/api_key"
     if [[ ! -f $shodan_api_key_path ]]; then
         echo ${RED}"shodan api key not found. run \"shodan init api_key\" first"${NC}
     else
+        count=0
         shodan search --fields ip_str,port,org,location --separator "<>" "$@" | awk '{
             split($0, result, "<>");
 
@@ -386,7 +393,11 @@ sd() {
             print "| " protocol "://" ip ":" port;
             print "> " org;
             print "> " location;
-            print "-----------------------------";
+            print "-----------------------------\n";
+
+            count++;
+        } END {
+            print "total result: " count;
         }'
     fi
 }
@@ -410,7 +421,7 @@ update_zshrc() {
         https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
 }
 
-## file, dirs
+## file, dir
 if [[ -f "/home/game/minecraft/tools/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tools/rcon.py"
 fi

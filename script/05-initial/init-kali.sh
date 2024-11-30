@@ -63,7 +63,7 @@ apt install -y \
 	fzf ripgrep vim \
 	docker.io docker-compose \
 	gdb gdbserver ghidra rizin radare2 patchelf \
-	nmap hydra john
+	nmap hydra john telnet
 
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs npm && \
 npm install -g npm@latest --registry=https://registry.npmmirror.com && \

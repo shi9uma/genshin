@@ -3,7 +3,7 @@
 主机信息搜集
 
 
-
+1. `bash <(curl -sL IP.Check.Place)`
 
 
 

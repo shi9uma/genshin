@@ -137,6 +137,11 @@ function home {
     $home_path = "c:/users/wkyuu/desktop"
     Set-Location -Path $home_path
 }
+function download {
+    & print_old_dir
+    $download_path = "e:/download"
+    Set-Location -Path $download_path
+}
 function tmp {
     & print_old_dir
     $tmp_path = "e:/"

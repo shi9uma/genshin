@@ -62,6 +62,7 @@ $BURPSUITEPATH = "d:/sec/burpsuite"
 $FRIDAPATH = "d:/sec/frida"
 $IDAPATH = "d:/sec/ida"
 $JADXPATH = "d:/sec/jadx"
+$MOBAXTERMPATH = "d:/sec/mobaxterm-portable"
 $WINHEXPATH = "d:/sec/winhex"
 $WIRESHARKPATH = "d:/sec/wireshark"
 
@@ -70,10 +71,12 @@ $env:PATH += "$ADBPATH;" + `
 "$FRIDAPATH;" + `
 "$IDAPATH;" + `
 "$JADXPATH;" + `
+"$MOBAXTERMPATH;" + `
 "$WINHEXPATH;" + `
 "$WIRESHARKPATH;"
 
 Set-Alias ida ida64
+Set-Alias moba mobaxterm
 Set-Alias winhex xwforensics64
 Set-Alias wireshark WiresharkPortable64
 

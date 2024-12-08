@@ -7,9 +7,9 @@ repo：https://github.com/alist-org/alist.git
 2. 挂载 nas 存储
    1. `sudo apt install cifs-utils`
    
-   2. `sudo mount -t cifs //192.168.9.4/torrent/qbittorrent /home/server/02-alist/storage/qbittorrent -o username=user,password=xxxxx,uid=user,gid=user`
+   2. `sudo mount -t cifs //192.168.9.4/nas-torrent /home/server/02-alist/nas/nas-torrent -o username=user,password=xxxxx,uid=user,gid=user`
    
-   3. `sudo mount -t cifs //192.168.9.4/storage/local /home/server/02-alist/storage/local -o username=user,password=xxxxx,uid=user,gid=user`
+   3. `sudo mount -t cifs //192.168.9.4/nas-storage /home/server/02-alist/nas/nas-storage -o username=user,password=xxxxx,uid=user,gid=user`
    
    4. 可以将以上操作写到 fstab 中，自动挂载 `sudo vim /etc/fstab`：
    
@@ -24,8 +24,8 @@ repo：https://github.com/alist-org/alist.git
       /dev/sdd1 /mnt/disk02-5.5t ext4 defaults 0 0
       
       # 以下新增
-      //192.168.9.4/torrent/qbittorrent /home/server/02-alist/storage/qbittorrent cifs username=user,password=xxxxx,uid=user,gid=user 0 0
-      //192.168.9.4/storage/local /home/server/02-alist/storage/local cifs username=user,password=xxxxx,uid=user,gid=user 0 0
+      //192.168.9.4/nas-torrent /home/server/02-alist/nas/nas-torrent cifs username=user,password=xxxxx,uid=user,gid=user 0 0
+      //192.168.9.4/nas-storage /home/server/02-alist/nas/nas-storage cifs username=user,password=xxxxx,uid=user,gid=user 0 0
       ```
    
 3. `sudo docker-compose -p 02-alist -f /home/server/02-alist/alist.yml up -d` 启动后，在 log 里看默认账密 `admin / xxxxxx`
@@ -34,5 +34,5 @@ repo：https://github.com/alist-org/alist.git
    1. 语言改中文
    1. `个人资料`，修改默认账密
    3. `存储`，添加驱动：
-      1. 本机存储，挂载路径 `local`，根文件夹路径 `/opt/alist/storage/local`
-      2. 本机存储，挂载路径 `qbittorrent`，根文件夹路径 `/opt/alist/storage/qbittorrent`
+      1. 本机存储，挂载路径 `nas-torrent`，根文件夹路径 `/opt/alist/nas/nas-torrent`
+      2. 本机存储，挂载路径 `nas-storage`，根文件夹路径 `/opt/alist/nas/nas-storage`

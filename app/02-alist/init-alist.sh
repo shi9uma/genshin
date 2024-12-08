@@ -14,8 +14,8 @@ work_dir=$(dirname $0)
 file_path=$work_dir/$app_name.yml
 if [ ! -f $file_path ]; then
     create_dir $work_dir/data
-    create_dir $work_dir/storage/local
-    create_dir $work_dir/storage/qbittorrent
+    create_dir $work_dir/nas/nas-storage
+    create_dir $work_dir/nas/nas-torrent
     curl -fLo $file_path $url
 fi
 

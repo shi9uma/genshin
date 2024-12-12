@@ -6,16 +6,17 @@ create_dir() {
     fi
 }
 
-app=(ddns-go alist qbittorrent synctv transfersh hedgedoc outline reference cyberchef gtfobins explainshell hastebin)
+app=(ddns-go alist qbittorrent synctv transfersh hedgedoc outline reference cyberchef gtfobins explainshell hastebin codeserver matrix)
+app_length=${#app[@]}
 url_base=https://raw.githubusercontent.com/shi9uma/genshin/main/app
 work_dir=$(dirname $0)
 
-for index in {01..12}; do
+for index in $(seq -f "%02g" 1 $app_length); do
     app_name=${app[$index]}
     echo $app_name
 done
 
-for index in {01..12}; do
+for index in $(seq -f "%02g" 1 $app_length); do
     app_name=${app[$index]}
 
     app_dir=$work_dir/$index-$app_name

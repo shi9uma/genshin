@@ -1,6 +1,6 @@
 # persistence
 
-持久化
+持久化、backdoor 的编写等
 
 
 

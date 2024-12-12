@@ -1,9 +1,10 @@
 # host-enumeration
 
-主机信息搜集
+主机信息搜集、固件备份
 
 
 1. `bash <(curl -sL IP.Check.Place)`
+2. dnslog，`https://www.callback.red/`
 
 
 

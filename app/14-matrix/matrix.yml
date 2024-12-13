@@ -31,3 +31,5 @@ services:
     - PGID=1000
     - TZ=Asia/Shanghai
     restart: unless-stopped
+
+# sudo docker-compose -f /home/server/14-matrix/matrix.yml up -d

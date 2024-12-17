@@ -40,13 +40,11 @@ $env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
 
 ###################### software ######################
 $POTPLAYERPATH = "d:/software/potplayer"
-$SUBLIMETEXTPATH = "d:/software/sublime-text"
 $SUMATRAPATH = "d:/software/sumatra-pdf"
 $TYPORAPATH = "d:/software/typora"
 $XNVIEWPATH = "d:/software/xnview"
 
 $env:PATH += "$POTPLAYERPATH;" + `
-"$SUBLIMETEXTPATH;" + `
 "$SUMATRAPATH;" + `
 "$TYPORAPATH;" + `
 "$XNVIEWPATH;"

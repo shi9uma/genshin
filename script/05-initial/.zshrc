@@ -430,18 +430,26 @@ if [[ -d "$HOME/repo" ]]; then
     alias repo="cd $HOME/repo"
 fi
 
-## exports
-export all_proxy="http://198.18.0.1:7890"
+## export
+proxy_ip_file="$HOME/.proxy_ip"
+if [[ -f ~/.proxy_ip ]]; then
+    export all_proxy="http://$(cat $proxy_ip_file):7890"
+else
+    if [[ -d "/home/wkyuu" ]]; then
+        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo ip > \$proxy_ip_file${NC} ${NC}"
+    fi
+fi
 
 ### vim
 export FZF_DEFAULT_COMMAND="rg --files"
 export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 
-### binaries
+### binary
 os_type=$(uname -o)
+export_path=$PATH
 case $os_type in
     "Darwin")
-        export_path=$HOME/.bin:$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$PATH
+        export_path=$HOME/.bin:$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$export_path
         alias python="python3"
         alias pip="pip3"
 
@@ -451,7 +459,7 @@ case $os_type in
         alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
         ;;
     "GNU/Linux")
-        export_path=$HOME/.bin:$PATH:$HOME/.local/bin:$HOME/.cargo/bin
+        export_path=$HOME/.bin:$export_path:$HOME/.local/bin:$HOME/.cargo/bin
         ;;
 esac
 export PATH=$export_path
@@ -476,5 +484,5 @@ alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
 alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
-alias temp="sensors"
+alias transfer="sd http.favicon.hash:\"-620522584\""
 # end alias

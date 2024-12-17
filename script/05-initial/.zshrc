@@ -422,8 +422,8 @@ update_zshrc() {
 }
 
 ## file, dir
-if [[ -f "/home/game/minecraft/tools/rcon.py" ]]; then
-    alias mc="python /home/game/minecraft/tools/rcon.py"
+if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
+    alias mc="python /home/game/minecraft/tool/rcon.py"
 fi
 
 if [[ -d "$HOME/repo" ]]; then

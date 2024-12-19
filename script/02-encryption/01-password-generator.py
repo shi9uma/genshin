@@ -8,6 +8,16 @@ import argparse
 import subprocess
 from time import time
 
+OUTPUT_PASSWORD_COLOR = 3
+OUTPUT_LENGTH_COLOR = 4
+OUTPUT_KEY_COLOR = 5
+OUTPUT_SALT_COLOR = 6
+
+BANNER = '''Generated password with:
+| password: {}
+| length: {}
+| key: {}
+| salt_file: {}'''
 
 def color(text: str = '', color: int = 1) -> str:
     '''
@@ -41,8 +51,7 @@ def get_system_uuid() -> str:
         print(f"Error obtaining system UUID: {e}")
         exit()
 
-
-def get_salt(uuid: str, key: str, salt_file='salt') -> str:
+def get_salt(uuid: str, key: str, salt_file: str ='salt') -> str:
     if os.path.exists(salt_file):
         with open(salt_file, 'r') as file:
             salt = file.read()
@@ -57,10 +66,12 @@ def get_salt(uuid: str, key: str, salt_file='salt') -> str:
         file.write(salt)
     return salt
 
+def get_file_full_path(file_path: str) -> str:
+    return os.path.abspath(file_path).replace('\\', '/')
+
 def check_length(src_length: int, generated_password: str) -> int:
     this_length = len(generated_password)
     return src_length - this_length if this_length < src_length else 0
-    
 
 def generate_password(seed: str, length: int, salt_file: str, char_set: str = None, is_recursive: bool = False) -> str:
     if salt_file is not None:
@@ -79,10 +90,8 @@ def generate_password(seed: str, length: int, salt_file: str, char_set: str = No
     )
     base64_bytes = base64.b64encode(hash_bytes)
     
-    if char_set:
-        password = ''.join(filter(lambda x: x in char_set, base64_bytes.decode()))
-    else:
-        password = ''.join(filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode()))  # default raw password
+    password_filter = filter(lambda x: x in char_set, base64_bytes.decode()) if char_set else filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode())
+    password = ''.join(password_filter)
     
     # handle situation which first generated length not enough
     if is_recursive:
@@ -109,15 +118,16 @@ def main():
     args = vars(ap.parse_args())
 
     if args['key'] is None:
-        tmp_seed = str(time())
-        print('Using random seed based on time.time(): {}'.format(color(tmp_seed, 3)))
+        key_seed = str(time())
     else:
-        tmp_seed = args['key']
+        key_seed = args['key']
 
-    password = generate_password(tmp_seed, args['length'], args['salt'], args['char'])
-    print('Generated password of length {}: {}'.format(
-        color(str(len(password)), 3),
-        color(password, 4)
+    password = generate_password(key_seed, args['length'], args['salt'], args['char'])
+    print(BANNER.format(
+        color(password, OUTPUT_PASSWORD_COLOR),
+        color(str(len(password)), OUTPUT_LENGTH_COLOR),
+        color(key_seed + ' (base on time.time())' if (args['key'] is None) else key_seed, OUTPUT_KEY_COLOR),
+        color(get_file_full_path(args['salt']) if args['salt'] else 'None', OUTPUT_SALT_COLOR)
     ))
 
 

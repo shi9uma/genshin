@@ -293,9 +293,17 @@ tsh() {
     fi
 }
 
-clear_history() {
+clean_history() {
     echo "" > ~/.zsh_history
     kill -9 $$
+}
+
+clean_docker() {
+    docker rm `docker ps -a | grep Exited | awk '{ print $1 }'` > /dev/null 2>&1
+    docker rmi `docker images | grep -i \<none\> | awk '{ print $3 }'` > /dev/null 2>&1
+
+    docker images; echo ""
+    docker ps -a
 }
 
 password() {

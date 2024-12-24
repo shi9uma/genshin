@@ -6,6 +6,7 @@ import argparse
 ap = argparse.ArgumentParser(description = '传入 json 文件，生成树形结构')
 ap.add_argument('-f', '--filepath', help = 'json 文件路径')
 ap.add_argument('-e', '--example', action = 'store_true', help = '显示示例')
+ap.add_argument('-m', '--make_example', action = 'store_true', help = '生成一个 example 文件 tree-example.json')
 args = vars(ap.parse_args())
 
 banner = '''1. 表示在同目录下，使用 [ file1, file2, dir1, dir2 ] 来界定
@@ -75,22 +76,6 @@ banner = '''1. 表示在同目录下，使用 [ file1, file2, dir1, dir2 ] 来�
 '''
 
 def color(text: str = '', color: int = 2) -> str:
-    '''
-    返回对应的控制台 ANSI 颜色; 
-    ```python
-    color_table = {
-        0: '无色', 
-        1: '黑色加粗',
-        2: '红色加粗',
-        3: '绿色加粗',
-        4: '黄色加粗',
-        5: '蓝色加粗',
-        6: '紫色加粗',
-        7: '青色加粗',
-        8: '白色加粗',
-    }
-    ```
-    '''
     color_table = {
         0: '{}',                    # 无色
         1: '\033[1;30m{}\033[0m',   # 黑色加粗
@@ -108,7 +93,6 @@ def print_tree(data, indent="", is_last=True):
     '''
     递归打印树结构
     '''
-
     if isinstance(data, dict):
         for idx, (key, value) in enumerate(data.items()):
             connector = "└── " if is_last and idx == len(data) - 1 else "├── "
@@ -123,19 +107,58 @@ def print_tree(data, indent="", is_last=True):
         connector = "└── " if is_last else "├── "
         print(f"{indent}{connector}{data}")
 
-
 def json_to_tree(json_data):
     '''
     处理根节点并打印目录树
     '''
-
     root_key = list(json_data.keys())[0]
     print(root_key)
     print_tree(json_data[root_key], indent="")
 
-
-if args['example']:
-    print(color(banner, 3))
+if args['example'] or args['make_example']:
+    if args['example']:
+        print(color(banner, 5))
+    if args['make_example']:
+        with open('tree-example.json', mode = 'w+', encoding = 'utf-8') as fd:
+            fd.write(
+                '''{
+    "root": [
+        {
+            "diy": [
+                "readme.md",
+                "unix-install-vim.sh",
+                "windows-vimrc"
+            ]
+        },
+        "README.md",
+        {
+            "tutorials": [
+                "ch00_read_this_first.md",
+                "ch01_starting_vim.md",
+                "ch24_vim_runtime.md",
+                {
+                    "images": [
+                        "diffing-apples.png",
+                        "fugitive-git.png",
+                        "session-layout.png"
+                    ]
+                },
+                "LICENSE",
+                "readme.md"
+            ]
+        },
+        {
+            "write": [
+                "often.md",
+                "readme.md",
+                "tcpdump.py",
+                "test.md"
+            ]
+        }
+    ]
+}
+                '''
+            )
     exit()
 
 assert args['filepath'], 'lack of json file path'

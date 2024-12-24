@@ -147,7 +147,9 @@ mkdir -p \
 # 	$SERVER_DIR_PATH/09-reference \
 # 	$SERVER_DIR_PATH/10-cyberchef \
 # 	$SERVER_DIR_PATH/11-gtfobins \
-# 	$SERVER_DIR_PATH/12-hastebin
+# 	$SERVER_DIR_PATH/12-hastebin \
+#	$SERVER_DIR_PATH/13-codeserver \
+#	$SERVER_DIR_PATH/14-matrix
 
 # pwn
 PWN_DIR_PATH="$APP_DIR_PATH/pwn"

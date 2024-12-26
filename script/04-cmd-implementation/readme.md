@@ -2,7 +2,7 @@
 
 1.   initial
 
-     1.   `mkdir -p $HOME/.genshin/scripts/`
+     1.   `mkdir -p $HOME/.genshin/script/`
 
 
 

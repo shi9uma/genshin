@@ -1,12 +1,17 @@
-#!/bin/sh
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <file_path>"
+    exit 1
+fi
 
 if [ $(id -u) -ne 0 ]; then
     echo "run as root"
     exit 1
 fi
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <file_path>"
+if [ $(which docker) -ne 0 ]; then
+    echo "docker not found, or place it in /usr/bin/docker"
     exit 1
 fi
 

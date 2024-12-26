@@ -255,6 +255,8 @@ fi
 # |                       custom script                       |
 # ==============================================================
 
+github_url_base="https://raw.githubusercontent.com/shi9uma/genshin/main"
+
 # color
 # ${RED}xxx${NC}
 RED='\033[0;31m'
@@ -306,24 +308,22 @@ clean_docker() {
     docker ps -a
 }
 
+_curl() {
+    curl -fLo $1 --create-dirs $2
+}
+
 password() {
-    rename_path="$HOME/.genshin/encryption/password-generator.py"
+    rename_path="$HOME/.genshin/password-generator.py"
     if [[ ! -f $rename_path ]]; then
-        curl \
-            -fLo $rename_path \
-            --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/script/02-encryption/01-password-generator.py
+        _curl $rename_path $github_url_base/script/02-encryption/01-password-generator.py
     fi
     python3 $rename_path "$@"
 }
 
 lcd() {
-    lcd_path="$HOME/.genshin/cmd-implementation/lcd.py"
+    lcd_path="$HOME/.genshin/lcd.py"
     if [[ ! -f $lcd_path ]]; then
-        curl \
-            -fLo $lcd_path \
-            --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/script/04-cmd-implementation/02-lcd.py
+        _curl $lcd_path $github_url_base/script/04-cmd-implementation/02-lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $lcd_path -pn "$2")
@@ -340,12 +340,9 @@ lcd() {
 }
 
 rename() {
-    rename_path="$HOME/.genshin/cmd-implementation/interact-rename.py"
+    rename_path="$HOME/.genshin/interact-rename.py"
     if [[ ! -f $rename_path ]]; then
-        curl \
-            -fLo $rename_path \
-            --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/script/04-cmd-implementation/03-interact-rename.py
+        _curl $rename_path $github_url_base/script/04-cmd-implementation/03-interact-rename.py
     fi
     python3 $rename_path "$@"
 }
@@ -357,12 +354,9 @@ w2u() {
 }
 
 cx() {
-    ip_status_path="$HOME/.genshin/network/ip-status.py"
+    ip_status_path="$HOME/.genshin/ip-status.py"
     if [[ ! -f $ip_status_path ]]; then
-        curl \
-            -fLo $ip_status_path \
-            --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/script/03-network/03-ip-status.py
+        _curl $ip_status_path $github_url_base/script/03-network/03-ip-status.py
     fi
     python3 $ip_status_path "$@"
 }
@@ -410,23 +404,28 @@ sd() {
     fi
 }
 
+unblob() {
+    unblob_path="$HOME/.genshin/unblob.sh"
+    if [[ ! -f $unblob_path ]]; then
+        _curl $unblob_path $github_url_base/code/shellscript/04-unblob.sh
+        chmod +x $unblob_path
+    fi
+    cp $unblob_path .
+    eval $PWD/unblob.sh
+}
+
 call_bridge() {
-    call_bridge_path="$HOME/.genshin/cmd-implementation/call-bridge.sh"
+    call_bridge_path="$HOME/.genshin/call-bridge.sh"
     if [[ ! -f $call_bridge_path ]]; then
-        curl \
-            -fLo $call_bridge_path \
-            --create-dirs \
-            https://raw.githubusercontent.com/shi9uma/genshin/main/script/04-cmd-implementation/04-call-bridge.sh
-        chmod +x "$call_bridge_path"
+        _curl $call_bridge_path $github_url_base/script/04-cmd-implementation/04-call-bridge.sh
+        chmod +x $call_bridge_path
     fi
     eval "$call_bridge_path $@"
 }
 
 update_zshrc() {
     zshrc_path="$HOME/.zshrc"
-    curl \
-        -fLo $zshrc_path \
-        https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
+    _curl $zshrc_path $github_url_base/script/05-initial/.zshrc
 }
 
 ## file, dir

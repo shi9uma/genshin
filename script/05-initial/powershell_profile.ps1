@@ -193,7 +193,7 @@ function kalidown {
 function k {
     $running = Get-WmiObject Win32_Process | Where-Object { $_.Name -eq "wsl.exe" } | Select-Object -ExpandProperty CommandLine
     if ($running -like "*kali*") {
-        wsl zsh -l -c "~/.genshin/cmd-implementation/call-bridge.sh $args"
+        wsl zsh -l -c "~/.genshin/call-bridge.sh $args"
     } else {
         & kali
         Write-Host "run you cmd after kali started." -ForegroundColor Yellow

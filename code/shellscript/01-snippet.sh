@@ -9,9 +9,12 @@ yellow='\033[33m'
 grey='\e[37m'
 pink='\033[38;5;218m'
 cyan='\033[96m'
+nc='\033[0m'
+# ${red}xxx${nc}
 #endregion
 
 workdir=$(cd $(dirname $0); pwd)
+rootdir=$(cd $(dirname "$0/../../"); pwd)
 
 if [ $(id -u) -ne 0 ]; then
     echo "run as root"
@@ -22,6 +25,10 @@ if [ $# -eq 0 ]; then
     echo "usage: $0 args"
     exit 1
 fi
+
+while read -r line; do
+	echo $line
+done < $(cat $1)
 
 for arg in "$@"; do
     if [ "$arg" = "--help" ]; then
@@ -41,7 +48,7 @@ case "$1" in
         echo "restart"
         ;;
     *)
-        echo "usage: $0 <start | stop | restart>"
+        echo "usage: $0 {enc|dec|show}"
 esac
 
 while getopts "uc3h" opt; do

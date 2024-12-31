@@ -1,7 +1,8 @@
 
+# encryption
+salt
 
 # diy
-*.binary
 *.gdb_history
 
 # python venv

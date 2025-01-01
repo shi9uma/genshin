@@ -30,13 +30,13 @@
 import sys
 import argparse
 import numpy as np
-_IntertwinedFateNum = 389    # 屯屯鼠改这个
+_IntertwinedFateNum = 120    # 屯屯鼠改这个
 DEFAULT = [
     _IntertwinedFateNum,
     3,	# 期望抽到限定角色次数，0-7
-    0,	# 当前角色池已垫抽数, 0-89
-    0,	# 当前角色池是否为大保底, 0/1
-    1,	# 期望抽到限定定轨武器次数, 0-5
+    1,	# 当前角色池已垫抽数, 0-89
+    1,	# 当前角色池是否为大保底, 0/1
+    0,	# 期望抽到限定定轨武器次数, 0-5
     0,	# 当前武器池已垫抽数, 0-79
     0,	# 当前武器池是否为大保底, 0/1
     0	# 当前武器池的命定值, 0-2

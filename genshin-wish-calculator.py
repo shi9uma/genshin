@@ -33,25 +33,25 @@ import numpy as np
 _IntertwinedFateNum = 120    # 屯屯鼠改这个
 DEFAULT = [
     _IntertwinedFateNum,
-    3,	# 期望抽到限定角色次数，0-7
-    1,	# 当前角色池已垫抽数, 0-89
-    1,	# 当前角色池是否为大保底, 0/1
-    0,	# 期望抽到限定定轨武器次数, 0-5
-    0,	# 当前武器池已垫抽数, 0-79
-    0,	# 当前武器池是否为大保底, 0/1
-    0	# 当前武器池的命定值, 0-2
+    3,  # 期望抽到限定角色次数，0-7
+    1,  # 当前角色池已垫抽数, 0-89
+    1,  # 当前角色池是否为大保底, 0/1
+    0,  # 期望抽到限定定轨武器次数, 0-5
+    0,  # 当前武器池已垫抽数, 0-79
+    0,  # 当前武器池是否为大保底, 0/1
+    0  # 当前武器池的命定值, 0-2
 ]
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--IntertwinedFateNum', type=int, help='当前拥有的抽数')
-ap.add_argument('--ExpectedCharacterNum', type=int,
+ap.add_argument('--interwined_fate_num', type=int, help='当前拥有的抽数')
+ap.add_argument('--expected_character_num', type=int,
                 help='期望抽到限定角色次数, 0-7, 注意从无到 6 命需要 7 次限定金')
-ap.add_argument('--CharacterPoolStage', type=int, help='当前角色池已垫抽数, 0-89')
-ap.add_argument('--CharacterPoolGuarantee', type=int, help='当前角色池是否为大保底, 0/1')
-ap.add_argument('--ExpectedWeaponNum', type=int, help='期望抽到限定定轨武器次数, 0-5')
-ap.add_argument('--WeaponPoolStage', type=int, help='当前武器池已垫抽数, 0-79')
-ap.add_argument('--WeaponPoolGuarantee', type=int, help='当前武器池是否为大保底, 0/1')
-ap.add_argument('--BindingNum', type=int, help='当前武器池的命定值, 0-2')
+ap.add_argument('--character_pool_num', type=int, help='当前角色池已垫抽数, 0-89')
+ap.add_argument('--is_character_guarantee', type=int, help='当前角色池是否为大保底, 0/1')
+ap.add_argument('--expected_weapon_num', type=int, help='期望抽到限定定轨武器次数, 0-5')
+ap.add_argument('--weapon_pool_num', type=int, help='当前武器池已垫抽数, 0-79')
+ap.add_argument('--is_weapon_guarantee', type=int, help='当前武器池是否为大保底, 0/1')
+ap.add_argument('--weapon_pool_binding_num', type=int, help='当前武器池的命定值, 0-2')
 ap.add_argument('-d', '--default', default=False,
                 action='store_true', help='使用默认数据生成')
 ap.add_argument('-g', '--generate', default=False,
@@ -63,14 +63,15 @@ ap.add_argument('-i', '--interfaces', default=False,
 
 args = vars(ap.parse_args())
 
-IntertwinedFateNum = args['IntertwinedFateNum']
-ExpectedCharacterNum = args['ExpectedCharacterNum']
-CharacterPoolStage = args['CharacterPoolStage']
-CharacterPoolGuarantee = args['CharacterPoolGuarantee']
-ExpectedWeaponNum = args['ExpectedWeaponNum']
-WeaponPoolStage = args['WeaponPoolStage']
-WeaponPoolGuarantee = args['WeaponPoolGuarantee']
-BindingNum = args['BindingNum']
+interwined_fate_num = args['interwined_fate_num']
+expected_character_num = args['expected_character_num']
+character_pool_num = args['character_pool_num']
+is_character_guarantee = args['is_character_guarantee']
+expected_weapon_num = args['expected_weapon_num']
+weapon_pool_num = args['weapon_pool_num']
+is_weapon_guarantee = args['is_weapon_guarantee']
+weapon_pool_binding_num = args['weapon_pool_binding_num']
+
 isDefault = args['default']
 isGenerate = args['generate']
 isCmd = args['cmd']
@@ -103,12 +104,13 @@ banner3 = '''
 '''
 
 
-def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee, ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum):
+def main(interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee, expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num):
 
-    if not isValid(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee, ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum):
+    if not isValid(interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee, expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num):
         return
 
     # 单次抽卡的概率
+
     # 角色池
     def percent_character(x):
         if x <= 73:
@@ -117,8 +119,8 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
             return (0.006+0.06*(x-73))
         else:
             return 1
-    # 武器池
 
+    # 武器池
     def percent_weapon(x):
         if x <= 62:
             return 0.007
@@ -128,24 +130,26 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
             return (0.777+0.035*(x-73))
         else:
             return 1
-    # 初始化一个零矩阵
-    size = 180*ExpectedCharacterNum+400 * \
-        ExpectedWeaponNum+1  # 这里加上1是为了让最后一行表示达成抽卡预期的状态
+    
+    # 初始化零矩阵
+    size = 180 * expected_character_num + 400 * expected_weapon_num + 1  # 多加 1 行用于表示达成抽卡预期的状态
     TPmatrix = np.zeros((size, size))
+
     # 角色池的初始状态设置
     CharacterPoolOffset = 0
-    if ExpectedCharacterNum != 0:
-        if CharacterPoolGuarantee == False:
-            CharacterPoolOffset = CharacterPoolStage
-        elif CharacterPoolGuarantee == True:
-            CharacterPoolOffset = CharacterPoolStage+90
+    if expected_character_num != 0:
+        if is_character_guarantee == False:
+            CharacterPoolOffset = character_pool_num
+        elif is_character_guarantee == True:
+            CharacterPoolOffset = character_pool_num+90
+
     # 生成转移概率矩阵（矩阵前面的行是武器，后面的行是角色，最后一行表示的状态是已经达成抽卡预期）
     # 这一部分代码生成抽武器的状态，如果要抽的武器数为0，那么就不会运行这一部分代码
-    for i in range(0, ExpectedWeaponNum):
+    for i in range(0, expected_weapon_num):
         offset = 400*i
         for j in range(0, 80):
             x = j % 80 + 1
-            if i == ExpectedWeaponNum-1:
+            if i == expected_weapon_num-1:
                 # 该行属于要抽的最后一把武器的部分，那么如果出限定就会进入角色部分，要加上角色池的初始偏移量
                 TPmatrix[offset+j, offset+400 +
                          CharacterPoolOffset] = percent_weapon(x)*0.375
@@ -157,7 +161,7 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
             TPmatrix[offset+j, offset+j+1] = 1-percent_weapon(x)
         for j in range(80, 160):
             x = j % 80 + 1
-            if i == ExpectedWeaponNum-1:
+            if i == expected_weapon_num-1:
                 TPmatrix[offset+j, offset+400 +
                          CharacterPoolOffset] = percent_weapon(x)*0.5
             else:
@@ -168,7 +172,7 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
                 TPmatrix[offset+j, offset+j+1] = 1-percent_weapon(x)
         for j in range(160, 240):
             x = j % 80 + 1
-            if i == ExpectedWeaponNum-1:
+            if i == expected_weapon_num-1:
                 TPmatrix[offset+j, offset+400 +
                          CharacterPoolOffset] = percent_weapon(x)*0.375
             else:
@@ -177,7 +181,7 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
             TPmatrix[offset+j, offset+j+1] = 1-percent_weapon(x)
         for j in range(240, 320):
             x = j % 80 + 1
-            if i == ExpectedWeaponNum-1:
+            if i == expected_weapon_num-1:
                 TPmatrix[offset+j, offset+400 +
                          CharacterPoolOffset] = percent_weapon(x)*0.5
             else:
@@ -187,7 +191,7 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
                 TPmatrix[offset+j, offset+j+1] = 1-percent_weapon(x)
         for j in range(320, 400):
             x = j % 80 + 1
-            if i == ExpectedWeaponNum-1:
+            if i == expected_weapon_num-1:
                 TPmatrix[offset+j, offset+400 +
                          CharacterPoolOffset] = percent_weapon(x)
             else:
@@ -195,8 +199,8 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
             if j != 399:
                 TPmatrix[offset+j, offset+j+1] = 1-percent_weapon(x)
     # 这一部分代码生成抽角色的状态，如果要抽的角色数为0，那么就不会运行这一部分代码
-    for i in range(0, ExpectedCharacterNum):
-        offset = 180*i+ExpectedWeaponNum*400
+    for i in range(0, expected_character_num):
+        offset = 180*i+expected_weapon_num*400
         for j in range(0, 90):
             x = j % 90 + 1
             TPmatrix[offset+j, offset+180] = percent_character(x)*0.5
@@ -212,19 +216,19 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
     TPmatrix[size-1, size-1] = 1
     # 生成初始状态向量，如果抽武器，那么和武器池水位有关，否则和角色池水位有关
     initVector = np.zeros((size))
-    if ExpectedWeaponNum != 0:
-        if BindingNum == 0:
-            if WeaponPoolGuarantee == False:
-                initVector[WeaponPoolStage] = 1
-            elif WeaponPoolGuarantee == True:
-                initVector[WeaponPoolStage+80] = 1
-        elif BindingNum == 1:
-            if WeaponPoolGuarantee == False:
-                initVector[WeaponPoolStage+160] = 1
-            elif WeaponPoolGuarantee == True:
-                initVector[WeaponPoolStage+240] = 1
-        elif BindingNum == 2:
-            initVector[WeaponPoolStage+320] = 1
+    if expected_weapon_num != 0:
+        if weapon_pool_binding_num == 0:
+            if is_weapon_guarantee == False:
+                initVector[weapon_pool_num] = 1
+            elif is_weapon_guarantee == True:
+                initVector[weapon_pool_num+80] = 1
+        elif weapon_pool_binding_num == 1:
+            if is_weapon_guarantee == False:
+                initVector[weapon_pool_num+160] = 1
+            elif is_weapon_guarantee == True:
+                initVector[weapon_pool_num+240] = 1
+        elif weapon_pool_binding_num == 2:
+            initVector[weapon_pool_num+320] = 1
     else:  # 这里是不抽武器的情况，和角色池水位有关
         initVector[CharacterPoolOffset] = 1
     # 存储达到10%、25%、50%、75%、90%概率时的抽数
@@ -240,7 +244,7 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
         # 将初始状态向量和转移概率矩阵不断相乘，相乘的次数为抽数，得到预期次数后状态的概率分布
         resultVector = resultVector@TPmatrix
         result = resultVector[size-1]
-        if i == IntertwinedFateNum - 1:
+        if i == interwined_fate_num - 1:
             percentRes = result
         if result > 0.1 and percent10num == 0:
             percent10num = i+1
@@ -262,50 +266,52 @@ def main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, Character
     # print(percent75num)
     # print(percent90num)
     percentRes = str(np.round(percentRes*100, 2))
-    print(banner1.format(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, '是' if CharacterPoolGuarantee else '不是',
-          ExpectedWeaponNum, WeaponPoolStage, '是' if WeaponPoolGuarantee else '不是', BindingNum), end='')
-    print(banner2.format(IntertwinedFateNum,
-          ExpectedCharacterNum, ExpectedWeaponNum), end='')
-    print(banner3.format(IntertwinedFateNum, percentRes, percent10num,
+    print(banner1.format(interwined_fate_num, expected_character_num, character_pool_num, '是' if is_character_guarantee else '不是',
+          expected_weapon_num, weapon_pool_num, '是' if is_weapon_guarantee else '不是', weapon_pool_binding_num), end='')
+    print(banner2.format(interwined_fate_num,
+          expected_character_num, expected_weapon_num), end='')
+    print(banner3.format(interwined_fate_num, percentRes, percent10num,
           percent25num, percent50num, percent75num, percent90num), end='')
     sys.stdout.flush()
 
 
-def printCmd(IntertwinedFateNum=IntertwinedFateNum, ExpectedCharacterNum=ExpectedCharacterNum, CharacterPoolStage=CharacterPoolStage, CharacterPoolGuarantee=CharacterPoolGuarantee, ExpectedWeaponNum=ExpectedWeaponNum, WeaponPoolStage=WeaponPoolStage, WeaponPoolGuarantee=WeaponPoolGuarantee, BindingNum=BindingNum):
-    print('python \033[1;33m{}\033[0m -c --IntertwinedFateNum=\033[1;33m{}\033[0m --ExpectedCharacterNum=\033[1;33m{}\033[0m --CharacterPoolStage=\033[1;33m{}\033[0m --CharacterPoolGuarantee=\033[1;33m{}\033[0m --ExpectedWeaponNum=\033[1;33m{}\033[0m --WeaponPoolStage=\033[1;33m{}\033[0m --WeaponPoolGuarantee=\033[1;33m{}\033[0m --BindingNum=\033[1;33m{}\033[0m'.format(
-        __file__, IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee, ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum))
+def printCmd(interwined_fate_num=interwined_fate_num, expected_character_num=expected_character_num, character_pool_num=character_pool_num, is_character_guarantee=is_character_guarantee, expected_weapon_num=expected_weapon_num, weapon_pool_num=weapon_pool_num, is_weapon_guarantee=is_weapon_guarantee, weapon_pool_binding_num=weapon_pool_binding_num):
+    print('python \033[1;33m{}\033[0m -c --interwined_fate_num=\033[1;33m{}\033[0m --expected_character_num=\033[1;33m{}\033[0m --character_pool_num=\033[1;33m{}\033[0m --is_character_guarantee=\033[1;33m{}\033[0m --expected_weapon_num=\033[1;33m{}\033[0m --weapon_pool_num=\033[1;33m{}\033[0m --is_weapon_guarantee=\033[1;33m{}\033[0m --weapon_pool_binding_num=\033[1;33m{}\033[0m'.format(
+        __file__, interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee, expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num))
 
 
 def interfaces():
     pass
 
-def isValid(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee, ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum) -> bool:
-    IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee, ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum
-    if (IntertwinedFateNum < 0 and IntertwinedFateNum > 1500):
+
+def isValid(interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee, expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num) -> bool:
+    interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee, expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num
+    if (interwined_fate_num < 0 and interwined_fate_num > 1500):
         print('目前持有的 纠缠之缘数量 应该大于等于 0 (原石请自行换算).')
         return False
-    if (ExpectedCharacterNum < 0 and ExpectedCharacterNum > 7):
+    if (expected_character_num < 0 and expected_character_num > 7):
         print('目标获得的 限定角色卡数量 应该处于 0 ~ 7 之间.')
         return False
-    if (CharacterPoolStage < 0 and CharacterPoolStage > 89):
+    if (character_pool_num < 0 and character_pool_num > 89):
         print('已垫限定角色卡池抽数 应该处于 0 ~ 89 之间.')
         return False
-    if (CharacterPoolGuarantee not in [0, 1]):
+    if (is_character_guarantee not in [0, 1]):
         print('限定角色卡池是否为大保底的状态 只有 0 或 1.')
         return False
-    if (ExpectedWeaponNum < 0 and ExpectedWeaponNum > 5):
+    if (expected_weapon_num < 0 and expected_weapon_num > 5):
         print('目标获得的 限定且目标定轨武器数量 应该处于 0 ~ 5 之间.')
         return False
-    if (WeaponPoolStage < 0 and WeaponPoolStage > 79):
+    if (weapon_pool_num < 0 and weapon_pool_num > 79):
         print('已垫限定且目标定轨武器卡池抽数 应该处于 0 ~ 79 之间.')
         return False
-    if (WeaponPoolGuarantee not in [0, 1]):
+    if (is_weapon_guarantee not in [0, 1]):
         print('限定且定轨的武器卡池是否为保底的状态 只有 0 或 1.')
         return False
-    if (BindingNum not in [0, 1, 2]):
+    if (weapon_pool_binding_num not in [0, 1, 2]):
         print('武器卡池的定轨状态 只有 0, 1, 2.')
         return False
     return True
+
 
 def fgx(type=1, text='分割线', length='30', isPrint=True):
     # print("{:=^60s}".format('分割线'))
@@ -338,10 +344,10 @@ elif isGenerate:
              DEFAULT[4], DEFAULT[5], DEFAULT[6], DEFAULT[7])
 elif isCmd:
     fgx(text='选择 cmd 直接调用模式')
-    main(IntertwinedFateNum, ExpectedCharacterNum, CharacterPoolStage, CharacterPoolGuarantee,
-         ExpectedWeaponNum, WeaponPoolStage, WeaponPoolGuarantee, BindingNum)
+    main(interwined_fate_num, expected_character_num, character_pool_num, is_character_guarantee,
+         expected_weapon_num, weapon_pool_num, is_weapon_guarantee, weapon_pool_binding_num)
 elif isInterfaces:
     fgx(text='选择用户交互模式')
     interfaces()
 else:
-    fgx(text = '输入指令以调用程序, 使用 -h 以获取更多帮助')
+    fgx(text='输入指令以调用程序, 使用 -h 以获取更多帮助')

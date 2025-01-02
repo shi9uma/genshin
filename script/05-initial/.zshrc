@@ -363,6 +363,11 @@ cx() {
 
 sd() {
 
+    if [ $# -eq 0 ]; then
+        echo "usage: sd {show|args}"
+        return
+    fi
+
     if [[ "$1" == "show" ]]; then
         echo "shodan search --fields ip_str,port,org,location ARGS | awk ' { print \"http://\"\$1\":\"\$2} '"
         return

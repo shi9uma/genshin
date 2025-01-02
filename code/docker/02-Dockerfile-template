@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:3.10-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
 ENV WORKDIR="/opt/test"
 
@@ -8,7 +9,7 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubunt
     sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubuntu/|g' /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y \
-    curl wget \
+    net-tools curl wget \
     gnupg2 \
     software-properties-common \
     build-essential \

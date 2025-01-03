@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 感谢 https://ip.rss.ink 提供的接口
+# 感谢 https://tcp.mk 提供的接口
 
 import subprocess
 import json
@@ -7,61 +7,58 @@ import argparse
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--ip', default='', type=str, help='指定 ip 来查询')
-ap.add_argument('-l', '--location', action='store_true', help='展示 location')
 ap.add_argument('-q', '--qqwry', action='store_true', help='展示 cz 查询结果')
-ap.add_argument('-2', '--ip2location', action='store_true', help='展示 ip2location 查询结果')
 ap.add_argument('-g', '--geoip2', action='store_true', help='展示 geoip2 查询结果')
 ap.add_argument('-a', '--all', action='store_true', help='展示所有查询结果')
 ap.add_argument('-c', '--cmd', action='store_true', help='展示 curl 原生指令')
 args = vars(ap.parse_args())
 
+BASE_URL = "https://tcp.mk"
+TITLE_COLOR = 7
+SUB_TITLE_COLOR = 2
+CONTENT_COLOR = 3
+
 class IPRSSClient:
     def __init__(self, args):
         self.ip = ''
         self.args = args
-        self.BASE_URL = "https://ip.rss.ink"
 
     def execute_curl(self, url):
-        result = subprocess.run(['curl', '-s', url], capture_output=True, text=True, encoding='utf-8')
+        result = subprocess.run(
+            ['curl', '-s', url], capture_output=True, text=True, encoding='utf-8')
         if result.returncode == 0:
             return result.stdout.strip()
         else:
-            raise Exception(f"Failed to execute curl for {url}, Error: {result.stderr}")
-
-    # def get_public_ip(self):
-    #     '''
-    #     获取本机公网 IP 地址
-    #     '''
-    #     if args['ip'] != '':
-    #         self.ip = args['ip']
-    #     else:
-    #         url = f"{self.BASE_URL}"
-    #         self.ip = self.execute_curl(url)
-
-    def get_public_ip_v2(self):
-        '''
-        获取本机公网 IP 地址 + 区域
-        '''
-        url = f"{self.BASE_URL}/text"
-        if args['ip'] != '':
-            self.ip = args['ip']
-            url += f"?ip={self.ip}"
-        ip, location = self.execute_curl(url).split(',')
-        print(color("IP with Location:", 7))
-        print(f"{color('ip', 2)}: {color(ip, 3)}; {color('location', 2)}: {color(location, 3)}")
-        self.ip = ip
+            raise Exception(
+                f"Failed to execute curl for {url}, Error: {result.stderr}")
 
     def get_ip_with_location(self):
         '''
-        获取本机公网 IP 地址 + 详细区域
+        获取公网 IP 地址 + 详细区域
         '''
-        if check_arg(args, 'location') == None:
-            return
-        url = f"{self.BASE_URL}/json?ip={self.ip}"
+        url = f"{BASE_URL}/json"
+        if args['ip'] != '':
+            self.ip = args['ip']
+            url += f"?ip={self.ip}"
         response = self.execute_curl(url)
-        ip_with_location_json = json.loads(response)
-        print(color("IP with Location Detail:", 7))
-        format_dict(ip_with_location_json)
+        response_json = json.loads(response)
+        if response_json.get('msg', '') == 'success':
+            data = response_json.get('data', {})
+        else:
+            raise Exception(
+                f"Failed to get public ip address, Error: {response_json.get('msg', '')}")
+        print(color("IP with Location:", TITLE_COLOR))
+        print(
+            '{}: {}; {}: {} {} {}'.format(
+                color('ip', SUB_TITLE_COLOR),
+                color(data['ip'], CONTENT_COLOR),
+                color('location', SUB_TITLE_COLOR),
+                color(data['country'], CONTENT_COLOR),
+                color(data['region'], CONTENT_COLOR),
+                color(data['city'], CONTENT_COLOR),
+            )
+        )
+        self.ip = data['ip']
 
     def query_ip_with_qqwry(self):
         '''
@@ -69,23 +66,11 @@ class IPRSSClient:
         '''
         if check_arg(args, 'qqwry') == None:
             return
-        url = f"{self.BASE_URL}/v1/qqwry?ip={self.ip}"
+        url = f"{BASE_URL}/api/ip-query?source=qqwry&ip={self.ip}"
         response = self.execute_curl(url)
         qqwry_result = json.loads(response)
-        print(color("QQWry Result:", 7))
+        print(color("QQWry Result:", TITLE_COLOR))
         format_dict(qqwry_result, exclude_keys=['code', 'msg'])
-
-    def query_ip_with_ip2location(self):
-        '''
-        在 ip2location 数据库中查询 IP 地址对应信息
-        '''
-        if check_arg(args, 'ip2location') == None:
-            return
-        url = f"{self.BASE_URL}/v1/ip2location?ip={self.ip}"
-        response = self.execute_curl(url)
-        ip2location_result = json.loads(response)
-        print(color("IP2Location Result:", 7))
-        format_dict(ip2location_result)
 
     def query_ip_with_geoip2(self):
         '''
@@ -93,11 +78,12 @@ class IPRSSClient:
         '''
         if check_arg(args, 'geoip2') == None:
             return
-        url = f"{self.BASE_URL}/v1/geoip2?ip={self.ip}"
+        url = f"{BASE_URL}/api/ip-query?source=geoip2&ip={self.ip}"
         response = self.execute_curl(url)
         geoip2_result = json.loads(response)
-        print(color("GeoIP2 Result:", 7))
+        print(color("GeoIP2 Result:", TITLE_COLOR))
         format_dict(geoip2_result)
+
 
 def format_dict(data: dict, indent=0, exclude_keys=None):
     if exclude_keys is None:
@@ -107,10 +93,12 @@ def format_dict(data: dict, indent=0, exclude_keys=None):
         if key in exclude_keys:
             continue
         if isinstance(value, dict):
-            print(' ' * indent + f"{color(key, 4)}:")
+            print(' ' * indent + f"{color(key, CONTENT_COLOR)}:")
             format_dict(value, indent + 4, exclude_keys)
         else:
-            print(' ' * indent + f"{color(key, 2)}: {color(value, 3)}")
+            print(
+                ' ' * indent + f"{color(key, SUB_TITLE_COLOR)}: {color(value, CONTENT_COLOR)}")
+
 
 def color(text: str = '', color: int = 2) -> str:
     '''
@@ -129,37 +117,37 @@ def color(text: str = '', color: int = 2) -> str:
     }
     return color_table[color].format(text)
 
+
 def check_arg(args, type) -> str:
     try:
         if args[type]:
             return args[type]
     except BaseException as e:
         return None
-    
+
+
 def cmd():
-    BASE_URL = "https://ip.rss.ink"
-    print(color('curl cmd:', 7))
-    print(color(f'{" " * 2}curl {BASE_URL}', 3))
-    print(color(f'{" " * 2}curl {BASE_URL}/text', 3))
-    print(color(f'{" " * 2}curl {BASE_URL}/json?ip=', 3))
-    print(color(f'{" " * 2}curl {BASE_URL}/v1/qqwry?ip=', 3))
-    print(color(f'{" " * 2}curl {BASE_URL}/v1/ip2location?ip=', 3))
-    print(color(f'{" " * 2}curl {BASE_URL}/v1/geoip2?ip=', 3))
+    print(color('curl cmd:', TITLE_COLOR))
+    print(color(f'{" " * SUB_TITLE_COLOR}curl {BASE_URL}/json?ip=', CONTENT_COLOR))
+    print(color(f'{" " * SUB_TITLE_COLOR}curl {BASE_URL}/api/ip-query?source=qqwry&ip=', CONTENT_COLOR))
+    print(color(f'{" " * SUB_TITLE_COLOR}curl {BASE_URL}/api/ip-query?source=geoip2&ip=', CONTENT_COLOR))
+
 
 def check_ip_and_return_str(ip: str) -> str:
     '''
     检查 ip 地址是否合法, 最终只返回一个 ip 地址
     '''
     import re
-    
-    assert re.search(r'\d+\.\d+\.\d+\.\d+', ip), "no IP address found." 
+
+    assert re.search(r'\d+\.\d+\.\d+\.\d+', ip), "no IP address found."
     return re.search(r'\d+\.\d+\.\d+\.\d+', ip).group()
-    
+
+
 if __name__ == "__main__":
-    
+
     if args['ip']:
         args['ip'] = check_ip_and_return_str(args['ip'])
-    
+
     if args['cmd']:
         cmd()
         exit()
@@ -167,22 +155,12 @@ if __name__ == "__main__":
     if args['all']:
         args = {
             'ip': args['ip'] if args['ip'] else '',
-            'location': True,
-            'qqwrt': True,
-            'ip2location': True,
+            'qqwry': True,
             'geoip2': True
         }
-    
+
     client = IPRSSClient(args)
 
-    try:
-
-        # client.get_public_ip()
-        client.get_public_ip_v2()
-        client.get_ip_with_location()
-        client.query_ip_with_qqwry()
-        client.query_ip_with_ip2location()
-        client.query_ip_with_geoip2()
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
+    client.get_ip_with_location()
+    client.query_ip_with_qqwry()
+    client.query_ip_with_geoip2()

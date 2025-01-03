@@ -7,6 +7,7 @@ import argparse
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--ip', default='', type=str, help='指定 ip 来查询')
+ap.add_argument('-2', '--ip2location', action='store_true', help='展示 ip2location 查询结果')
 ap.add_argument('-q', '--qqwry', action='store_true', help='展示 cz 查询结果')
 ap.add_argument('-g', '--geoip2', action='store_true', help='展示 geoip2 查询结果')
 ap.add_argument('-a', '--all', action='store_true', help='展示所有查询结果')
@@ -59,6 +60,18 @@ class IPRSSClient:
             )
         )
         self.ip = data['ip']
+
+    def query_ip_with_ip2location(self):
+        '''
+        在 cz 数据库中查询 IP 地址对应信息
+        '''
+        if check_arg(args, 'ip2location') == None:
+            return
+        url = f"{BASE_URL}/api/ip-query?source=ip2location&ip={self.ip}"
+        response = self.execute_curl(url)
+        qqwry_result = json.loads(response)
+        print(color("ip2location Result:", TITLE_COLOR))
+        format_dict(qqwry_result, exclude_keys=['code', 'msg'])
 
     def query_ip_with_qqwry(self):
         '''
@@ -155,6 +168,7 @@ if __name__ == "__main__":
     if args['all']:
         args = {
             'ip': args['ip'] if args['ip'] else '',
+            'ip2location': True,
             'qqwry': True,
             'geoip2': True
         }
@@ -162,5 +176,6 @@ if __name__ == "__main__":
     client = IPRSSClient(args)
 
     client.get_ip_with_location()
+    client.query_ip_with_ip2location()
     client.query_ip_with_qqwry()
     client.query_ip_with_geoip2()

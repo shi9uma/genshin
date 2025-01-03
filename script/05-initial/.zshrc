@@ -416,7 +416,7 @@ unblob() {
         chmod +x $unblob_path
     fi
     cp $unblob_path .
-    eval $PWD/unblob.sh
+    eval $PWD/unblob.sh $1
 }
 
 call_bridge() {

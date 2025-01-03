@@ -6,11 +6,11 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ $(id -u) -ne 0 ]; then
-    echo "run as root"
+    echo "run as su"
     exit 1
 fi
 
-if [ $(which docker) -ne 0 ]; then
+if [ $(which docker 2>&1 > /dev/null; echo $?) -ne 0 ]; then
     echo "docker not found, or place it in /usr/bin/docker"
     exit 1
 fi

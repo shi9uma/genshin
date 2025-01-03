@@ -21,6 +21,11 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
+if [ $(which docker 2>&1 > /dev/null; echo $?) -ne 0 ]; then
+    echo "docker not found, or place it in /usr/bin/docker"
+    exit 1
+fi
+
 if [ $# -eq 0 ]; then
     echo "usage: $0 args"
     exit 1

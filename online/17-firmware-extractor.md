@@ -12,7 +12,5 @@
 3. usage（docker）：
 
    ```bash
-   docker 
+   docker
    ```
-
-   

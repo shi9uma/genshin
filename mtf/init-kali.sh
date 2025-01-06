@@ -6,22 +6,23 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 PROXY_POINT="http://192.168.9.4:7890"
+GITHUB_URL_BASE="https://raw.githubusercontent.com/shi9uma/genshin/main"
 export all_proxy="$PROXY_POINT"
 
 # init zsh
-curl -fLo $HOME/.zshrc https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
-curl -fLo /root/.zshrc https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/.zshrc
+curl -fLo $HOME/.zshrc $GITHUB_URL_BASE/mtf/.zshrc
+curl -fLo /root/.zshrc $GITHUB_URL_BASE/mtf/.zshrc
 
 # ssh
 mkdir -p $HOME/.ssh
-curl -fLo $HOME/.ssh/authorized_keys https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/authorized_keys
+curl -fLo $HOME/.ssh/authorized_keys $GITHUB_URL_BASE/mtf/authorized_keys
 chmod 700 -R $HOME/.ssh
 
 mkdir -p /root/.ssh
-curl -fLo /root/.ssh/authorized_keys https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/authorized_keys
+curl -fLo /root/.ssh/authorized_keys $GITHUB_URL_BASE/mtf/authorized_keys
 chmod 700 -R /root/.ssh
 
-curl -fLo /etc/ssh/sshd_config https://raw.githubusercontent.com/shi9uma/genshin/main/script/05-initial/sshd_config
+curl -fLo /etc/ssh/sshd_config $GITHUB_URL_BASE/mtf/sshd_config
 systemctl start ssh && systemctl enable ssh
 
 # software

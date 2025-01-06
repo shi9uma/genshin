@@ -1,7 +1,5 @@
 # Analysis tplink wr1042ndv1
 
->   就是从模仿开始打怪积累经验
-
 get firmware here：[TP-Link TL-WR1042NDv1 Router Firmware 130923](https://drivers.softpedia.com/get/Router-Switch-Access-Point/TP-Link/TP-Link-TL-WR1042NDv1-Router-Firmware-130923.shtml)；以 `$` 为宿主机，`$$` 为 guest 虚拟环境
 
 ## front

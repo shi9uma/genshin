@@ -1,8 +1,55 @@
-# Environment Configuration
+# 01 iot-introduction
 
->   简要配置一下固件分析环境
+sth useful while learning how to bug the iot
 
-个人使用的是 Kali in wsl2，属于是残疾版，很多常用的命令都没有自带，除此之外还需要配置网络，相关安装配置可以参考我的另一篇文章 [app | windows-terminal](https://www.tataramoriko.com/index.php/wkyuu/36.html) 中的 wsl 小标题下的内容
+## article
+
+1.   各类安全文章集合，[看雪知识库](https://www.kanxue.com/chm.htm)
+2.   iot 安全文章集合，[先知社区，iot 板](https://xz.aliyun.com/node/18)
+3.   配置固件分析环境（1），[一步一步PWN路由器之环境搭建](https://xz.aliyun.com/t/1508)
+4.   配置固件分析环境（2），[路由器固件模拟环境搭建](https://xz.aliyun.com/t/5697)
+5.   配置固件分析环境（3），[固件模拟调试环境搭建](http://zeroisone.cc/2018/03/20/固件模拟调试环境搭建)
+6.   iot 文章（1），[路由器通用 0day 漏洞挖掘及 RCE 思路](https://xz.aliyun.com/t/13506)
+7.   ctf（1），[[原创]CTF-PWN常规题个人实战笔记（持续更新）](https://bbs.kanxue.com/thread-266142.htm)
+8.   linux（1），程序是怎样运行的，[How programs get run: ELF binaries](https://lwn.net/Articles/631631/)
+
+## tool
+
+1.   SecureCRT，分析串口信息
+2.   binwalk，用于识别和提取嵌入在 rom 中的文件系统、压缩文件、嵌入式固件等
+3.   firmadyne，固件模拟工具，[firmadyne/firmadyne](https://github.com/firmadyne/firmadyne.git)
+4.   iot 类的在线云沙箱，[bugprove](https://bugprove.com/)
+5.   固件下载网址，[drivers.softpedia](https://drivers.softpedia.com)
+6.   网络测绘引擎（1），[shodan](https://shodan.io)
+7.   网络测绘引擎（2），[fofa](https://en.fofa.info/)
+
+## binary-tool
+
+1.  static
+    1.  **ida**，[IDA Pro](https://hex-rays.com/ida-pro/)；对二进制文件进行反汇编和静态分析，提供直观的图形界面和强大的反汇编功能，用于理解程序的结构和逻辑
+    2.  **ghidra**，[NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra.git)；ida 平替
+    3.  **jadx**，[skylot/jadx](https://github.com/skylot/jadx.git)；用于将 Android 应用程序的 DEX 文件反编译成可读的 Java 源代码，有助于理解和修改 Android 应用程序
+    4.  **dnspy**，[dnSpy/dnSpy](https://github.com/dnSpy/dnSpy.git)；用于 .NET 程序的反编译器和调试器，允许逆向工程 .NET 应用程序，查看和修改源代码
+    5.  **apktool**，[iBotPeaches/Apktool](https://github.com/iBotPeaches/Apktool.git)；反编译和重新编译 apk 文件，查看 java smail 源码
+    6.  **jd-gui**，[java-decompiler/jd-gui](https://github.com/java-decompiler/jd-gui.git)；可以看 jar 包的源码，`apt install jd-gui`
+    7.  **dex2jar**，[pxb1988/dex2jar](https://github.com/pxb1988/dex2jar.git)；将 dex 文件转为 jar 包，`apt install dex2jar`
+2.  dynamic
+    1.  **gdb**，[official](https://www.sourceware.org/gdb/)；用于调试程序，支持多种编程语言，可用于跟踪程序的执行过程、检查内存和寄存器状态等，一般不会只使用 gdb，更多要配合插件
+    2.  **ollydbg**，[OllyDbg](https://www.ollydbg.de/)；Windows，动态调试器，用于分析和修改程序的运行时行为，主要用于反汇编和跟踪
+    3.  **x64dbg/x32dbg**，[x64dbg/x64dbg](https://github.com/x64dbg/x64dbg.git)；开源，支持多种指令集，和 ollydbg 像
+    4.  **windbg**，[official](http://www.windbg.org/)；分析 Windows 系统和应用程序
+    5.  **cheat engine**，[official](https://www.cheatengine.org/)；改游戏挺常用的
+    6.  **frida**，[frida/frida](https://github.com/frida/frida.git)；动态插桩
+3.  other
+    1.  **z3**，[Z3Prover/z3](https://github.com/Z3Prover/z3.git)；用于自动推理和解决数学问题的定理证明器，可用于逆向工程中的符号执行、模型检测等约束求解问题
+    2.  **angr**，[angr/angr](https://github.com/angr/angr.git)；开源的二进制分析框架，用于自动化逆向工程任务，包括符号执行、路径探索和程序分析
+    3.  **binwalk**，[ReFirmLabs/binwalk](https://github.com/ReFirmLabs/binwalk.git)；固件提取工具
+    4.  **easy apk tool**，[APK Easy Tool v1.59.2 - Windows 下使用的安卓逆向工具](https://www.52pojie.cn/thread-1411747-1-1.html)；各种安卓逆向工具的封装，有民间汉化版本，一键反编译、回编译、签名
+    5.  **MT 修改器**，[Android 平台文件管理 & 逆向修改神器](https://mt2.cn/)；安卓平台的，能很大程度地看 apk 的各种信息并修改
+
+# 02 iot-environment-configuration
+
+简要配置一下固件分析环境，个人使用的是 Kali in wsl2，属于是残疾版，很多常用的命令都没有自带，除此之外还需要配置网络，相关安装配置可以参考我的另一篇文章 [app | windows-terminal](https://www.tataramoriko.com/index.php/wkyuu/36.html) 中的 wsl 小标题下的内容
 
 ## qemu
 
@@ -145,7 +192,7 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
      2.   挂载提取出来的固件
 
           1.   按照上文配置好网络并启动 qemu 模拟环境，通过 `ping 172.17.0.2` 可以 ping 通；由于在一些老版本的镜像中 ssh 版本较低，而新版本的 ssh 默认禁用了 `ssh-dss` 算法，可以通过 `ssh -o HostKeyAlgorithms=+ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-dss  user@172.17.0.2` 指定新增算法选项来解决，如果想一劳永逸，还可以修改配置文件 `~/.ssh/config`（没有就创建）：
-          
+
                ```ini
                # 方法 1, 对特定 ip 添加配置
                Host 172.17.0.2
@@ -157,14 +204,14 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
                HostKeyAlgorithms +ssh-dss
                PubkeyAcceptedKeyTypes +ssh-dss
                ```
-          
+
           2.    将提取出来的系统传输到 qemu 中
-          
-               1.   首先需要将整个 squashfs-root 文件夹打包成 tar：`tar -cvf sqfs.tar squashfs-root`
-               2.   传输到 qemu 里：`scp -r sqfs.tar root@172.17.0.2:/root/`（scp 需要用到 ssh，遇到 ssh-dss 算法问题就参考上一步添加对应选项）
-               3.   在 qemu 中解压：`tar -xvf sqfs.tar`
-               4.   运行固件的 shell：`cd /root/squashfs-root`，`chroot . bin/ash`
-               5.   按照上述步骤制作完固件的虚拟环境后，可以将启动时指定的 `debian_squeeze_mips_standard.qcow2`，当然，后续只需要 cp 一份该文件就能分发着去用了，不同的 iot 固件需要更换不同 kernel 和 img，可以自己编译也可以去下载，各凭本事
+
+                1.   首先需要将整个 squashfs-root 文件夹打包成 tar：`tar -cvf sqfs.tar squashfs-root`
+                2.   传输到 qemu 里：`scp -r sqfs.tar root@172.17.0.2:/root/`（scp 需要用到 ssh，遇到 ssh-dss 算法问题就参考上一步添加对应选项）
+                3.   在 qemu 中解压：`tar -xvf sqfs.tar`
+                4.   运行固件的 shell：`cd /root/squashfs-root`，`chroot . bin/ash`
+                5.   按照上述步骤制作完固件的虚拟环境后，可以将启动时指定的 `debian_squeeze_mips_standard.qcow2`，当然，后续只需要 cp 一份该文件就能分发着去用了，不同的 iot 固件需要更换不同 kernel 和 img，可以自己编译也可以去下载，各凭本事
 
 ### imgs
 
@@ -329,7 +376,7 @@ get src here：[frida/frida](https://github.com/frida/frida.git)；Android、Lin
 
 具体使用方式参考另一篇文章 [app | frida-handbook]()；
 
-## references
+## reference
 
 1.   配置固件分析环境（1），[一步一步PWN路由器之环境搭建](https://xz.aliyun.com/t/1508)
 2.   配置固件分析环境（2），[路由器固件模拟环境搭建](https://xz.aliyun.com/t/5697)
@@ -337,3 +384,63 @@ get src here：[frida/frida](https://github.com/frida/frida.git)；Android、Lin
 4.   配置 qemu 环境（1），[QEMU Intro and Network Configuration](https://tyeyeah.github.io/2020/01/11/2020-01-11-QEMU-Intro-and-Network-Configuration/)
 5.   配置 qemu 环境（2），[Qemu 模拟环境](https://ctf-wiki.org/pwn/linux/kernel-mode/environment/qemu-emulate/)
 6.   配置 qemu 环境（3），[IoT（七）通过qemu调试IoT固件和程序](https://www.gandalf.site/2018/12/iotqemuiot.html)
+
+# 03 hardware
+
+1.   安规电容：
+     1.   220V电路板为什么都要加X电容和Y电容？安规电容是怎么发挥作用的？https://www.bilibili.com/video/av603871403
+2.   继电器
+     1.   目的：低电压小电流，控制高电压大电流；低电压小电流控制继电器中的一个开关，当开关导通时，220v 电压可以被传输给电器
+     2.   继电器有什么作用？工作原理是什么？看完试验和拆解，你就知道了https://www.bilibili.com/video/av219398122
+3.   电感线圈
+
+## chip
+
+1.   译码器
+2.   逻辑控制器
+3.   反向器
+
+# 04 router-device-introduction
+
+写这些理论的东西感觉不如直接上手样本来得实在，慢慢补充吧
+
+## introduction
+
+路由器，是比较容易接触到的智能设备，路由器的挖掘有：
+
+-   从路由器的 web 管理界面下手，从登录界面开始就找什么弱口令、注入之类的，进去后还有命令执行、越权之类的，比起要用到逆向的知识，这更像是渗透或者 web 手做的事情
+-   通过 binwalk 对 flash rom 处理提取出固件，再对固件展开逆向分析
+
+## component
+
+简单的路由器组成主要是 cpu、ram、flash rom、uart / jtag 串口
+
+-   cpu：在一些嵌入式微控制器里也叫 MCU（Microcontroller Unit，微控制单元）
+-   uart：Universal Asynchronous Receiver/Transmitter，通用异步收发器/发送器。常见的串行通信接口标准，用于在计算机系统和外部设备之间进行数据传输，通过 uart 调试口，开发人员可以发送和接受调试信息、日志、配置等，可以使用 SecureCRT 来获取和分析串口的信息
+-   Flash Rom：用于 iot 设备存储文件系统、内核信息、boot 信息、配置信息。不同的 flash rom 有不同的存储结构，需要主动识别和区分这些 rom，最常见的方式是通过芯片上厂商的首字母缩写、不规则数字等信息区分 rom，然后使用编程器软件提取信息，不同的厂商可能会有不同的编程器软件
+
+## firmware
+
+固件（firmware）就是存储于设备的 flash 芯片中，一般担任着一个数码产品最基础、底层的工作
+
+获取固件的方法有以下方式：
+
+-   从官网技术支持获取固件升级包；从第三方网站获取固件包
+-   本地 OTA（over the air，无线传输方式升级）升级时进行抓包；也可以破解掉用于升级的软件，获取其通讯算法，直接下载
+-   通过编程器、binwalk 直接从路由器的 flash rom 中获取
+-   获取硬件系统的系统权限后，使用 tar、dd 等指令提取固件
+-   ......
+
+## boot
+
+boot 引导进入系统，修改 boot 启动脚本进入有密码保护的登陆系统的思路（也可以用于其他 iot 设备的引导程序）：
+
+1.   进入 uboot 后，通过 `tftpboot ${loadaddr} filesystem.img` 来引导魔改过的系统，简单文件传输协议（Trivial File Transfer Protocol，TFTP），在系统运行后再提取固件
+2.   使用第三方 Linux 挂载 rom，然后修改 `passwd`，`shadow`，`shadow-` 文件中的 root 相关内容
+3.   对于使用 x86 系统的固件，使用类似 WinPE 系统的方式，挂载一个 u 盘版本的 LinuxPE，然后提取固件
+4.   类似 Linux 系统忘记密码的解决方案，在启动选项中添加 `single` 或 `init=/bin/sh`，即进入单用户模式，然后修改密码
+5.   让系统在启动时执行删除密码的命令，`init=passwd root -d`，一般删除后，使用 root 登录将不再需要密码
+
+## reference
+
+1.   [智能设备漏洞挖掘中几个突破点](https://bbs.kanxue.com/thread-230095.html)

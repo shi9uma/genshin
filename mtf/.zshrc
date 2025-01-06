@@ -468,7 +468,7 @@ case $os_type in
         alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
         alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
         alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
-        alias np="/Applications/Notepad--.app/Contents/MacOS/Notepad--"
+        alias np="/Applications/Notepad4.app/Contents/MacOS/Notepad4"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$export_path:$HOME/.local/bin:$HOME/.cargo/bin

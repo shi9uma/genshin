@@ -315,15 +315,23 @@ _curl() {
 password() {
     rename_path="$HOME/.genshin/password-generator.py"
     if [[ ! -f $rename_path ]]; then
-        _curl $rename_path $github_url_base/script/02-encryption/01-password-generator.py
+        _curl $rename_path $github_url_base/code/python/08-password-generator.py
     fi
     python3 $rename_path "$@"
+}
+
+cx() {
+    ip_status_path="$HOME/.genshin/ip-status.py"
+    if [[ ! -f $ip_status_path ]]; then
+        _curl $ip_status_path $github_url_base/code/python/09-ip-status.py
+    fi
+    python3 $ip_status_path "$@"
 }
 
 lcd() {
     lcd_path="$HOME/.genshin/lcd.py"
     if [[ ! -f $lcd_path ]]; then
-        _curl $lcd_path $github_url_base/script/04-cmd-implementation/02-lcd.py
+        _curl $lcd_path $github_url_base/code/python/13-lcd.py
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $lcd_path -pn "$2")
@@ -342,7 +350,7 @@ lcd() {
 rename() {
     rename_path="$HOME/.genshin/interact-rename.py"
     if [[ ! -f $rename_path ]]; then
-        _curl $rename_path $github_url_base/script/04-cmd-implementation/03-interact-rename.py
+        _curl $rename_path $github_url_base/code/python/14-interact-rename.py
     fi
     python3 $rename_path "$@"
 }
@@ -351,14 +359,6 @@ w2u() {
     windows_path_like="$1"
     unix_path=$(echo "$windows_path_like" | sed 's|\\|/|g' | sed 's|^\([a-zA-Z]\):|/\L\1|')
     echo "$unix_path"
-}
-
-cx() {
-    ip_status_path="$HOME/.genshin/ip-status.py"
-    if [[ ! -f $ip_status_path ]]; then
-        _curl $ip_status_path $github_url_base/script/03-network/03-ip-status.py
-    fi
-    python3 $ip_status_path "$@"
 }
 
 sd() {
@@ -422,7 +422,7 @@ unblob() {
 call_bridge() {
     call_bridge_path="$HOME/.genshin/call-bridge.sh"
     if [[ ! -f $call_bridge_path ]]; then
-        _curl $call_bridge_path $github_url_base/script/04-cmd-implementation/04-call-bridge.sh
+        _curl $call_bridge_path $github_url_base/code/shellscript/07-call-bridge.sh
         chmod +x $call_bridge_path
     fi
     eval "$call_bridge_path $@"
@@ -430,7 +430,7 @@ call_bridge() {
 
 update_zshrc() {
     zshrc_path="$HOME/.zshrc"
-    _curl $zshrc_path $github_url_base/script/05-initial/.zshrc
+    _curl $zshrc_path $github_url_base/mtf/.zshrc
 }
 
 ## file, dir

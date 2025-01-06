@@ -98,15 +98,15 @@ Set-Alias reg regedit
 function poweroff { Stop-Computer }
 function reboot { Restart-Computer }
 
-function password { python d:/project/04-flyMe2theStar/03-genshin/script/02-encryption/01-password-generator.py $args }
-function rename { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/03-interact-rename.py $args}
-function encrypt { python d:/project/04-flyMe2theStar/03-genshin/script/02-encryption/03-ez-encrypt.py $args }
-function cx { python d:/project/04-flyMe2theStar/03-genshin/script/03-network/03-ip-status.py $args }
-function ftp { python d:/project/04-flyMe2theStar/03-genshin/script/03-network/02-fast-ftp-server.py $args }
-function l { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args }
-function ll { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args }
-function ls { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args }
-function la { python d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/01-ls-alh.py $args --all }
+function password { python d:/project/04-flyMe2theStar/03-genshin/code/python/08-password-generator.py $args }
+function rename { python d:/project/04-flyMe2theStar/03-genshin/code/python/14-interact-rename.py $args}
+function encrypt { python d:/project/04-flyMe2theStar/03-genshin/code/python/02-ez-encrypt.py $args }
+function cx { python d:/project/04-flyMe2theStar/03-genshin/code/python/09-ip-status.py $args }
+function ftp { python d:/project/04-flyMe2theStar/03-genshin/code/python/16-fast-ftp-server.py $args }
+function l { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
+function ll { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
+function ls { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
+function la { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args --all }
 
 function genshin { ssh genshin-wkyuu }
 function pve { ssh pve-wkyuu }
@@ -155,7 +155,7 @@ function tmp {
     Set-Location -Path $path
 }
 function lcd {
-    $script_path = "d:/project/04-flyMe2theStar/03-genshin/script/04-cmd-implementation/02-lcd.py"
+    $script_path = "d:/project/04-flyMe2theStar/03-genshin/code/python/13-lcd.py"
     
     if ($args[0] -eq "cd" -and $args[1]) {
         $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '([A-Za-z]:\/[^\r\n]+)' | ForEach-Object { $_.Matches[0].Value }

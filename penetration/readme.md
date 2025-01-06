@@ -40,6 +40,10 @@
 1.   找一些 router 设备：`shodan search --limit 10 --fields ip_str,port "cisco -authorized port:23"`
 2.   找一些后台管理系统：`shodan search --limit 10 --fields ip_str,port http.title:后台`
 
+## fofa
+
+[refer](https://hackeyes.github.io/2021/04/17/fofa%E8%AF%AD%E6%B3%95/)
+
 ## nmap
 
 基本语法：`nmap [type] [option] ip`，指定 `-V` 或 `-vv` 以获得详细输出；以 `192.168.0.1/24` 和 `192.168.0.1` 为例

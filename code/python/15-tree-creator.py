@@ -161,7 +161,9 @@ if args['example'] or args['make_example']:
             )
     exit()
 
-assert args['filepath'], 'lack of json file path'
+if not args.get('filepath', ''):
+    print(color('lack of json file path, see `python tree-creator.py -h` for help', 4))
+    exit(1)
 
 with open(args['filepath'], 'r', encoding = 'utf-8') as f:
     json_data = json.load(f)

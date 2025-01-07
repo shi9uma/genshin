@@ -7,11 +7,6 @@
 1. 
 
 
-
-
-
-
-
 ## refer
 
 1. https://www.subrat.info/build-kernel-and-userspace/

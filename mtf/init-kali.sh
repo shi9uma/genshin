@@ -57,14 +57,15 @@ fi
 apt install -y \
 	aptitude \
 	locales curl net-tools openvpn rsync proxychains4 jq traceroute \
-	gnupg2 binutils file fd-find xxd btop rename tmux strace \
+	gnupg2 binutils file fd-find xxd btop rename tmux strace last \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \
 	python3-pip python3-venv python3-shodan python3-ropgadget \
 	fzf ripgrep vim \
 	docker.io docker-compose \
 	gdb gdbserver ghidra rizin radare2 patchelf \
-	nmap hydra john telnet
+	nmap hydra john telnet \
+	rkhunter chkrootkit debsums
 
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs npm && \
 npm install -g npm@latest --registry=https://registry.npmmirror.com && \

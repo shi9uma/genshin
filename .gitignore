@@ -2,9 +2,6 @@
 # venv
 .venv
 
-# encryption
-salt
-
 # diy
 *.gdb_history
 

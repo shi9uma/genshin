@@ -433,6 +433,27 @@ update_zshrc() {
     _curl $zshrc_path $github_url_base/mtf/.zshrc
 }
 
+find_genshin() {
+    current_dir=$(pwd)
+	if [ $# -eq 1 ]; then
+		target_dir_name=$1
+	else
+		target_dir_name="genshin"
+	fi
+
+    while [[ "$current_dir" != "/" ]]; do
+        base_name=$(basename "$current_dir")
+        if [[ "$base_name" == "$target_dir_name" ]]; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir=$(dirname "$current_dir")
+    done
+
+    echo -e "${RED}Error: $target_dir_name directory not found${nc}"
+    return 1
+}
+
 ## file, dir
 if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"

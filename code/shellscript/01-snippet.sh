@@ -9,12 +9,12 @@ yellow='\033[33m'
 grey='\e[37m'
 pink='\033[38;5;218m'
 cyan='\033[96m'
+
+# echo -e "${red}xxx${nc}"
 nc='\033[0m'
-# ${red}xxx${nc}
 #endregion
 
 workdir=$(cd $(dirname $0); pwd)
-rootdir=$(cd $(dirname "$0/../../"); pwd)
 
 if [ $(id -u) -ne 0 ]; then
     echo "run as root"
@@ -34,6 +34,15 @@ fi
 while read -r line; do
 	echo $line
 done < $(cat $1)
+
+loop_file_list=(
+	"file1"
+	"file2"
+	"file3"
+)
+for file in ${loop_file_list[@]}; do
+	echo $file
+done
 
 for arg in "$@"; do
     if [ "$arg" = "--help" ]; then
@@ -120,3 +129,24 @@ while getopts "uc3h" opt; do
 			;;
 	esac
 done
+
+find_genshin() {
+    current_dir=$(pwd)
+	if [ $# -eq 1 ]; then
+		target_dir_name=$1
+	else
+		target_dir_name="genshin"
+	fi
+
+    while [[ "$current_dir" != "/" ]]; do
+        base_name=$(basename "$current_dir")
+        if [[ "$base_name" == "$target_dir_name" ]]; then
+            echo "$current_dir"
+            return $current_dir
+        fi
+        current_dir=$(dirname "$current_dir")
+    done
+
+    echo -e "${RED}Error: $target_dir_name directory not found${nc}"
+    return 1
+}

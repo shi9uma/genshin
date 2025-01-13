@@ -120,11 +120,11 @@ public class test {
 
 ## sh1t
 
-使用 frida 插桩来监控应用（需要 root 权限），可以参考这篇文章 [android | android-root-records](https://www.tataramoriko.com/index.php/wkyuu/258.html) 对设备进行 root；从 [release](https://github.com/frida/frida/releases/) 处获取 `frida-server-x.x.x-android-arm` 文件；
+使用 frida 插桩来监控应用（需要 root 权限），可以参考这篇文章 [android | android-root-records](https://www.majo.im/index.php/wkyuu/258.html) 对设备进行 root；从 [release](https://github.com/frida/frida/releases/) 处获取 `frida-server-x.x.x-android-arm` 文件；
 
-kali 上可以安装 adb 调试工具：`sudo apt install adb`，由于 kali for wsl 官方 distribution 没有添加 usb 支持，需要自行进行内核编译添加 usb support，并在启动时指定编译出的 kernel，参考另一篇文章 [app | windows-terminal](https://www.tataramoriko.com/index.php/wkyuu/36.html)；**如果嫌麻烦的话**，直接使用 kali in vmware，在连接手机设备后选择连接到虚拟机即可（需要在虚拟机设置中添加 USB 控制器）
+kali 上可以安装 adb 调试工具：`sudo apt install adb`，由于 kali for wsl 官方 distribution 没有添加 usb 支持，需要自行进行内核编译添加 usb support，并在启动时指定编译出的 kernel，参考另一篇文章 [app | windows-terminal](https://www.majo.im/index.php/wkyuu/36.html)；**如果嫌麻烦的话**，直接使用 kali in vmware，在连接手机设备后选择连接到虚拟机即可（需要在虚拟机设置中添加 USB 控制器）
 
-电脑连接手机，将其传输到手机里：`adb push frida-server-android-arm64 /data/local/tmp/frida-server`，运行之：`su`，`/data/local/tmp/frida-server`；frida 的环境的配置可以参考 [app | frida-handbook](https://www.tataramoriko.com/index.php/wkyuu/334.html)，使用 `frida-ps -U` 可以获取手机当前正在运行的任务
+电脑连接手机，将其传输到手机里：`adb push frida-server-android-arm64 /data/local/tmp/frida-server`，运行之：`su`，`/data/local/tmp/frida-server`；frida 的环境的配置可以参考 [app | frida-handbook](https://www.majo.im/index.php/wkyuu/334.html)，使用 `frida-ps -U` 可以获取手机当前正在运行的任务
 
 1.   手机上打开 ainanning，`adb shell` 进入系统，输入：`dumpsys window windows | grep mCurrentFocus` 以获取当前应用的信息 *com.cloudbae.lovenanning/com.cloudbae.lovenanning.home.view.HomeActivity*，当前应用名为：**com.cloudbae.lovenanning**
 2.   

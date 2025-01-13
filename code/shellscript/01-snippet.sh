@@ -141,7 +141,6 @@ find_genshin() {
     while [[ "$current_dir" != "/" ]]; do
         base_name=$(basename "$current_dir")
         if [[ "$base_name" == "$target_dir_name" ]]; then
-            echo "$current_dir"
             return $current_dir
         fi
         current_dir=$(dirname "$current_dir")

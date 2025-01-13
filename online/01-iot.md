@@ -49,7 +49,7 @@ sth useful while learning how to bug the iot
 
 # 02 iot-environment-configuration
 
-简要配置一下固件分析环境，个人使用的是 Kali in wsl2，属于是残疾版，很多常用的命令都没有自带，除此之外还需要配置网络，相关安装配置可以参考我的另一篇文章 [app | windows-terminal](https://www.tataramoriko.com/index.php/wkyuu/36.html) 中的 wsl 小标题下的内容
+简要配置一下固件分析环境，个人使用的是 Kali in wsl2，属于是残疾版，很多常用的命令都没有自带，除此之外还需要配置网络，相关安装配置可以参考我的另一篇文章 [app | windows-terminal](https://www.majo.im/index.php/wkyuu/36.html) 中的 wsl 小标题下的内容
 
 ## qemu
 

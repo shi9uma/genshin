@@ -6,6 +6,8 @@
 
 1. 提权
 2. 持久化
+   1. 基于 mount 实现的隐藏
+   2. 
 
 `socat -d -d TCP-LISTEN:8888,reuseaddr,fork SYSTEM:"cat /etc/dropbear/authorized_keys"`
 

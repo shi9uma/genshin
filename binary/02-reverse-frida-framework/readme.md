@@ -48,7 +48,7 @@ frida 的运行需要 root 权限
 
 要解析固件、apk 时，需要到 [release](https://github.com/frida/frida/releases/) 中下载 frida-server 对应的 platform 和 structure，例如要解析是 mips linux 固件，则下载 `frida-server-x.x.x-linux-mips.xz`，解压得到 `frida-server` 将其复制到固件中，后台运行之 `sudo /tmp/frida-server &`（需要 root 权限，使用 qemu 模拟时就可以获取 root）
 
-一般都是从解析 apk 应用开始入门（android 的 root 可以参考这篇文章 [android | android-root-records](https://www.tataramoriko.com/index.php/wkyuu/258.html)）；需要自行搭建 android studio 环境用于编写 apk 软件
+一般都是从解析 apk 应用开始入门（android 的 root 可以参考这篇文章 [android | android-root-records](https://www.majo.im/index.php/wkyuu/258.html)）；需要自行搭建 android studio 环境用于编写 apk 软件
 
 1.   获取到 `frida-server-android-arm`
 2.   电脑连接手机，传到 android 上：`adb push frida-server-android-arm /data/local/tmp/frida-server`

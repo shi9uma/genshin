@@ -96,6 +96,10 @@ case "$1" in
     show)
         echo -e "encrypt_script_path: ${green}${encrypt_script_path}${nc}"
         echo -e "salt_path: ${green}${salt_path}${nc}"
+        echo -e "src_file_path: ${green}${src_file_path}${nc}"
+        echo -e "target_file_path: ${green}${target_file_path}${nc}"
+        echo -e "src_file_dir: ${green}${src_file_dir}${nc}"
+        echo -e "target_file_dir: ${green}${target_file_dir}${nc}"
         ;;
     *)
         echo "usage: $0 {enc|dec|show}"

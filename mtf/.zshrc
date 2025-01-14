@@ -261,11 +261,31 @@ github_url_base="https://raw.githubusercontent.com/shi9uma/genshin/main"
 # ${RED}xxx${NC}
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 ## function
 cmd() {
-    sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc
+    sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc | awk '
+    BEGIN { 
+        color_alias="\033[0;36m";
+        color_alias_name="\033[0;32m";
+        color_alias_cmd="\033[0;33m";
+        reset="\033[0m";
+    }
+    /^alias/ {
+        cmd = $0;
+        sub(/^alias[ \t]+/, "", cmd);
+        split(cmd, parts, "=");
+        alias_name = parts[1];
+        alias_cmd = substr(parts[2], 2, length(parts[2]) - 2);
+        printf("%salias %s%-10s%s = %s\"%s\"%s\n", color_alias, color_alias_name, alias_name, reset, color_alias_cmd, alias_cmd, reset);
+        next;
+    }
+    {
+        print $0;
+    }'
 }
 
 tmp() {
@@ -510,7 +530,14 @@ alias lt="ls -alht"
 alias lss="ls -alhS"
 alias cls="clear"
 alias c="clear"
-alias size="du -abh -d 1" # exclude file size under 1G: size -t 1G | exclude reg files: size --exclude=*backups*
+alias size="du -abh --time -d 1"
+    # exclude file size under 1G: `size -t 1G`;
+    # exclude reg files: `size --exclude=*backups*`;
+    # sort by size: `size | sort -h`
+
+alias rcp="rsync -avtz --progress"
+    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src dst`
+
 alias x="curl"
 alias xi="curl -I"
 alias reg="grep -ir"

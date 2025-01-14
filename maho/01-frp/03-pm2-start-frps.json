@@ -1,0 +1,10 @@
+{
+  "apps": [
+    {
+      "name": "frps",
+      "cwd": "/home/app/frp",
+      "script": "/home/app/frp/frps -c /home/app/frp/frps.toml",
+      "restart_delay": 60000
+    }
+  ]
+}

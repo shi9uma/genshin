@@ -123,8 +123,7 @@ if __name__ == "__main__":
         cmd()
         exit()
 
-    if args["all"]:
-        args = {"ip": args["ip"] if args["ip"] else ""}
+    args = {"ip": args["ip"] if args["ip"] else ""}
 
     client = IPRSSClient(args)
 

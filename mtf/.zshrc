@@ -289,10 +289,17 @@ cmd() {
 }
 
 tmp() {
-    if [[ ! -d '/tmp/tmp' ]]; then
+
+    if [ $# -eq 0 ]; then
         mkdir -p '/tmp/tmp'
+        cd /tmp/tmp
+    elif [ $# -eq 1 ]; then
+        mkdir -p /tmp/tmp/$1
+        cd /tmp/tmp/$1
+    else
+        echo "usage: tmp [dir]"
     fi
-    cd /tmp/tmp
+
 }
 
 app() {

@@ -9,6 +9,7 @@
 <details>
     <summary> 見えない </summary>
     <ul>
+        <li> 高等元素论<a href="https://github.com/earthjasonlin/GenshinTheory.git">earthjasonlin/GenshinTheory</a></li>
         <li> wiki，<a href="https://ctf-wiki.org/">ctf wiki</a></li>
         <li> 程式備忘錄，<a href="https://reference.shanwer.top/">Quick Reference</a>，<code>http.html:"jaywcjlove/reference"</code></li>
         <li> 權限提升 trick，<a href="https://gtfobins.github.io/">GTFOBins</a></li>

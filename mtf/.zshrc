@@ -524,6 +524,11 @@ case $os_type in
 esac
 export PATH=$export_path
 
+if [[ $DONT_FASTFETCH -ne 1 ]]; then
+    if [ -f /usr/bin/fastfetch ]; then
+        fastfetch
+    fi
+fi
 
 # anchor
 # ==============================================================
@@ -551,5 +556,7 @@ alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
 alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
+alias tldr="tldr --language=zh"
 alias transfer="sd http.favicon.hash:\"-620522584\""
+alias random="cat /dev/urandom|head|base64|md5sum|cut -d \" \" -f 1"
 # end alias

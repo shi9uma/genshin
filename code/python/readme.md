@@ -1,22 +1,41 @@
 ## python-embed-env-maker
 
-通过 python embedable package 快速创建不同版本的可移植环境（venv），以 python 3.12 为例
+### windows
 
-1. 在项目下创建文件夹 `venv`
-2. 到 [官网](https://www.python.org/downloads/release/python-3120/) 下载对应的 embedable package，解压到 `venv/` 下
-3. 补全 python 能力
+windows 下通过 python embedable package 快速创建不同版本的可移植环境（venv），以 python 3.12 为例
+
+1. 在项目下创建文件夹 `.venv`
+2. 到 [官网](https://www.python.org/downloads/release/python-3120/) 下载对应的 embedable package，解压到 `.venv/` 下
+3. 补全 python 能力：pip、virtualenv
    1. 获取 pip：`wget https://bootstrap.pypa.io/get-pip.py -O get-pip.py`
-   2. 在 `venv/python-3.12.0-embed-amd64/python12._pth` 中去掉 `# import site` 前的注释号
-   3. 安装 pip：`venv/python-3.12.0-embed-amd64/python.exe get-pip.py`
-   4. `venv/python-3.12.0-embed-amd64/python.exe -m pip install virtualenv`
-4. 然后创建虚拟环境：`venv/python-3.12.0-embed-amd64/python.exe -m virtualenv venv`（选定 `venv` 目录作为虚拟环境，且移植后也可以直接使用）
-5. `./venv/scripts/activate`
+   2. 在 `.venv/python-3.12.0-embed-amd64/python12._pth` 中去掉 `# import site` 前的注释号
+   3. 安装 pip：`.venv/python-3.12.0-embed-amd64/python.exe get-pip.py`
+   4. `.venv/python-3.12.0-embed-amd64/python.exe -m pip install virtualenv`
+4. 然后创建虚拟环境：`.venv/python-3.12.0-embed-amd64/python.exe -m virtualenv .venv`（选定 `.venv` 目录作为虚拟环境，且移植后也可以直接使用）
+5. `./.venv/scripts/activate`
 
-以上步骤完成后，python 项目的目录结构应该如下：
+### unix
+
+由于官网上并没有提供 unix 的 portable 程序，需要自己手动编译：
+
+1. 在项目下创建文件夹 `.venv`，安装必要编译工具：`sudo apt install build-essential autoconf automake`
+2. 到 [官网](https://www.python.org/downloads/release/python-3131/) 下载源码 `Gzipped source tarball`，解压到 `.venv/` 下：`tar zxvf Python-3.13.1.tgz`
+3. 编译
+   1. `cd Python-3.13.1`，`mkdir portable-output`
+   2. `./configure --prefix=$PWD/portable-output --with-ensurepip=install`，在这里可以预先指定安装 pip
+   3. `make` 开始编译
+   4. `make install` 编译完成后安装到上述提供的 `portable-output`
+   5. 此时将 `portable-output` 目录整个打包即为 python 的 porable 环境：`mv portable-output ../python`
+4. 安装虚拟环境
+   1. `.venv/python/bin/python3 -m pip install virtualenv`
+   2. `.venv/python/bin/python3 -m pip virtualenv .venv`
+5. `source .venv/bin/activate`
+
+以上步骤完成后，python 项目的目录结构应该如下（unix 相似）：
 
 ```bash
 project
-├── venv
+├── .venv
 │   ├── python-3.12.0-embed-amd64
 │   │   ├── python.exe
 │   │   ├── pythonw.exe

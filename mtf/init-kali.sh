@@ -44,7 +44,7 @@ apt install -y \
 	intltool \
 	libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libncurses-dev libpython3-dev \
 	libmpfr-dev libc6-dbg libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libffi-dev libtool lrzsz \
-    make module-assistant mkisofs msmtp \
+    make module-assistant mkisofs msmtp tldr \
 	ninja-build \
 	p7zip p7zip-full \
 	patch pkgconf python2.7 python3-pip \

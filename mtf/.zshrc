@@ -509,14 +509,16 @@ os_type=$(uname -o)
 export_path=$PATH
 case $os_type in
     "Darwin")
+        export CLICOLOR=1
+        export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
+
         export_path=$HOME/.bin:$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$export_path
-        alias python="python3"
-        alias pip="pip3"
+        alias python="/opt/homebrew/bin/python3"
+        alias pip="/opt/homebrew/bin/pip3"
 
         alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
         alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
         alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
-        alias np="/Applications/Notepad4.app/Contents/MacOS/Notepad4"
         ;;
     "GNU/Linux")
         export_path=$HOME/.bin:$export_path:$HOME/.local/bin:$HOME/.cargo/bin

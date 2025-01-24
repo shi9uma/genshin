@@ -57,7 +57,7 @@ fi
 apt install -y \
 	aptitude \
 	locales curl net-tools openvpn rsync proxychains4 jq traceroute \
-	gnupg2 binutils file fd-find xxd btop rename tmux strace last \
+	gnupg2 binutils file fd-find xxd btop rename tmux strace last coreutils \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \
 	python3-pip python3-venv python3-shodan python3-ropgadget \

@@ -481,6 +481,18 @@ find_genshin() {
     return 1
 }
 
+ollama() {
+    ollama_dir_path="$HOME/.ollama"
+    if [[ ! -d $ollama_dir_path ]]; then
+        mkdir -p $ollama_dir_path
+    fi
+    ollama_path="$config_dir_path/ollama.py"
+    if [[ ! -f $ollama_path ]]; then
+        _curl $ollama_path $github_url_base/code/python/17-ollama.py
+    fi
+    python3 $ollama_path -c "$ollama_dir_path/config.json" "$@"
+}
+
 ## file, dir
 if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"
@@ -512,16 +524,44 @@ case $os_type in
         export CLICOLOR=1
         export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
 
-        export_path=$HOME/.bin:$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin:$export_path
-        alias python="/opt/homebrew/bin/python3"
-        alias pip="/opt/homebrew/bin/pip3"
+        darwin_path=(
+            "$HOME/.bin"
+            "$HOME/.local/bin"
+            "$HOME/.cargo/bin"
+
+            "/opt/homebrew/bin"
+            "/opt/homebrew/opt/make/libexec/gnubin"
+            "/opt/metasploit-framework/bin"
+
+            "$export_path"
+        )
+
+        for path in "${darwin_path[@]}"; do
+            if [[ -d "$path" ]]; then
+                export_path="$path:$export_path"
+            fi
+        done
+
+        # alias python="/opt/homebrew/bin/python3"
+        # alias pip="/opt/homebrew/bin/pip3"
 
         alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
         alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
         alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
         ;;
     "GNU/Linux")
-        export_path=$HOME/.bin:$export_path:$HOME/.local/bin:$HOME/.cargo/bin
+        linux_path=(
+            "$HOME/.bin"
+            "$HOME/.local/bin"
+            "$HOME/.cargo/bin"
+            "$export_path"
+        )
+
+        for path in "${linux_path[@]}"; do
+            if [[ -d "$path" ]]; then
+                export_path="$path:$export_path"
+            fi
+        done
         ;;
 esac
 export PATH=$export_path

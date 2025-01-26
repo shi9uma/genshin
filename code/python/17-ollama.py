@@ -49,8 +49,10 @@ quiet_import()
 
 should_exit = False
 is_generating = False
-default_config_name = ".ollama-config.json"
-default_config_path = os.path.expanduser(f"~/{default_config_name}")
+ollama_dir_name = ".ollama"
+ollama_dir_path = os.path.expanduser(f"~/{ollama_dir_name}")
+ollama_config_name = "config.json"
+ollama_config_path = os.path.join(ollama_dir_path, ollama_config_name)
 
 def signal_handler(signum, frame):
     global should_exit
@@ -59,9 +61,9 @@ def signal_handler(signum, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-def get_default_config_path():
+def get_ollama_config_path():
     """获取默认配置文件路径"""
-    return default_config_path
+    return ollama_config_path
 
 def load_config(config_path):
     """加载配置文件，如果指定路径不存在则尝试加载默认配置"""
@@ -71,7 +73,15 @@ def load_config(config_path):
         with open(config_path, 'r') as f:
             return json.load(f)
     
-    default_config = get_default_config_path()
+    # 确保 .ollama 文件夹存在
+    if not os.path.exists(ollama_dir_path):
+        try:
+            os.makedirs(ollama_dir_path)
+        except Exception as e:
+            print(color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
+            return config
+    
+    default_config = get_ollama_config_path()
     if os.path.exists(default_config):
         with open(default_config, 'r') as f:
             return json.load(f)
@@ -320,11 +330,29 @@ class OllamaClient:
             "pre_prompt": "1. Answer in Chinese\n2. Be concise and efficient"
         }
         
+        # 如果是默认配置路径，确保目录存在
+        if config_path == ollama_config_path:
+            try:
+                if not os.path.exists(ollama_dir_path):
+                    os.makedirs(ollama_dir_path)
+            except Exception as e:
+                print(color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
+                return
+        
+        # 确保目标文件的目录存在
+        config_dir = os.path.dirname(config_path)
+        if config_dir and not os.path.exists(config_dir):
+            try:
+                os.makedirs(config_dir)
+            except Exception as e:
+                print(color(f"\nError creating directory {config_dir}: {str(e)}", 2))
+                return
+        
         if os.path.exists(config_path):
             try:
                 with open(config_path, 'r') as f:
                     existing_config = json.load(f)
-                default_config.update(existing_config)
+                    default_config.update(existing_config)
             except json.JSONDecodeError:
                 print(color(f"Warning: Existing config file '{config_path}' is invalid, using default values", 4))
         
@@ -355,7 +383,7 @@ def check_required_params(args, config):
             suggestions.append("Use -p/--port to specify server port or use a config file (-c)")
     
     if errors:
-        default_config = get_default_config_path()
+        default_config = get_ollama_config_path()
         print(color("\nConfiguration Error:", 2))
         for error in errors:
             print(color(f"- {error}", 2))
@@ -373,6 +401,25 @@ def check_required_params(args, config):
         print(color(f"   {os.path.basename(sys.argv[0])} -i 127.0.0.1 -p 11434 -m llama3.2:1b", 8))
         sys.exit(1)
 
+def get_user_input(prompt_text):
+    """获取用户输入，支持退格键等编辑功能"""
+    print(prompt_text, end='', flush=True)
+    buffer = []
+    while True:
+        char = readchar.readchar()
+        if char == '\r' or char == '\n':  # Enter 键
+            print()  # 换行
+            return ''.join(buffer)
+        elif char == '\x03':  # Ctrl+C
+            raise KeyboardInterrupt
+        elif char == '\x7f' or char == '\x08':  # 退格键
+            if buffer:
+                buffer.pop()
+                print('\b \b', end='', flush=True)  # 删除一个字符
+        elif char.isprintable():  # 可打印字符
+            buffer.append(char)
+            print(char, end='', flush=True)
+
 def main():
     global is_generating
     
@@ -381,22 +428,22 @@ def main():
     
     # 检查默认配置文件
     default_config = {}
-    if os.path.exists(default_config_path):
+    if os.path.exists(ollama_config_path):
         try:
-            with open(default_config_path, 'r') as f:
+            with open(ollama_config_path, 'r') as f:
                 default_config = json.load(f)
         except json.JSONDecodeError:
-            print(color(f"\nWarning: Default config file '{default_config_path}' is invalid", 4))
+            print(color(f"\nWarning: Default config file '{ollama_config_path}' is invalid", 4))
     
     examples = f'''
 {color("Required:", 2)}
   - Model name (-m or in config)
   - Either specify server details (-i, -p) or use a config file (-c)
-  - Default config file {default_config_path} will be used if exists
+  - Default config file {ollama_config_path} will be used if exists
 
 {color("Config File Format:", 3)}
   {{
-    "ip": "162.19.250.223",
+    "ip": "127.0.0.1",
     "port": "11434",
     "model": "llama3.2:1b",
     "ssl": false,
@@ -472,15 +519,15 @@ def main():
         config = load_config(args['config'])
         if not config:
             print(color(f"\nError: Config file '{args['config']}' not found or empty", 2))
-            if os.path.exists(default_config_path):
-                print(color(f"\nUsing default config file: {default_config_path}", 3))
+            if os.path.exists(ollama_config_path):
+                print(color(f"\nUsing default config file: {ollama_config_path}", 3))
                 config = default_config
             else:
                 print(color("\nYou can:", 3))
                 print(color("1. Generate a new config file:", 7))
                 print(color(f"  {script_name} --new-config {args['config']}", 8))
                 print(color("2. Create default config file:", 7))
-                print(color(f"  {script_name} --new-config {default_config_path}", 8))
+                print(color(f"  {script_name} --new-config {ollama_config_path}", 8))
             return
     else:
         # 如果没有指定配置文件，使用默认配置
@@ -539,7 +586,6 @@ def main():
             loading_thread.daemon = True
             loading_thread.start()
             
-            print(color("─" * 80, 8))  # 添加顶部分隔线
             messages = []
             if pre_prompt:
                 messages.append({
@@ -589,7 +635,7 @@ def main():
             if should_exit:
                 break
                 
-            user_input = input(color("\nYou: ", 4))
+            user_input = get_user_input(color("\nYou: ", 4))
             if not user_input.strip():
                 continue
             

@@ -113,14 +113,16 @@ def show_loading_animation():
     animation = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
     i = 0
     global is_generating
+    start_time = time.time()  # 记录开始时间
     while is_generating:
         if should_exit:
             break
-        sys.stdout.write(color(f"\r{animation[i]} Generating response...", 6))
+        elapsed = time.time() - start_time  # 计算已过时间
+        sys.stdout.write(color(f"\r{animation[i]} Generating response... ({elapsed:.1f}s)", 6))
         sys.stdout.flush()
         time.sleep(0.1)
         i = (i + 1) % len(animation)
-    sys.stdout.write("\r" + " " * 30 + "\r")  # Clear status bar
+    sys.stdout.write("\r" + " " * 50 + "\r")  # Clear status bar (increased width)
     sys.stdout.flush()
 
 def format_size(size_bytes):
@@ -283,11 +285,10 @@ class OllamaClient:
         try:
             # 尝试作为 markdown 渲染
             md = Markdown(content)
-            console.print("\nAssistant:", style="bold green")
             console.print(md)
         except Exception:
             # 如果渲染失败，回退到普通文本显示
-            print(color("\nAssistant: ", 3) + content)
+            print(content)
     
     def chat(self, model, messages):
         try:
@@ -348,10 +349,10 @@ def check_required_params(args, config):
     if not args['config']:
         if not args['ip'] and not config.get('ip'):
             errors.append("No server IP specified")
-            suggestions.append("Use -i/--ip to specify server IP or use a config file")
+            suggestions.append("Use -i/--ip to specify server IP or use a config file (-c)")
         if not args['port'] and not config.get('port'):
             errors.append("No server port specified")
-            suggestions.append("Use -p/--port to specify server port or use a config file")
+            suggestions.append("Use -p/--port to specify server port or use a config file (-c)")
     
     if errors:
         default_config = get_default_config_path()
@@ -533,10 +534,12 @@ def main():
     if args['exit']:
         try:
             is_generating = True
+            start_time = time.time()
             loading_thread = threading.Thread(target=show_loading_animation)
             loading_thread.daemon = True
             loading_thread.start()
             
+            print(color("─" * 80, 8))  # 添加顶部分隔线
             messages = []
             if pre_prompt:
                 messages.append({
@@ -553,7 +556,12 @@ def main():
                 is_generating = False
                 loading_thread.join()
                 
-                client.print_response(response.message['content'])
+                assistant_message = response.message
+                messages.append({"role": "assistant", "content": assistant_message['content']})
+                elapsed = time.time() - start_time  # 获取总思考时间
+                print(f"{color(model, 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # 使用不同颜色
+                client.print_response(assistant_message['content'])
+                print(color("─" * 80, 8))  # 添加底部分隔线
             except Exception:
                 is_generating = False
                 loading_thread.join()
@@ -584,10 +592,12 @@ def main():
             user_input = input(color("\nYou: ", 4))
             if not user_input.strip():
                 continue
-                
+            
+            print(color("─" * 80, 8))  # 添加顶部分隔线
             messages.append({"role": "user", "content": user_input})
             try:
                 is_generating = True
+                start_time = time.time()  # 记录开始时间
                 loading_thread = threading.Thread(target=show_loading_animation)
                 loading_thread.daemon = True
                 loading_thread.start()
@@ -598,7 +608,10 @@ def main():
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
+                elapsed = time.time() - start_time  # 获取总思考时间
+                print(f"\n{color(model, 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}", end="")  # 使用不同颜色
                 client.print_response(assistant_message['content'])
+                print(color("─" * 80, 8))  # 添加底部分隔线
             except Exception as e:
                 is_generating = False
                 if loading_thread.is_alive():

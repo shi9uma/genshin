@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pip install ollama rich readchar
+# need pip install ollama rich readchar
 
 import os
 import sys
@@ -14,11 +14,10 @@ import pprint
 import readchar
 from rich.console import Console
 from rich.table import Table
-from rich.prompt import Prompt, IntPrompt
+from rich.prompt import IntPrompt
 from rich.panel import Panel
 from rich.markdown import Markdown
 from rich import box
-from rich.live import Live
 
 def quiet_import():
     try:
@@ -33,9 +32,8 @@ def quiet_import():
         import readchar
         from rich.console import Console
         from rich.table import Table
-        from rich.prompt import Prompt
+        from rich.prompt import IntPrompt
         from rich.markdown import Markdown
-        from rich.live import Live
         from rich import box
         return True
     except KeyboardInterrupt:
@@ -53,6 +51,9 @@ ollama_dir_name = ".ollama"
 ollama_dir_path = os.path.expanduser(f"~/{ollama_dir_name}")
 ollama_config_name = "config.json"
 ollama_config_path = os.path.join(ollama_dir_path, ollama_config_name)
+
+split_line_char = "─"
+split_line_length = 30
 
 def signal_handler(signum, frame):
     global should_exit
@@ -420,6 +421,50 @@ def get_user_input(prompt_text):
             buffer.append(char)
             print(char, end='', flush=True)
 
+def show_current_config(args, config):
+    """显示当前配置信息"""
+    console = Console()
+    
+    # 合并命令行参数和配置文件
+    current_config = {
+        'ip': args['ip'] or config.get('ip', '127.0.0.1'),
+        'port': args['port'] or config.get('port', '11434'),
+        'model': args['model'] or config.get('model', ''),
+        'ssl': args['ssl'] or config.get('ssl', False),
+        'pre_prompt': args['pre_prompt'] or config.get('pre_prompt', '')
+    }
+    
+    # 创建表格
+    table = Table(
+        title="Current Configuration",
+        box=box.ROUNDED,
+        header_style="bold cyan",
+        border_style="cyan",
+        title_style="bold cyan"
+    )
+    
+    table.add_column("Parameter", style="bold green")
+    table.add_column("Value", style="yellow")
+    table.add_column("Source", style="blue")
+    
+    # 添加配置信息到表格
+    for key, value in current_config.items():
+        source = "Command Line" if args.get(key) else "Config File" if key in config else "Default"
+        # 处理 pre_prompt 的多行显示
+        if key == 'pre_prompt' and value:
+            value = value.replace('\n', '\\n')
+        table.add_row(key, str(value), source)
+    
+    # 添加配置文件路径信息
+    if args['config']:
+        table.add_row("Config File", args['config'], "Command Line")
+    elif os.path.exists(ollama_config_path):
+        table.add_row("Config File", ollama_config_path, "Default")
+    
+    console.print()
+    console.print(table)
+    console.print()
+
 def main():
     global is_generating
     
@@ -505,7 +550,8 @@ def main():
     ap.add_argument('-l', '--list', action='store_true', help='List available models')
     ap.add_argument('--status', action='store_true', help='Show Ollama status')
     ap.add_argument('--pre-prompt', type=str, help='Set pre-prompt instructions for the model (e.g., "1. Answer in Chinese\\n2. Be concise")')
-    ap.add_argument('--exit', type=str, help='Generate single response and exit')
+    ap.add_argument('-e', '--exit', type=str, help='Generate single response and exit')
+    ap.add_argument('--show-config', action='store_true', help='Show current configuration')
     
     args = vars(ap.parse_args())
     
@@ -533,19 +579,17 @@ def main():
         # 如果没有指定配置文件，使用默认配置
         config = default_config
     
-    # Parameter priority: command line > config file > default values
-    ip = args['ip'] or config.get('ip', '127.0.0.1')
-    port = args['port'] or config.get('port', '11434')
-    ssl = args['ssl'] or config.get('ssl', False)
-    model = args['model'] or config.get('model', '')
-    pre_prompt = args['pre_prompt'] or config.get('pre_prompt', '')
+    # 在检查参数之前添加显示配置的处理
+    if args['show_config']:
+        show_current_config(args, config)
+        return
     
     # 只在需要完整配置的命令时检查参数
-    if not args['list'] and not args['status'] and not args['new_config']:
+    if not args['list'] and not args['status'] and not args['new_config'] and not args['show_config']:
         check_required_params(args, config)
     
     try:
-        client = OllamaClient(ip, port, ssl)
+        client = OllamaClient(args['ip'], args['port'], args['ssl'])
     except KeyboardInterrupt:
         sys.exit(0)
     
@@ -565,17 +609,17 @@ def main():
             sys.exit(0)
         return
     
-    if not model:
-        model = client.show_model_selection()
-        if not model:
+    if not args['model']:
+        args['model'] = client.show_model_selection()
+        if not args['model']:
             return
     
     available_models = client.get_available_models()
-    if model not in available_models:
-        print(color(f"\nError: Model '{model}' is not available", 2))
+    if args['model'] not in available_models:
+        print(color(f"\nError: Model '{args['model']}' is not available", 2))
         print(color("\nPlease select a model:", 3))
-        model = client.show_model_selection(model)
-        if not model:
+        args['model'] = client.show_model_selection(args['model'])
+        if not args['model']:
             return
     
     if args['exit']:
@@ -587,10 +631,10 @@ def main():
             loading_thread.start()
             
             messages = []
-            if pre_prompt:
+            if args['pre_prompt']:
                 messages.append({
                     "role": "system",
-                    "content": pre_prompt
+                    "content": args['pre_prompt']
                 })
             messages.append({
                 "role": "user",
@@ -598,16 +642,16 @@ def main():
             })
             
             try:
-                response = client.chat(model, messages)
+                response = client.chat(args['model'], messages)
                 is_generating = False
                 loading_thread.join()
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
                 elapsed = time.time() - start_time  # 获取总思考时间
-                print(f"{color(model, 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # 使用不同颜色
+                print(f"{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # 使用不同颜色
                 client.print_response(assistant_message['content'])
-                print(color("─" * 80, 8))  # 添加底部分隔线
+                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔线
             except Exception:
                 is_generating = False
                 loading_thread.join()
@@ -619,15 +663,15 @@ def main():
                 loading_thread.join()
             sys.exit(1)
         
-    print(color(f"Starting chat with model: {model}", 3))
+    print(color(f"Starting chat with model: {args['model']}", 3))
     print(color("Press Ctrl+C to exit", 7))
     
     messages = []
     # Add pre-prompt if specified
-    if pre_prompt:
+    if args['pre_prompt']:
         messages.append({
             "role": "system",
-            "content": pre_prompt
+            "content": args['pre_prompt']
         })
     
     try:
@@ -639,7 +683,7 @@ def main():
             if not user_input.strip():
                 continue
             
-            print(color("─" * 80, 8))  # 添加顶部分隔线
+            print(color(split_line_char * split_line_length, 8))  # 添加顶部分隔线
             messages.append({"role": "user", "content": user_input})
             try:
                 is_generating = True
@@ -648,16 +692,16 @@ def main():
                 loading_thread.daemon = True
                 loading_thread.start()
                 
-                response = client.chat(model, messages)
+                response = client.chat(args['model'], messages)
                 is_generating = False
                 loading_thread.join()
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
                 elapsed = time.time() - start_time  # 获取总思考时间
-                print(f"\n{color(model, 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}", end="")  # 使用不同颜色
+                print(f"\n{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}", end="")  # 使用不同颜色
                 client.print_response(assistant_message['content'])
-                print(color("─" * 80, 8))  # 添加底部分隔线
+                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔线
             except Exception as e:
                 is_generating = False
                 if loading_thread.is_alive():

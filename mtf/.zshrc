@@ -486,11 +486,11 @@ ollama() {
     if [[ ! -d $ollama_dir_path ]]; then
         mkdir -p $ollama_dir_path
     fi
-    ollama_path="$config_dir_path/ollama.py"
+    ollama_path="$ollama_dir_path/cli-ollama.py"
     if [[ ! -f $ollama_path ]]; then
-        _curl $ollama_path $github_url_base/code/python/17-ollama.py
+        _curl $ollama_path $github_url_base/code/python/17-cli-ollama.py
     fi
-    python3 $ollama_path -c "$ollama_dir_path/config.json" "$@"
+    python3 $ollama_path "$@"
 }
 
 ## file, dir

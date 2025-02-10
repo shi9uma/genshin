@@ -13,7 +13,7 @@ from getpass import getpass
 
 def color(text: str = '', color: int = 1) -> str:
     '''
-    返回对应的控制台 ANSI 颜色
+    Returns the corresponding console ANSI color
     '''
     color_table = {
         0: '\033[1;30m{}\033[0m',   # 黑色加粗
@@ -61,7 +61,7 @@ def encrypt_file(input_path: str, output_path: str, password: str, salt: bytes):
     with open(input_path, 'rb') as f:
         data = f.read()
 
-    # aes 字节填充
+    # AES byte padding
     padding_length = 16 - len(data) % 16
     data += bytes([padding_length] * padding_length)
 
@@ -71,31 +71,45 @@ def encrypt_file(input_path: str, output_path: str, password: str, salt: bytes):
         f.write(salt + cipher_text)
 
 
-def decrypt_file(input_path: str, output_path: str, password: str, salt: bytes = None):
+def decrypt_file(input_path: str, output_path: str, password: str):
+    file_size = os.path.getsize(input_path)
+    if file_size < 16:
+        raise ValueError(f"{color('File size abnormal, might not be a valid encrypted file', 1)}")
+
     with open(input_path, 'rb') as f:
-        salt_read = f.read(16)
-        cipher_text = f.read()
+        try:
+            salt_read = f.read(16)
+            cipher_text = f.read()
 
-    salt_read = pad_salt(salt_read)
-    key = derive_key(password, salt_read)
-    initialization_vector = salt_read[:16]
-    cipher = Cipher(
-        algorithms.AES(key),
-        modes.CBC(initialization_vector),
-        backend=default_backend()
-    )
-    decryptor = cipher.decryptor()
-    data = decryptor.update(cipher_text) + decryptor.finalize()
+            if not salt_read or not cipher_text:
+                raise ValueError(f"{color('Invalid file format, might not be a valid encrypted file', 1)}")
 
-    # 清除 aes 字节填充
-    padding_length = data[-1]
-    data = data[:-padding_length]
+            salt_read = pad_salt(salt_read)
+            key = derive_key(password, salt_read)
+            initialization_vector = salt_read[:16]
+            cipher = Cipher(
+                algorithms.AES(key),
+                modes.CBC(initialization_vector),
+                backend=default_backend()
+            )
+            decryptor = cipher.decryptor()
+            data = decryptor.update(cipher_text) + decryptor.finalize()
 
-    with open(output_path, 'wb') as f:
-        f.write(data)
+            padding_length = data[-1]
+            if padding_length > 16 or padding_length < 1:
+                raise ValueError(f"{color('Decryption failed: invalid padding', 1)}")
+
+            data = data[:-padding_length]
+
+            with open(output_path, 'wb') as f:
+                f.write(data)
+        except (ValueError, Exception) as e:
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            raise e
 
 
-def process_directory(directory: str, func, output_dir: str, password: str, recursive: bool, salt: bytes):
+def process_directory(directory: str, func, output_dir: str, password: str, recursive: bool, salt: bytes = None):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     for root, dirs, files in os.walk(directory):
@@ -103,7 +117,10 @@ def process_directory(directory: str, func, output_dir: str, password: str, recu
             input_path = os.path.join(root, file)
             rel_path = os.path.relpath(input_path, directory)
             output_path = os.path.join(output_dir, rel_path)
-            func(input_path, output_path, password, salt)
+            if func == encrypt_file:
+                func(input_path, output_path, password, salt)
+            else:  # decrypt_file
+                func(input_path, output_path, password)
         if not recursive:
             break
 
@@ -146,25 +163,81 @@ def get_salt(key: str, salt_file='salt', is_use_salt=False) -> str:
     return salt
 
 
+def get_banner():
+    description = f'{color("Simple Encrypt/Decrypt Tool", 2)}'
+    epilog = f'''
+{color("Examples:", 3)}
+  Encrypt a file:
+    {color("python ez-encrypt.py enc -i secret.txt", 6)}
+  Decrypt a file:
+    {color("python ez-encrypt.py dec -i secret.txt.enc", 6)}
+  Encrypt a directory recursively:
+    {color("python ez-encrypt.py enc -i secret_folder -r", 6)}
+  Encrypt with custom salt file:
+    {color("python ez-encrypt.py enc -i secret.txt -s my_salt", 6)}
+'''
+    return description, epilog
+
+
 def main():
-    parser = argparse.ArgumentParser(description='End of Life')
-    parser.add_argument('foobar', choices=['enc', 'dec'], help='选择模式：加密或解密')
-    parser.add_argument('-i', '--input', required=True, help='指定输入文件或目录路径')
-    parser.add_argument('-o', '--output', help='指定输出文件或目录路径')
-    parser.add_argument('-r', '--recursive',
-                        action='store_true', help='是否递归处理目录')
-    parser.add_argument('-d', '--delete', action='store_true', help='加密后删除源文件')
-    parser.add_argument(
-        '-s', '--salt', help='指定一个盐文件，如果添加该选项但路径文件为空，则根据 key 和 uuid 生成盐，并存储到指定路径')
-    parser.add_argument('-k', '--key', help='指定一个密钥文件，或字符（不推荐直接暴露在命令行）；若不加 -k 选项，默认会要求输入密钥')
+    description, epilog = get_banner()
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=epilog
+    )
+
+    # Create argument groups for better organization
+    mode_group = parser.add_argument_group(f'{color("Mode", 2)}')
+    mode_group.add_argument(
+        'mode',
+        choices=['enc', 'dec'],
+        metavar='MODE',
+        help='Choose operation mode: enc(encrypt) or dec(decrypt)'
+    )
+
+    required_group = parser.add_argument_group(f'{color("Required arguments", 2)}')
+    required_group.add_argument(
+        '-i', '--input',
+        required=True,
+        help='Specify input file or directory path'
+    )
+
+    optional_group = parser.add_argument_group(f'{color("Optional arguments", 2)}')
+    optional_group.add_argument(
+        '-o', '--output',
+        help='Specify output file or directory path'
+    )
+    optional_group.add_argument(
+        '-r', '--recursive',
+        action='store_true',
+        help='Process directory recursively'
+    )
+    optional_group.add_argument(
+        '-d', '--delete',
+        action='store_true',
+        help='Delete source file after processing'
+    )
+
+    security_group = parser.add_argument_group(f'{color("Security options", 2)}')
+    security_group.add_argument(
+        '-s', '--salt',
+        help='Specify a salt file. If file is empty, generate salt from key and uuid'
+    )
+    security_group.add_argument(
+        '-k', '--key',
+        help='Specify a key file or string (not recommended in command line)'
+    )
+
     args = vars(parser.parse_args())
-
+    args['mode'] = args.pop('mode')
+    
     # assert
-    assert os.path.exists(args['input']), '{}'.format(color('输入文件或目录无效'), 3)
+    assert os.path.exists(args['input']), f'{color("Invalid input file or directory", 3)}'
 
-    # 检查 key 是否被指定，并取值
+    # Check if key is specified and get its value
     if args['key'] is None:
-        password = getpass(color('请输入密钥：', 3))
+        password = getpass(color('Please enter key: ', 3))
     else:
         if os.path.exists(args['key']):
             with open(args['key'], 'r') as f:
@@ -179,17 +252,17 @@ def main():
 
     if os.path.isdir(args['input']):
         if args['output'] is None:
-            if args['foobar'] == 'enc':
+            if args['mode'] == 'enc':
                 args['output'] = args['input'] + \
                     ('_enc' if not args['input'].endswith('_enc') else '')
-            elif args['foobar'] == 'dec':
+            elif args['mode'] == 'dec':
                 if args['output'].endswith('_enc'):
                     temp_dir = args['output'][:-4]
                     if os.path.exists(temp_dir):
                         args['output'] = temp_dir + '_dec'
         process_directory(
             args['input'],
-            encrypt_file if args['foobar'] == 'enc' else decrypt_file,
+            encrypt_file if args['mode'] == 'enc' else decrypt_file,
             args['output'],
             password,
             args['recursive'],
@@ -198,23 +271,34 @@ def main():
     else:
         if args['output'] is None:
             args['output'] = args['input'] + \
-                '.enc' if args['foobar'] == 'enc' else args['input'].rstrip(
+                '.enc' if args['mode'] == 'enc' else args['input'].rstrip(
                     '.enc')
-        if args['foobar'] == 'enc':
+        if args['mode'] == 'enc':
             encrypt_file(args['input'], args['output'], password, salt)
         else:
-            decrypt_file(args['input'], args['output'], password, salt)
+            decrypt_file(args['input'], args['output'], password)
 
-    if args['delete'] and args['foobar'] == 'enc':
-        assert input('是否删除源文件？(y/n)') == 'y', '{}'.format(color('已取消删除', 3))
-        if os.path.isdir(args['input']):
-            for root, dirs, files in os.walk(args['input'], topdown=False):
-                for name in files:
-                    os.remove(os.path.join(root, name))
-                for name in dirs:
-                    os.rmdir(os.path.join(root, name))
-        else:
-            os.remove(args['input'])
+    if args['delete']:
+        if args['mode'] == 'enc':
+            assert input('Delete source file? (y/n)') == 'y', '{}'.format(color('Deletion cancelled', 3))
+            if os.path.isdir(args['input']):
+                for root, dirs, files in os.walk(args['input'], topdown=False):
+                    for name in files:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+            else:
+                os.remove(args['input'])
+        elif args['mode'] == 'dec':  # Add deletion for decryption
+            assert input('Delete source file? (y/n)') == 'y', '{}'.format(color('Deletion cancelled', 3))
+            if os.path.isdir(args['input']):
+                for root, dirs, files in os.walk(args['input'], topdown=False):
+                    for name in files:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+            else:
+                os.remove(args['input'])
 
 
 if __name__ == '__main__':

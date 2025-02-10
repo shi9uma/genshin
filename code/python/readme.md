@@ -160,10 +160,10 @@ tab
 4. 指定 `-d` 会在加密后提示是否删除源文件
 5. 示例
     1.   **注意，操作之前，如果不主动指定 output，会自动覆盖掉解密后的同名文件，如果密码错了该文件会丢失**
-    2.   对单个文件进行加密：`python ./03-ez-encrypt.py -i plain/03-ez-encrypt.md -s salt enc`
-    3.   对单个文件进行解密：`python ./03-ez-encrypt.py -i plain/03-ez-encrypt.md.enc -s salt dec`
+    2.   对单个文件进行加密：`python ./02-ez-encrypt.py -i plain/03-ez-encrypt.md -s salt enc`
+    3.   对单个文件进行解密：`python ./02-ez-encrypt.py -i plain/03-ez-encrypt.md.enc dec`
     4.   对目录下文件进行加密，并递归处理：`python ./03-ez-encrypt.py -i path/to/enc_dir -r -s salt enc`
-    5.   对目录下文件进行解密，并递归处理：`python ./03-ez-encrypt.py -i path/to/enc_dir -r -s salt dec`
+    5.   对目录下文件进行解密，并递归处理：`python ./03-ez-encrypt.py -i path/to/enc_dir -r dec`
 
 ### ls-alh
 

@@ -3,7 +3,7 @@
 1. pwndbg env
 
    1. `.gdbinit`
-   2. tmux
+   2. tmux，https://gist.github.com/ryerh/14b7c24dfd623ef8edc7
    3. heap angel
 
 2. gdb tracing error

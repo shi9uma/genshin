@@ -164,17 +164,18 @@ def get_salt(key: str, salt_file='salt', is_use_salt=False) -> str:
 
 
 def get_banner():
+    script_name = os.path.basename(sys.argv[0])
     description = f'{color("Simple Encrypt/Decrypt Tool", 2)}'
     epilog = f'''
 {color("Examples:", 3)}
   Encrypt a file:
-    {color("python ez-encrypt.py enc -i secret.txt", 6)}
+    {color(f"python {script_name} enc -i secret.txt", 6)}
   Decrypt a file:
-    {color("python ez-encrypt.py dec -i secret.txt.enc", 6)}
+    {color(f"python {script_name} dec -i secret.txt.enc", 6)}
   Encrypt a directory recursively:
-    {color("python ez-encrypt.py enc -i secret_folder -r", 6)}
+    {color(f"python {script_name} enc -i secret_folder -r", 6)}
   Encrypt with custom salt file:
-    {color("python ez-encrypt.py enc -i secret.txt -s my_salt", 6)}
+    {color(f"python {script_name} enc -i secret.txt -s my_salt", 6)}
 '''
     return description, epilog
 

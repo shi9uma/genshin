@@ -27,6 +27,8 @@
      c	# 未初始化数值
      ```
 
+     通过 `nm -D /path/to/sth.so | grep function_name` 可以由此判断其他 elf 在调用某个函数所在的动态链接库，例如 `$ nm -D lib/libmwopenrpc.so | grep GetByPseudoNameDomain` 回显为 `0008559c T IF_GetByPseudoNameDomain`，代表该函数在 libmwopenrpc.so 里被定义
+
 9.   `sudo su`，b 后台执行命令、D 先修改目录、i 先登录到目标用户的 shell、l 列出当前用户的权限、R 执行 chroot 到某个目录、-S 使用 cli 将密码进行传参
 
 10.   `xxd`，-r 16 进制展示、-p plain text 展示、

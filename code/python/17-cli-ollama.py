@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # need pip install ollama rich readchar
+# find ollama api with `shodan search http.html:"ollama"`
 
 import os
 import sys
@@ -90,7 +91,7 @@ def load_config(config_path):
     return config
 
 def color(text: str = '', color: int = 2) -> str:
-    '''
+    """
     返回对应的控制台 ANSI 颜色; 
     ```python
     color_table = {
@@ -105,7 +106,7 @@ def color(text: str = '', color: int = 2) -> str:
         8: '白色加粗',
     }
     ```
-    '''
+    """
     color_table = {
         0: '{}',
         1: '\033[1;30m{}\033[0m',

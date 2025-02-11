@@ -566,12 +566,6 @@ case $os_type in
 esac
 export PATH=$export_path
 
-if [[ $DONT_FASTFETCH -ne 1 ]]; then
-    if [ -f /usr/bin/fastfetch ]; then
-        fastfetch
-    fi
-fi
-
 # anchor
 # ==============================================================
 # |                       custom alias                         |
@@ -596,6 +590,7 @@ alias x="curl"
 alias xi="curl -I"
 alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
+alias f="fastfetch"
 alias wky="sudo su wkyuu"
 alias chwky="chown -R wkyuu:wkyuu"
 alias tldr="tldr --language=zh"

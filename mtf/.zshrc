@@ -388,54 +388,6 @@ w2u() {
     echo "$unix_path"
 }
 
-sd() {
-
-    if [ $# -eq 0 ]; then
-        echo "usage: sd {show|args}"
-        return
-    fi
-
-    if [[ "$1" == "show" ]]; then
-        echo "shodan search --fields ip_str,port,org,location ARGS | awk ' { print \"http://\"\$1\":\"\$2} '"
-        return
-    fi
-
-    shodan_api_key_path="$HOME/.config/shodan/api_key"
-    if [[ ! -f $shodan_api_key_path ]]; then
-        echo ${RED}"shodan api key not found. run \"shodan init api_key\" first"${NC}
-    else
-        count=0
-        shodan search --fields ip_str,port,org,location --separator "<>" "$@" | awk '{
-            split($0, result, "<>");
-
-            ip = result[1];
-            if (ip == "") {
-                next;
-            }
-            
-            port = result[2];
-
-            if (port == "443") {
-                protocol = "https";
-            } else {
-                protocol = "http";
-            }
-
-            org = result[3];
-            location = result[4];            
-
-            print "| " protocol "://" ip ":" port;
-            print "> " org;
-            print "> " location;
-            print "-----------------------------\n";
-
-            count++;
-        } END {
-            print "total result: " count;
-        }'
-    fi
-}
-
 unblob() {
     unblob_path="$HOME/.genshin/unblob.sh"
     if [[ ! -f $unblob_path ]]; then
@@ -493,6 +445,14 @@ ollama() {
     python3 $ollama_path "$@"
 }
 
+sd() {
+    sd_path="$HOME/.genshin/sd.py"
+    if [[ ! -f $sd_path ]]; then
+        _curl $sd_path $github_url_base/code/python/10-shodan.py
+    fi
+    python3 $sd_path "$@"
+}
+
 ## file, dir
 if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"
@@ -505,10 +465,15 @@ fi
 ## export
 proxy_ip_file="$HOME/.proxy_ip"
 if [[ -f ~/.proxy_ip ]]; then
-    export all_proxy="http://$(cat $proxy_ip_file):7890"
+    proxy_ip=$(cat $proxy_ip_file | awk '{print $1}')
+    proxy_port=$(cat $proxy_ip_file | awk '{print $2}')
+    if [[ -z "$proxy_port" ]]; then
+        proxy_port=7890
+    fi
+    export all_proxy="http://$proxy_ip:$proxy_port"
 else
     if [[ -d "/home/wkyuu" ]]; then
-        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo ip > \$proxy_ip_file${NC} ${NC}"
+        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
     fi
 fi
 
@@ -591,9 +556,7 @@ alias xi="curl -I"
 alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
 alias f="fastfetch"
-alias wky="sudo su wkyuu"
-alias chwky="chown -R wkyuu:wkyuu"
 alias tldr="tldr --language=zh"
-alias transfer="sd http.favicon.hash:\"-620522584\""
+alias transfer="sd search http.favicon.hash:-620522584"
 alias random="cat /dev/urandom|head|base64|md5sum|cut -d \" \" -f 1"
 # end alias

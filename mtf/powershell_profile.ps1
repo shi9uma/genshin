@@ -107,6 +107,8 @@ function l { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh
 function ll { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
 function ls { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
 function la { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args --all }
+function lt { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args -s time }
+function lss { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args -s size }
 
 function genshin { ssh genshin-wkyuu }
 function pve { ssh pve-wkyuu }

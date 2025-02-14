@@ -298,7 +298,7 @@ class ShodanClient:
                 try:
                     with open(cache_file, 'r') as f:
                         results = json.load(f)
-                        print(color("Using cached results...", 7))
+                        print(color("Using cached results...", 7), end='')
                 except Exception as e:
                     print(color(f"Error reading cache: {str(e)}", 2))
                     # If cache read fails, perform new search

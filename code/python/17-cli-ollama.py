@@ -288,14 +288,15 @@ class OllamaClient:
     
     def chat(self, model, messages):
         try:
-            # Use stream=True to get streaming response
+            # 使用 stream=True 获取流式响应
             response = ""
             for chunk in self.client.chat(model=model, messages=messages, stream=True):
-                if chunk.message:  # Check if message has content
+                if chunk.message:  # 检查消息是否有内容
                     content = chunk.message.get('content', '')
-                    print(content, end='', flush=True)  # Print each text chunk immediately
+                    print(content, end='', flush=True)  # 立即打印每个文本块
                     response += content
-            return type('Response', (), {'message': {'content': response}})  # Return a similar response object
+            print()  # 添加换行
+            return type('Response', (), {'message': {'content': response}})  # 返回类似的响应对象
         except Exception as e:
             error_msg = str(e)
             if "502" in error_msg:
@@ -642,12 +643,6 @@ def main():
     
     if args['exit']:
         try:
-            is_generating = True
-            start_time = time.time()
-            loading_thread = threading.Thread(target=show_loading_animation)
-            loading_thread.daemon = True
-            loading_thread.start()
-            
             messages = []
             if args['pre_prompt']:
                 messages.append({
@@ -660,27 +655,21 @@ def main():
             })
             
             try:
+                start_time = time.time()
+                print(f"\n{color(args['model'], 6)}:")  # 添加模型名称提示
                 response = client.chat(args['model'], messages)
-                is_generating = False
-                loading_thread.join()
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
-                elapsed = time.time() - start_time  # Get total response time
-                print(f"{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # Use different colors
-                client.print_response(assistant_message['content'])
-                print(color(split_line_char * split_line_length, 8))  # Add bottom separator
+                elapsed = time.time() - start_time  # 获取总响应时间
+                print(f"\n{color(f'[Responded in {elapsed:.1f}s]', 8)}")  # 使用不同颜色
+                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔符
             except Exception:
-                is_generating = False
-                loading_thread.join()
                 sys.exit(1)
             return
         except Exception:
-            is_generating = False
-            if loading_thread.is_alive():
-                loading_thread.join()
             sys.exit(1)
-        
+    
     print(color("Starting chat with model: ", 3) + color(args['model'], 6))
     print(color("Press Ctrl+C to exit", 7))
     print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行

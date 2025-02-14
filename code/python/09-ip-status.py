@@ -5,74 +5,14 @@ import subprocess
 import json
 import argparse
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--ip", default="", type=str, help="指定 ip 来查询")
-ap.add_argument("-c", "--cmd", action="store_true", help="展示 curl 原生指令")
-args = vars(ap.parse_args())
-
-BASE_URL = "http://ip-api.com"
-TITLE_COLOR = 7
-SUB_TITLE_COLOR = 2
-CONTENT_COLOR = 3
-
-
-class IPRSSClient:
-    def __init__(self, args):
-        self.ip = ""
-        self.args = args
-
-    def execute_curl(self, url):
-        result = subprocess.run(
-            ["curl", "-s", url], capture_output=True, text=True, encoding="utf-8"
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-        else:
-            raise Exception(f"Failed to execute curl for {url}, Error: {result.stderr}")
-
-    def get_ip_with_location(self):
-        """
-        获取公网 IP 地址 + 详细区域
-        """
-        url = f"{BASE_URL}/json"
-        if args["ip"] != "":
-            self.ip = args["ip"]
-            url += f"/{self.ip}"
-        response = self.execute_curl(url)
-        response_json = json.loads(response)
-        if response_json.get("status", "") == "success":
-            data = response_json
-        else:
-            raise Exception(
-                f"Failed to get public ip address, Error: {response_json.get('msg', '')}"
-            )
-        print(color("IP with Location:", TITLE_COLOR))
-        self.ip = data["query"]
-        format_data = {
-            **{
-                "ip": data["query"],
-            },
-            **data,
-        }
-        format_dict(format_data, indent=2)
-
-
-def format_dict(data: dict, indent=0, exclude_keys=None):
-    if exclude_keys is None:
-        exclude_keys = ["status", "query"]
-
-    for key, value in data.items():
-        if key in exclude_keys:
-            continue
-        if isinstance(value, dict):
-            print(" " * indent + f"{color(key, CONTENT_COLOR)}:")
-            format_dict(value, indent + 4, exclude_keys)
-        else:
-            print(
-                " " * indent
-                + f"{color(key, SUB_TITLE_COLOR)}: {color(value, CONTENT_COLOR)}"
-            )
-
+class Config:
+    BASE_URL = "http://ip-api.com"
+    COLORS = {
+        "TITLE": 7,
+        "SUB_TITLE": 2,
+        "CONTENT": 3,
+    }
+    EXCLUDE_KEYS = ["status", "query"]
 
 def color(text: str = "", color: int = 2) -> str:
     """
@@ -91,6 +31,143 @@ def color(text: str = "", color: int = 2) -> str:
     }
     return color_table[color].format(text)
 
+class ColoredArgumentParser(argparse.ArgumentParser):
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            metavar, = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        else:
+            parts = []
+            if action.nargs == 0:
+                parts.extend(map(lambda x: color(x, Config.COLORS["SUB_TITLE"]), action.option_strings))
+            else:
+                default = action.dest.upper()
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    parts.append(color(f'{option_string} {args_string}', Config.COLORS["SUB_TITLE"]))
+            return ', '.join(parts)
+
+    def format_help(self):
+        formatter = self._get_formatter()
+        formatter.add_text(self.description)
+        formatter.add_usage(self.usage, self._actions,
+                          self._mutually_exclusive_groups)
+        formatter.add_text(color("\n可选参数:", Config.COLORS["TITLE"]))
+        
+        for action_group in self._action_groups:
+            formatter.start_section(action_group.title)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+            
+        formatter.add_text(self.epilog)
+        return formatter.format_help()
+
+ap = ColoredArgumentParser(
+    description=color('IP地址查询工具 - 基于 ip-api.com 接口', Config.COLORS["TITLE"]),
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog=f'''
+{color("示例:", Config.COLORS["SUB_TITLE"])}
+  {color("%(prog)s", Config.COLORS["CONTENT"])}                     # 查询本机公网IP信息
+  {color("%(prog)s -i 8.8.8.8", Config.COLORS["CONTENT"])}         # 查询指定IP信息
+  {color("%(prog)s -c", Config.COLORS["CONTENT"])}                 # 显示curl命令
+  {color("%(prog)s -f json", Config.COLORS["CONTENT"])}           # 以JSON格式输出
+  
+{color("输出信息包含:", Config.COLORS["SUB_TITLE"])}
+  {color("- IP地址", Config.COLORS["CONTENT"])}
+  {color("- 国家/地区", Config.COLORS["CONTENT"])}
+  {color("- 城市", Config.COLORS["CONTENT"])}
+  {color("- ISP提供商", Config.COLORS["CONTENT"])}
+  {color("- 地理位置(经纬度)", Config.COLORS["CONTENT"])}
+  {color("- 时区", Config.COLORS["CONTENT"])}
+''')
+
+ap.add_argument("-i", "--ip", 
+    default="", 
+    type=str,
+    metavar=color("IP", Config.COLORS["CONTENT"]),
+    help=color("指定要查询的IP地址", Config.COLORS["CONTENT"])
+)
+ap.add_argument("-c", "--cmd", 
+    action="store_true",
+    help=color("显示对应的curl命令", Config.COLORS["CONTENT"])
+)
+ap.add_argument("-f", "--format",
+    choices=['text', 'json', 'csv'],
+    default='text',
+    help=color("指定输出格式(默认: text)", Config.COLORS["CONTENT"])
+)
+ap.add_argument("-t", "--timeout",
+    type=int,
+    default=5,
+    metavar=color("SECONDS", Config.COLORS["CONTENT"]),
+    help=color("设置请求超时时间(默认: 5秒)", Config.COLORS["CONTENT"])
+)
+args = vars(ap.parse_args())
+
+class IPRSSClient:
+    def __init__(self, args):
+        self.ip = ""
+        self.args = args
+
+    def execute_curl(self, url):
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "--connect-timeout", "5", "-m", "10", url],
+                capture_output=True,
+                text=True,
+                encoding="utf-8"
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                raise Exception(f"请求失败: {result.stderr}")
+        except Exception as e:
+            print(color(f"执行curl命令时出错: {str(e)}", 2))
+            exit(1)
+
+    def get_ip_with_location(self):
+        """
+        获取公网 IP 地址 + 详细区域
+        """
+        url = f"{Config.BASE_URL}/json"
+        if args["ip"] != "":
+            self.ip = args["ip"]
+            url += f"/{self.ip}"
+        response = self.execute_curl(url)
+        response_json = json.loads(response)
+        if response_json.get("status", "") == "success":
+            data = response_json
+        else:
+            raise Exception(
+                f"Failed to get public ip address, Error: {response_json.get('msg', '')}"
+            )
+        print(color("IP with Location:", Config.COLORS["TITLE"]))
+        self.ip = data["query"]
+        format_data = {
+            **{
+                "ip": data["query"],
+            },
+            **data,
+        }
+        format_dict(format_data, indent=2)
+
+
+def format_dict(data: dict, indent=0, exclude_keys=None):
+    if exclude_keys is None:
+        exclude_keys = Config.EXCLUDE_KEYS
+
+    for key, value in data.items():
+        if key in exclude_keys:
+            continue
+        if isinstance(value, dict):
+            print(" " * indent + f"{color(key, Config.COLORS['CONTENT'])}:")
+            format_dict(value, indent + 4, exclude_keys)
+        else:
+            print(
+                " " * indent
+                + f"{color(key, Config.COLORS['SUB_TITLE'])}: {color(value, Config.COLORS['CONTENT'])}"
+            )
+
 
 def check_arg(args, type) -> str:
     try:
@@ -101,17 +178,25 @@ def check_arg(args, type) -> str:
 
 
 def cmd():
-    print(color("curl cmd:", TITLE_COLOR))
-    print(color(f"{' ' * SUB_TITLE_COLOR}curl {BASE_URL}/json/<ip>", CONTENT_COLOR))
+    print(color("curl cmd:", Config.COLORS["TITLE"]))
+    print(color(f"{' ' * Config.COLORS['SUB_TITLE']}curl {Config.BASE_URL}/json/<ip>", Config.COLORS["CONTENT"]))
 
 
 def check_ip_and_return_str(ip: str) -> str:
     """
-    检查 ip 地址是否合法, 最终只返回一个 ip 地址
+    检查IP地址是否合法并提取有效IP地址
+    
+    Args:
+        ip (str): 输入的IP地址字符串
+        
+    Returns:
+        str: 提取出的有效IP地址
+        
+    Raises:
+        AssertionError: 当未找到有效IP地址时抛出
     """
     import re
-
-    assert re.search(r"\d+\.\d+\.\d+\.\d+", ip), "no IP address found."
+    assert re.search(r"\d+\.\d+\.\d+\.\d+", ip), "未找到有效的IP地址"
     return re.search(r"\d+\.\d+\.\d+\.\d+", ip).group()
 
 

@@ -80,14 +80,16 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
 
                     ```bash
                     $ sudo brctl addbr br0
-                    $ sudo ifconfig br0 192.168.0.1/24 up
+                    $ sudo ip addr add 192.168.0.1/24 dev br0
+                    $ sudo ip link set br0 up
                     ```
-
+     
                2.   宿主机创建 tap0 接口；
-
+     
                     ```bash
-                    $ sudo tunctl -t tap0
-                    $ sudo ifconfig tap0 192.168.0.2/24 up
+                    $ sudo ip tuntap add mode tap dev tap0
+                    $ sudo ip addr add 192.168.0.2/24 dev tap0
+                    $ sudo ip link set tap0 up
                     $ sudo brctl addif br0 tap0
                     $ sudo brctl show # 可以看到网桥 br0 拥有了 tap0 接口
                     ```
@@ -95,7 +97,7 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
                     此时输入 `ifconfig` 应当至少可以看到 tap0、br0、lo、ens33 几个网络接口；此时记住 br0 的 inet 地址，这里以 `192.168.0.1` 为例
 
                3.   宿主机启动 qemu system mode，并指定其使用 tap0 用于与宿主机通信：
-
+     
                     ```bash
                     $ sudo qemu-system-mips \
                     -M malta \	# 指定使用的 mips 开发板模型, 输入 -M ? 可以查看其他类型
@@ -109,90 +111,48 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
                     $ sudo qemu-system-mips -M malta -kernel vmlinux-3.2.0-4-4kc-malta -append "root=/dev/sda1 console=tty0" -net nic -net tap,ifname=tap0,script=no,downscript=no -hda debian_squeeze_mips_standard.qcow2
                     ```
 
-               4.   最后在虚拟环境中配置 ip：`sudo ifconfig eth0 192.168.0.3/24 up`，这里的 ip 地址参考上文 ens33 的 ip，要求同一子网
+               4.   最后在虚拟环境中配置 ip：`sudo ifconfig eth0 192.168.0.3/24 up` 或者 `sudo ip addr add 192.168.0.3/24 dev eth0`，这里的 ip 地址参考上文 ens33 的 ip，要求同一子网
+
+               5.   如果要连通外网，需要配置路由和 dns 服务器
+
+                    目前已知宿主机 br0 为 `192.168.0.1`，tap0 为 `192.168.0.2`，qemu 系统为 `192.168.0.3`；br0 可以上网
+
+                    1.   `ip route add 192.168.9.1 via 192.168.0.1`（这里的 `192.168.9.1` 是网关）
 
           2.   维新派
 
                1.   使用 docker 提供的网桥直接通信，首先安装 docker：`sudo apt-get install docker.io`
-
+     
                2.   启动 docker：`sudo systemctl start docker.service`，为 docker 添加开机自启动：`sudo systemctl enable docker.service`；注意，使用 wsl 时，开机自启 docker 容易导致通过 terminal 启动 wsl 时增加冗余，私以为而这种行为明显不符合 wsl 即开即用的逻辑
-
+     
                3.   输入 `ifconfig` 可以至少看到 lo、eth0、docker0 几个接口，记住 docker0 的 inet 地址，这里以 `172.17.0.1` 为例
-
+     
                4.   创建 tap0 设备，并连接到 docker0：
-
+     
                     ```bash
-                    $ tunctl -t tap0
-                    $ ifconfig tap0 up
+                    $ sudo ip tuntap add mode tap dev tap0
+                    $ sudo ip addr add 172.17.0.2/16 dev tap0
+                    $ sudo ip link set tap0 up
                     $ brctl addif docker0 tap0
                     $ brctl show	# 此时可以看到 docker0 有了 tap0 接口
                     ```
-
+     
                5.   宿主机启动 qemu system mode，指令与上一步骤相同
-
+     
                6.   在 qemu 中，需要手动配置网络信息：
-
+     
                     ```bash
-                    $ ifconfig eth0 172.17.0.2/24	# 如果地址冲突了就换一个
-                    $ route add default gw 172.17.0.1
-                    $ echo "nameserver 172.17.0.1" > /etc/resolv.conf
+                    $ ifconfig eth0 172.17.0.3/16	# 如果地址冲突了就换一个
+                    $ ip route add default gw 172.17.0.1	# 配置默认网关为 docker0, 可以由此连通外网
+                    $ echo "nameserver 172.17.0.1" > /etc/resolv.conf	# 配置 dns
                     ```
-
-               7.   这里给一个快速自动化配置环境的脚本，`init-qemu-network-env.sh`
-
-                    ```shell
-                    #/bin/bash
-                    
-                    is_network_interface_exist() {
-                        local interface_name="$1"
-                        if ifconfig | grep -q "$interface_name"; then
-                            return 1
-                        else
-                            return 0
-                        fi
-                    }
-                    
-                    echo -e "\e[1mChecking and initializing bridge and tap...\e[0m"
-                    
-                    is_network_interface_exist "docker0"
-                    if [ $? -eq 0 ]; then
-                        echo -e "\e[91mdocker0 doesn't exist, starting Docker...\e[0m"
-                        sudo systemctl start docker.service
-                    fi
-                    
-                    is_network_interface_exist "tap0"
-                    if [ $? -eq 0 ]; then
-                        echo -e "\e[93mtap0 doesn't exist, creating tap0...\e[0m"
-                        sudo tunctl -t tap0
-                        sudo ifconfig tap0 up
-                        sudo brctl addif docker0 tap0
-                        sudo brctl show
-                    fi
-                    
-                    echo -e "\e[1mQEMU environment is OK, starting QEMU...\e[0m"
-                    cmd="sudo qemu-system-mips \
-                    -M malta \
-                    -append \"root=/dev/sda1 console=tty0\" \
-                    -net nic \
-                    -net tap,ifname=tap0,script=no,downscript=no \
-                    -kernel vmlinux-3.2.0-4-4kc-malta \
-                    -hda debian_squeeze_mips_standard.qcow2"
-                    
-                    echo -e "\e[92mTry executing:\e[0m"
-                    echo -e "\e[93m$cmd\e[0m"
-                    
-                    echo -e "\e[94mOthers you may try:\e[0m"
-                    echo -e "\e[94mifconfig eth0 172.17.0.2/24
-                    route add default gw 172.17.0.1
-                    echo \"nameserver 172.17.0.1\" > /etc/resolv.conf\e[0m"
-                    ```
-
+     
           3.   永久修改网络配置，成功率较低，wsl 用户不可用，不推荐；主要思路是在 `/etc/network/interfaces` 中配置好 ens33 和 br0（网桥），用 br0 取代 ens33，然后创建 tap0 连接到 br0，再使用 tap0 为 qemu 提供网络，由于涉及到 `ifdown eth0` 和 `ifup br0`，而 wsl 的 dhcp 不会自动为 br0 提供 ip，就会导致 wsl 无 ip 可用，直接无网络。因此，私以为使用前两种生命周期为单次开机的方法更值得使用。
-
+     
      2.   挂载提取出来的固件
-
+     
           1.   按照上文配置好网络并启动 qemu 模拟环境，通过 `ping 172.17.0.2` 可以 ping 通；由于在一些老版本的镜像中 ssh 版本较低，而新版本的 ssh 默认禁用了 `ssh-dss` 算法，可以通过 `ssh -o HostKeyAlgorithms=+ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-dss  user@172.17.0.2` 指定新增算法选项来解决，如果想一劳永逸，还可以修改配置文件 `~/.ssh/config`（没有就创建）：
-
+     
                ```ini
                # 方法 1, 对特定 ip 添加配置
                Host 172.17.0.2
@@ -204,9 +164,9 @@ debian 系使用 apt 安装：`apt-get install qemu-user-static qemu-system uml-
                HostKeyAlgorithms +ssh-dss
                PubkeyAcceptedKeyTypes +ssh-dss
                ```
-
+     
           2.    将提取出来的系统传输到 qemu 中
-
+     
                 1.   首先需要将整个 squashfs-root 文件夹打包成 tar：`tar -cvf sqfs.tar squashfs-root`
                 2.   传输到 qemu 里：`scp -r sqfs.tar root@172.17.0.2:/root/`（scp 需要用到 ssh，遇到 ssh-dss 算法问题就参考上一步添加对应选项）
                 3.   在 qemu 中解压：`tar -xvf sqfs.tar`

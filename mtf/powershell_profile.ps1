@@ -186,6 +186,11 @@ function kalidown {
     if ($running -like "*kali*") {
         wsl --shutdown kali
         Write-Host "shutting down AMD 14900k + Windows 11 instance." -ForegroundColor Yellow
+        $service = Get-Service -Name "WSLKaliService" -ErrorAction SilentlyContinue
+        if ($service) {
+            Stop-Service -Name "WSLKaliService"
+            Write-Host "WSL Kali service stopped." -ForegroundColor Yellow
+        }
     } else {
         Write-Host "no AMD 14900k + Windows 11 instance running, type kali to start one." -ForegroundColor Yellow
     }

@@ -106,6 +106,7 @@ git config --global credential.helper store
 git config --global init.defaultbranch main
 git config --global core.editor vim
 git config --global core.autocrlf false
+git config --global pull.rebase true
 
 git config -l
 

@@ -64,18 +64,18 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 def get_ollama_config_path():
-    """获取默认配置文件路径"""
+    """Get default config file path"""
     return ollama_config_path
 
 def load_config(config_path):
-    """加载配置文件，如果指定路径不存在则尝试加载默认配置"""
+    """Load config file, try to load default config if specified path doesn't exist"""
     config = {}
     
     if config_path and os.path.exists(config_path):
         with open(config_path, 'r') as f:
             return json.load(f)
     
-    # 确保 .ollama 文件夹存在
+    # Ensure .ollama directory exists
     if not os.path.exists(ollama_dir_path):
         try:
             os.makedirs(ollama_dir_path)
@@ -91,22 +91,6 @@ def load_config(config_path):
     return config
 
 def color(text: str = '', color: int = 2) -> str:
-    """
-    返回对应的控制台 ANSI 颜色; 
-    ```python
-    color_table = {
-        0: '无色', 
-        1: '黑色加粗',
-        2: '红色加粗',
-        3: '绿色加粗',
-        4: '黄色加粗',
-        5: '蓝色加粗',
-        6: '紫色加粗',
-        7: '青色加粗',
-        8: '白色加粗',
-    }
-    ```
-    """
     color_table = {
         0: '{}',
         1: '\033[1;30m{}\033[0m',
@@ -121,15 +105,15 @@ def color(text: str = '', color: int = 2) -> str:
     return color_table[color].format(text)
 
 def show_loading_animation():
-    """显示加载动画"""
+    """Show loading animation"""
     animation = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
     i = 0
     global is_generating
-    start_time = time.time()  # 记录开始时间
+    start_time = time.time()  # Record start time
     while is_generating:
         if should_exit:
             break
-        elapsed = time.time() - start_time  # 计算已过时间
+        elapsed = time.time() - start_time  # Calculate elapsed time
         sys.stdout.write(color(f"\r{animation[i]} Generating response... ({elapsed:.1f}s)", 6))
         sys.stdout.flush()
         time.sleep(0.1)
@@ -138,7 +122,7 @@ def show_loading_animation():
     sys.stdout.flush()
 
 def format_size(size_bytes):
-    """智能转换文件大小单位"""
+    """Smart convert file size units"""
     for unit in ['MB', 'GB', 'TB']:
         if size_bytes < 1024:
             return f"{size_bytes:.1f}{unit}"
@@ -292,19 +276,26 @@ class OllamaClient:
             raise
     
     def print_response(self, content):
-        """使用 rich markdown 渲染回复内容"""
+        """Render response content using rich markdown"""
         console = Console()
         try:
-            # 尝试作为 markdown 渲染
+            # Try to render as markdown
             md = Markdown(content)
             console.print(md)
         except Exception:
-            # 如果渲染失败，回退到普通文本显示
+            # Fallback to plain text if markdown rendering fails
             print(content)
     
     def chat(self, model, messages):
         try:
-            return self.client.chat(model=model, messages=messages)
+            # Use stream=True to get streaming response
+            response = ""
+            for chunk in self.client.chat(model=model, messages=messages, stream=True):
+                if chunk.message:  # Check if message has content
+                    content = chunk.message.get('content', '')
+                    print(content, end='', flush=True)  # Print each text chunk immediately
+                    response += content
+            return type('Response', (), {'message': {'content': response}})  # Return a similar response object
         except Exception as e:
             error_msg = str(e)
             if "502" in error_msg:
@@ -332,7 +323,7 @@ class OllamaClient:
             "pre_prompt": "1. Answer in Chinese\n2. Be concise and efficient"
         }
         
-        # 如果是默认配置路径，确保目录存在
+        # If using default config path, ensure directory exists
         if config_path == ollama_config_path:
             try:
                 if not os.path.exists(ollama_dir_path):
@@ -341,7 +332,7 @@ class OllamaClient:
                 print(color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
                 return
         
-        # 确保目标文件的目录存在
+        # Ensure target file directory exists
         config_dir = os.path.dirname(config_path)
         if config_dir and not os.path.exists(config_dir):
             try:
@@ -368,7 +359,7 @@ class OllamaClient:
             print(color(f"Error generating config file: {str(e)}", 2))
 
 def check_required_params(args, config):
-    """检查必要参数是否完整"""
+    """Check if required parameters are complete"""
     errors = []
     suggestions = []
     
@@ -403,30 +394,60 @@ def check_required_params(args, config):
         print(color(f"   {os.path.basename(sys.argv[0])} -i 127.0.0.1 -p 11434 -m llama3.2:1b", 8))
         sys.exit(1)
 
-def get_user_input(prompt_text):
-    """获取用户输入，支持退格键等编辑功能"""
-    print(prompt_text, end='', flush=True)
+def get_user_input(prompt_text=None):
+    """Get user input with support for backspace and cursor movement"""
     buffer = []
+    cursor_pos = 0
+    
+    def refresh_line():
+        """Refresh current line display"""
+        # Move to line start and clear line
+        print('\r' + ' ' * 100 + '\r', end='')
+        # Print buffer content
+        print(''.join(buffer), end='')
+        # Move cursor to correct position
+        if cursor_pos < len(buffer):
+            print('\033[{}D'.format(len(buffer) - cursor_pos), end='')
+        sys.stdout.flush()
+    
     while True:
-        char = readchar.readchar()
-        if char == '\r' or char == '\n':  # Enter 键
-            print()  # 换行
+        char = readchar.readkey()
+        
+        if char == '\r' or char == '\n':  # Enter key
+            print()  # New line
             return ''.join(buffer)
+            
         elif char == '\x03':  # Ctrl+C
             raise KeyboardInterrupt
-        elif char == '\x7f' or char == '\x08':  # 退格键
-            if buffer:
-                buffer.pop()
-                print('\b \b', end='', flush=True)  # 删除一个字符
-        elif char.isprintable():  # 可打印字符
-            buffer.append(char)
-            print(char, end='', flush=True)
+            
+        elif char == '\x7f' or char == '\x08':  # Backspace key
+            if cursor_pos > 0:
+                buffer.pop(cursor_pos - 1)
+                cursor_pos -= 1
+                refresh_line()
+                
+        elif char == '\x1b[D':  # Left arrow
+            if cursor_pos > 0:
+                cursor_pos -= 1
+                refresh_line()
+                
+        elif char == '\x1b[C':  # Right arrow
+            if cursor_pos < len(buffer):
+                cursor_pos += 1
+                refresh_line()
+                
+        elif len(char) == 1 and char.isprintable():  # Printable character
+            buffer.insert(cursor_pos, char)
+            cursor_pos += 1
+            refresh_line()
+        
+        sys.stdout.flush()
 
 def show_current_config(args, config):
-    """显示当前配置信息"""
+    """Display current configuration information"""
     console = Console()
     
-    # 合并命令行参数和配置文件
+    # Merge command line args and config file
     current_config = {
         'ip': args['ip'] or config.get('ip', '127.0.0.1'),
         'port': args['port'] or config.get('port', '11434'),
@@ -435,7 +456,7 @@ def show_current_config(args, config):
         'pre_prompt': args['pre_prompt'] or config.get('pre_prompt', '')
     }
     
-    # 创建表格
+    # Create table
     table = Table(
         title="Current Configuration",
         box=box.ROUNDED,
@@ -444,19 +465,15 @@ def show_current_config(args, config):
         title_style="bold cyan"
     )
     
-    table.add_column("Parameter", style="bold green")
-    table.add_column("Value", style="yellow")
-    table.add_column("Source", style="blue")
-    
-    # 添加配置信息到表格
+    # Add config info to table
     for key, value in current_config.items():
         source = "Command Line" if args.get(key) else "Config File" if key in config else "Default"
-        # 处理 pre_prompt 的多行显示
+        # Handle multiline pre_prompt display
         if key == 'pre_prompt' and value:
             value = value.replace('\n', '\\n')
         table.add_row(key, str(value), source)
     
-    # 添加配置文件路径信息
+    # Add config file path info
     if args['config']:
         table.add_row("Config File", args['config'], "Command Line")
     elif os.path.exists(ollama_config_path):
@@ -649,10 +666,10 @@ def main():
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
-                elapsed = time.time() - start_time  # 获取总思考时间
-                print(f"{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # 使用不同颜色
+                elapsed = time.time() - start_time  # Get total response time
+                print(f"{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}")  # Use different colors
                 client.print_response(assistant_message['content'])
-                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔线
+                print(color(split_line_char * split_line_length, 8))  # Add bottom separator
             except Exception:
                 is_generating = False
                 loading_thread.join()
@@ -664,8 +681,9 @@ def main():
                 loading_thread.join()
             sys.exit(1)
         
-    print(color(f"Starting chat with model: {args['model']}", 3))
+    print(color("Starting chat with model: ", 3) + color(args['model'], 6))
     print(color("Press Ctrl+C to exit", 7))
+    print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
     
     messages = []
     # Add pre-prompt if specified
@@ -680,38 +698,29 @@ def main():
             if should_exit:
                 break
                 
-            user_input = get_user_input(color("\nYou: ", 4))
+            user_input = get_user_input()  # 不传入提示文本
             if not user_input.strip():
                 continue
             
-            print(color(split_line_char * split_line_length, 8))  # 添加顶部分隔线
             messages.append({"role": "user", "content": user_input})
             try:
-                is_generating = True
-                start_time = time.time()  # 记录开始时间
-                loading_thread = threading.Thread(target=show_loading_animation)
-                loading_thread.daemon = True
-                loading_thread.start()
+                start_time = time.time()
+                print(f"\n{color(args['model'], 6)}:")
                 
                 response = client.chat(args['model'], messages)
-                is_generating = False
-                loading_thread.join()
+                elapsed = time.time() - start_time
                 
-                assistant_message = response.message
-                messages.append({"role": "assistant", "content": assistant_message['content']})
-                elapsed = time.time() - start_time  # 获取总思考时间
-                print(f"\n{color(args['model'], 6)} {color(f'[Responded in {elapsed:.1f}s]:', 8)}", end="")  # 使用不同颜色
-                client.print_response(assistant_message['content'])
-                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔线
+                messages.append({"role": "assistant", "content": response.message['content']})
+                print(f"\n{color(f'[Responded in {elapsed:.1f}s]', 8)}")
+                print(color(split_line_char * split_line_length, 8))
+                print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
             except Exception as e:
-                is_generating = False
-                if loading_thread.is_alive():
-                    loading_thread.join()
                 print(color(f"\nError: {str(e)}", 2))
                 if should_exit:
                     break
                 messages.pop()
-                
+                print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
+
     except EOFError:
         pass  # Handle EOFError, exit silently
     finally:

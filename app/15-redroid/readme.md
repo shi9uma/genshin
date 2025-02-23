@@ -1,6 +1,6 @@
 # redroid
 
-
+redroid 是一个轻量级 android 实现的解决方案
 
 ## refer
 

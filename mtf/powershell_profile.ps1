@@ -1,28 +1,34 @@
 $OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding    # english use utf-8
 $OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(936)   # chinese change to utf-8 handly
 
+$lang_base_path = "d:/lang"
+$bin_base_path = "d:/bin"
+$software_base_path = "d:/software"
+$sec_base_path = "d:/sec"
+$project_base_path = "d:/project"
+
 # app export
 ###################### lang ######################
-$GRADLEPATH = "d:/lang/java/gradle-8.7/bin"
-$MINGW64PATH = "d:/lang/mingw64/bin"
-$NODEJSPATH = "d:/lang/node"
+$GRADLEPATH = "$lang_base_path/java/gradle-8.7/bin"
+$MINGW64PATH = "$lang_base_path/mingw64/bin"
+$NODEJSPATH = "$lang_base_path/node"
 
 $env:PATH += "$GRADLEPATH;" + `
 "$MINGW64PATH;" + `
 "$NODEJSPATH;"
 
-$env:PIP_DOWNLOAD_CACHE = "d:/lang/python/pip-cache"
+$env:PIP_DOWNLOAD_CACHE = "$lang_base_path/python/pip-cache"
 
 ###################### bin ######################
-$BTOPPATH = "d:/bin/btop4win"
-$FDPATH = "d:/bin/fd"
-$FFMPEGPATH = "d:/bin/ffmpeg"
-$FZFPATH = "d:/bin/fzf"
-$GITPATH = "d:/bin/git/cmd"
-$NMAPPATH = "d:/bin/nmap"
-$RIPGREPPATH = "d:/bin/ripgrep"
-$TREEPATH = "d:/bin/tree/bin"
-$VIMPATH = "d:/bin/vim/vim90"
+$BTOPPATH = "$bin_base_path/btop4win"
+$FDPATH = "$bin_base_path/fd"
+$FFMPEGPATH = "$bin_base_path/ffmpeg"
+$FZFPATH = "$bin_base_path/fzf"
+$GITPATH = "$bin_base_path/git/cmd"
+$NMAPPATH = "$bin_base_path/nmap"
+$RIPGREPPATH = "$bin_base_path/ripgrep"
+$TREEPATH = "$bin_base_path/tree/bin"
+$VIMPATH = "$bin_base_path/vim/vim90"
 
 $env:PATH += "$BTOPPATH;" + `
 "$FDPATH;" + `
@@ -39,11 +45,11 @@ $env:FZF_DEFAULT_COMMAND = "rg --files"
 $env:FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi"
 
 ###################### software ######################
-$NOTEPAD4PATH = "d:/software/notepad4"
-$POTPLAYERPATH = "d:/software/potplayer"
-$SUMATRAPATH = "d:/software/sumatra-pdf"
-$TYPORAPATH = "d:/software/typora"
-$XNVIEWPATH = "d:/software/xnview"
+$NOTEPAD4PATH = "$software_base_path/notepad4"
+$POTPLAYERPATH = "$software_base_path/potplayer"
+$SUMATRAPATH = "$software_base_path/sumatra-pdf"
+$TYPORAPATH = "$software_base_path/typora"
+$XNVIEWPATH = "$software_base_path/xnview"
 
 $env:PATH += "$NOTEPAD4PATH;" + `
 "$POTPLAYERPATH;" + `
@@ -57,14 +63,14 @@ Set-Alias pdf sumatrapdf
 Set-Alias img xnviewmp
 
 ###################### sec ######################
-$ADBPATH = "d:/sec/android/android-platform-tool"
-$BURPSUITEPATH = "d:/sec/burpsuite"
-$FRIDAPATH = "d:/sec/frida"
-$IDAPATH = "d:/sec/ida"
-$JADXPATH = "d:/sec/jadx"
-$MOBAXTERMPATH = "d:/sec/mobaxterm-portable"
-$WINHEXPATH = "d:/sec/winhex"
-$WIRESHARKPATH = "d:/sec/wireshark"
+$ADBPATH = "$sec_base_path/android/android-platform-tool"
+$BURPSUITEPATH = "$sec_base_path/burpsuite"
+$FRIDAPATH = "$sec_base_path/frida"
+$IDAPATH = "$sec_base_path/ida"
+$JADXPATH = "$sec_base_path/jadx"
+$MOBAXTERMPATH = "$sec_base_path/mobaxterm-portable"
+$WINHEXPATH = "$sec_base_path/winhex"
+$WIRESHARKPATH = "$sec_base_path/wireshark"
 
 $env:PATH += "$ADBPATH;" + `
 "$BURPSUITEPATH;" + `
@@ -80,9 +86,11 @@ Set-Alias moba mobaxterm
 Set-Alias winhex xwforensics64
 Set-Alias wireshark WiresharkPortable64
 
-# env export
-$env:http_proxy="http://127.0.0.1:7890"
-$env:https_proxy="http://127.0.0.1:7890"
+# proxy export
+$proxy_host = "127.0.0.1"
+$proxy_port = "7890"
+$env:http_proxy="http://${proxy_host}:${proxy_port}"
+$env:https_proxy="http://${proxy_host}:${proxy_port}"
 
 # cancle native alias
 Remove-Item Alias:ls
@@ -98,28 +106,29 @@ Set-Alias reg regedit
 function poweroff { Stop-Computer }
 function reboot { Restart-Computer }
 
-function password { python d:/project/04-flyMe2theStar/03-genshin/code/python/08-password-generator.py $args }
-function rename { python d:/project/04-flyMe2theStar/03-genshin/code/python/14-interact-rename.py $args}
-function encrypt { python d:/project/04-flyMe2theStar/03-genshin/code/python/02-ez-encrypt.py $args }
-function cx { python d:/project/04-flyMe2theStar/03-genshin/code/python/09-ip-status.py $args }
-function ftp { python d:/project/04-flyMe2theStar/03-genshin/code/python/16-fast-ftp-server.py $args }
-function l { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
-function ll { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
-function ls { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args }
-function la { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args --all }
-function lt { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args -s time }
-function lss { python d:/project/04-flyMe2theStar/03-genshin/code/python/12-ls-alh.py $args -s size }
+$project_genshin_path = "$project_base_path/04-flyMe2theStar/03-genshin"
+function password { python $project_genshin_path/code/python/08-password-generator.py $args }
+function rename { python $project_genshin_path/code/python/14-interact-rename.py $args}
+function encrypt { python $project_genshin_path/code/python/02-ez-encrypt.py $args }
+function cx { python $project_genshin_path/code/python/09-ip-status.py $args }
+function ftp { python $project_genshin_path/code/python/16-fast-ftp-server.py $args }
+function l { python $project_genshin_path/code/python/12-ls-alh.py $args }
+function ll { python $project_genshin_path/code/python/12-ls-alh.py $args }
+function ls { python $project_genshin_path/code/python/12-ls-alh.py $args }
+function la { python $project_genshin_path/code/python/12-ls-alh.py $args --all }
+function lt { python $project_genshin_path/code/python/12-ls-alh.py $args -s time }
+function lss { python $project_genshin_path/code/python/12-ls-alh.py $args -s size }
 
 function genshin { ssh genshin-wkyuu }
 function pve { ssh pve-wkyuu }
 function schale { ssh schale-wkyuu }
 
 function hash { certutil -hashfile $args }
-function tree { d:/bin/tree/bin/tree.exe -N -h $args }
-function geek { d:/bin/geek.exe }
+function tree { & "$TREEPATH/tree.exe" -N -h $args }
+function geek { & "$GEEKPATH/geek.exe" }
 function env { Start-Process powershell "-Command & {rundll32 sysdm.cpl,EditEnvironmentVariables}" -Verb RunAs }
 function magnet { echo magnet:?xt=urn:btih:$args }
-function code { d:/software/visual-studio-code/binary/Code.exe --extensions-dir "d:/software/visual-studio-code/extension" $args }
+function code { & $software_base_path/visual-studio-code/binary/Code.exe --extensions-dir "$software_base_path/visual-studio-code/extension" $args }
 function rmrf { Remove-Item -Recurse -Force $args }
 function xpath {
     $convertedPath = $args -replace '\\', '/'
@@ -142,22 +151,30 @@ function home {
     $home_path = "c:/users/wkyuu/desktop"
     Set-Location -Path $home_path
 }
-function download {
-    & print_old_dir
-    $download_path = "e:/download"
-    Set-Location -Path $download_path
-}
 function tmp {
     & print_old_dir
     $tmp_path = "e:/"
-    $path = Join-Path -Path $tmp_path -ChildPath "tmp"
-    if (-Not (Test-Path $path)) {
-        New-Item -ItemType Directory -Path $path
+    if (Test-Path $tmp_path) {
+        $path = Join-Path -Path $tmp_path -ChildPath "tmp"
+        if (-Not (Test-Path $path)) {
+            New-Item -ItemType Directory -Path $path
+        }
+        Set-Location -Path $path
+    } else {
+        $tmp_path = "d:/"   
+        if (Test-Path $tmp_path) {
+            $path = Join-Path -Path $tmp_path -ChildPath "tmp"
+            if (-Not (Test-Path $path)) {
+                New-Item -ItemType Directory -Path $path
+            }
+            Set-Location -Path $path
+        } else {
+            Write-Host "no tmp path found" -ForegroundColor Red
+        }
     }
-    Set-Location -Path $path
 }
 function lcd {
-    $script_path = "d:/project/04-flyMe2theStar/03-genshin/code/python/13-lcd.py"
+    $script_path = "$project_genshin_path/code/python/13-lcd.py"
     
     if ($args[0] -eq "cd" -and $args[1]) {
         $targetDir = python $script_path -pn $args[1] | Select-String -Pattern '([A-Za-z]:\/[^\r\n]+)' | ForEach-Object { $_.Matches[0].Value }

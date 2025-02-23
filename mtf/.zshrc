@@ -463,17 +463,26 @@ if [[ -d "$HOME/repo" ]]; then
 fi
 
 ## export
-proxy_ip_file="$HOME/.proxy_ip"
-if [[ -f ~/.proxy_ip ]]; then
-    proxy_ip=$(cat $proxy_ip_file | awk '{print $1}')
-    proxy_port=$(cat $proxy_ip_file | awk '{print $2}')
-    if [[ -z "$proxy_port" ]]; then
-        proxy_port=7890
+proxy_ip_file="$HOME/.proxy-ip"
+if [[ -f $proxy_ip_file ]]; then
+
+    if [[ $(cat $proxy_ip_file) == "no proxy" ]]; then
+        pass
+    elif [[ -s $proxy_ip_file ]]; then
+        echo "${RED}proxy ip file: $proxy_ip_file is empty, delete it or ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
+    else
+        proxy_ip=$(cat $proxy_ip_file | awk '{print $1}')
+        proxy_port=$(cat $proxy_ip_file | awk '{print $2}')
+
+        if [[ -z "$proxy_port" ]]; then
+            proxy_port=7890
+        fi
+        export all_proxy="http://$proxy_ip:$proxy_port"
     fi
-    export all_proxy="http://$proxy_ip:$proxy_port"
 else
-    if [[ -d "/home/wkyuu" ]]; then
+    if [[ -d "/home/$USER" ]]; then
         echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
+        echo "${RED}or ${GREEN}echo 'no proxy' > \$proxy_ip_file${NC} for no proxy needed${NC}"
     fi
 fi
 
@@ -493,6 +502,7 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
+            "/usr/local/nodejs/bin"
 
             "/opt/homebrew/bin"
             "/opt/homebrew/opt/make/libexec/gnubin"
@@ -519,6 +529,7 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
+            "/usr/local/nodejs/bin"
             "$export_path"
         )
 
@@ -556,7 +567,6 @@ alias xi="curl -I"
 alias reg="grep -ir"
 alias zshrc="source ~/.zshrc"
 alias f="fastfetch"
-alias tldr="tldr --language=zh"
 alias transfer="sd search http.favicon.hash:-620522584"
 alias random="cat /dev/urandom|head|base64|md5sum|cut -d \" \" -f 1"
 # end alias

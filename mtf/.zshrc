@@ -467,8 +467,8 @@ proxy_ip_file="$HOME/.proxy-ip"
 if [[ -f $proxy_ip_file ]]; then
 
     if [[ $(cat $proxy_ip_file) == "no proxy" ]]; then
-        pass
-    elif [[ -s $proxy_ip_file ]]; then
+        :
+    elif [[ $( stat -c %s $proxy_ip_file) -eq 0 ]]; then
         echo "${RED}proxy ip file: $proxy_ip_file is empty, delete it or ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
     else
         proxy_ip=$(cat $proxy_ip_file | awk '{print $1}')

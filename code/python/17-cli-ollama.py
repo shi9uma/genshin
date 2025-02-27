@@ -536,6 +536,11 @@ def show_current_config(args, config):
         title_style="bold cyan"
     )
     
+    # Add columns
+    table.add_column("Parameter", style="bold green")  # 添加列名
+    table.add_column("Value", style="yellow")          # 添加列名
+    table.add_column("Source", style="cyan")           # 添加列名
+    
     # Add config info to table
     for key, value in current_config.items():
         source = "Command Line" if args.get(key) else "Config File" if key in config else "Default"
@@ -554,13 +559,62 @@ def show_current_config(args, config):
     console.print(table)
     console.print()
 
+def get_user_confirmation(prompt_text):
+    """获取用户确认输入"""
+    print(f"\n{CLIStyle.color(prompt_text, 4)} (y/n): ", end='')
+    while True:
+        char = readchar.readkey().lower()
+        if char in ['y', 'n']:
+            print(char)
+            return char == 'y'
+        elif char == '\x03':  # Ctrl+C
+            raise KeyboardInterrupt
+
+def update_config(args, config_path):
+    """更新配置文件"""
+    if not os.path.exists(config_path):
+        if not get_user_confirmation(f"Config file not found at: {config_path}\nCreate new config file?"):
+            return False
+        
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+        config = {}
+    else:
+        try:
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+        except json.JSONDecodeError:
+            if not get_user_confirmation(f"Invalid config file at: {config_path}\nOverwrite with new config?"):
+                return False
+            config = {}
+    
+    if args['ip']:
+        config['ip'] = args['ip']
+    if args['port']:
+        config['port'] = args['port']
+    if args['model']:
+        config['model'] = args['model']
+    if args['ssl']:
+        config['ssl'] = args['ssl']
+    if args['pre_prompt']:
+        config['pre_prompt'] = args['pre_prompt']
+    
+    try:
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=4)
+        print(CLIStyle.color("\nConfig file updated successfully!", 3))
+        print(CLIStyle.color("\nNew configuration:", 7))
+        print(json.dumps(config, indent=4))
+        return True
+    except Exception as e:
+        print(CLIStyle.color(f"\nError updating config file: {str(e)}", 2))
+        return False
+
 def main():
     global is_generating
     
     socket.setdefaulttimeout(5)
     script_name = os.path.basename(sys.argv[0])
     
-    # 检查默认配置文件
     default_config = {}
     if os.path.exists(ollama_config_path):
         try:
@@ -602,8 +656,17 @@ def main():
     ap.add_argument('--new-config', type=str, help='Generate new config file')
     ap.add_argument('--show-config', action='store_true', help='Show current configuration')
     ap.add_argument('--ssl', action='store_true', help='Use HTTPS for API connection')
+    ap.add_argument('--update', action='store_true', help='Update config file with current parameters')
     
     args = vars(ap.parse_args())
+    
+    if args['update']:
+        config_path = args['config'] if args['config'] else ollama_config_path
+        if not get_user_confirmation(f"Update config file at: {config_path}?"):
+            return
+        if update_config(args, config_path):
+            return
+        sys.exit(1)
     
     if args['new_config']:
         client = OllamaClient('127.0.0.1', '11434')

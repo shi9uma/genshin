@@ -556,7 +556,7 @@ class ShodanClient:
             return text[:width-3] + "..."
         return text
 
-    def display_results(self, matches, total):
+    def display_results(self, matches, total, limit=None):
         """根据终端宽度动态显示结果"""
         console = Console()
         console.print()
@@ -654,7 +654,7 @@ class ShodanClient:
         
         # 显示查询信息和统计
         total_matches = len(matches)
-        if args.limit and args.limit > 0:
+        if limit and limit > 0:
             console.print(
                 f"[grey]Total Results: {total} | Retrieved: {total_matches} | Displayed: {len(matches)} (limited by --limit)[/grey]"
             )
@@ -778,7 +778,7 @@ def main():
         if args.limit and args.limit > 0:
             matches = matches[: args.limit]
 
-        client.display_results(matches, results.get("total", 0))
+        client.display_results(matches, results.get("total", 0), args.limit)
 
     elif args.command == "info":
         try:

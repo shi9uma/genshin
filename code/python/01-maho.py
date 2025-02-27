@@ -106,28 +106,61 @@ def create_example_text(script_name: str, examples: list, notes: list = None) ->
 # ============================== misc ============================== #
 def exec(cmd: str, print_output=False):
     '''
-    直接传入命令行字符串，执行命令行并返回输出
+    直接传入命令行字符串，执行命令行并返回输出和返回码
     ```python
-    exec('ls -l')
-    exec('ls -l', print_output=True)
+    output, ret_code = exec('ls -l')
+    output, ret_code = exec('ls -l', print_output=True)
     ```
     '''
     assert type(cmd) == str, 'wrong cmd'
     import subprocess
-    output = subprocess.check_output(cmd, shell=True)
-    if print_output: print(output)
+    try:
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        output = result.stdout
+        ret_code = result.returncode
+        
+        if print_output:
+            print(output)
 
-def debug(*args):
+        return ret_code, output
+    except subprocess.CalledProcessError as e:
+        if print_output:
+            print(f"cmd exec failed: {e}")
+        return e.returncode, e.output
+
+def debug(*args, file=None, append=True, **kwargs):
     '''
     打印传入的参数值，并显示其在源码的文件和行号
+    
+    参数:
+        *args: 要打印的参数
+        file: 输出文件路径，默认为None（输出到控制台）
+        append: 是否追加到文件，默认为True
+        **kwargs: 要打印的键值对参数
     '''
     import inspect
     frame = inspect.currentframe().f_back
     info = inspect.getframeinfo(frame)
-    print(f"{color(clean_path(info.filename), 3)}: {color(info.lineno, 4)} {color('|', 7)}", end = ' ')
-    for x in args:
-        print(f"{color(x, 2)}", end = ' ' if x[-1] != ' ' else '')
-    print('')
+    
+    output = f"{color(clean_path(info.filename), 3)}: {color(info.lineno, 4)} {color('|', 7)} "
+    
+    for i, arg in enumerate(args):
+        arg_str = str(arg)
+        output += f"{color(arg_str, 2)} "
+    
+    for k, v in kwargs.items():
+        output += f"{color(k+'=', 6)}{color(str(v), 2)} "
+    
+    output += '\n'
+    
+    if file:
+        mode = 'a' if append else 'w'
+        with open(file, mode) as f:
+            clean_output = re.sub(r'\033\[\d+;\d+m|\033\[0m', '', output)
+            f.write(clean_output)
+    else:
+        print(output, end='')
+
 
 def color(text: str = '', color: int = 2) -> str:
     '''

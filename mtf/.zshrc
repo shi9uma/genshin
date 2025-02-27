@@ -454,13 +454,26 @@ sd() {
     python3 $sd_path "$@"
 }
 
+exp() {
+    if [[ ! -f "/usr/bin/dolphin" ]]; then
+        echo "${RED}dolphin not found, try ${GREEN}sudo apt install dolphin-emu${NC}"
+        return 1
+    fi
+    if [[ $# -eq 0 ]]; then
+        dolphin . &>/dev/null &
+    else
+        dolphin "$@" &>/dev/null &
+    fi
+    return 0
+}
+
 ## file, dir
 if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"
 fi
 
-if [[ -d "$HOME/repo" ]]; then
-    alias repo="cd $HOME/repo"
+if [[ -d "$HOME/cargo/repo" ]]; then
+    alias repo="cd $HOME/cargo/repo"
 fi
 
 ## export

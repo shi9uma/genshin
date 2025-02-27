@@ -41,10 +41,10 @@ apt install -y \
 	fastjar flex \
 	gawk gettext gcc-multilib g++-multilib gdb-multiarch gperf \
 	haveged help2man \
-	intltool \
+	gnupg2 intltool \
 	libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libncurses-dev libpython3-dev \
 	libmpfr-dev libc6-dbg libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libffi-dev libtool lrzsz \
-    make module-assistant mkisofs msmtp tldr \
+    make module-assistant mkisofs msmtp \
 	ninja-build \
 	p7zip p7zip-full \
 	patch pkgconf python2.7 python3-pip \
@@ -56,8 +56,8 @@ fi
 
 apt install -y \
 	aptitude \
-	locales curl net-tools openvpn rsync proxychains4 jq traceroute \
-	gnupg2 binutils file fd-find xxd btop rename tmux strace last coreutils \
+	locales net-tools curl openvpn rsync proxychains4 jq traceroute \
+	file fd-find xxd btop tmux strace last coreutils \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \
 	python3-pip python3-venv python3-shodan python3-ropgadget \
@@ -97,8 +97,13 @@ trusted-host = https://mirrors.ustc.edu.cn
 EOF
 
 sudo -u wkyuu pip install \
-	setuptools setuptools_rust argparse cryptography scapy netifaces wsgidav shodan datetime colorama ipython getpass4 pwntools
-	
+	datetime argparse colorama cryptography getpass4 rich readchar \
+	ipython \
+	netifaces wsgidav \
+	ropgadget pwntools \
+	scapy shodan \
+	ollama
+
 # git
 git config --global user.email wkyuu@majo.im
 git config --global user.name shiguma

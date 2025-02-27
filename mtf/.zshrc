@@ -57,7 +57,7 @@ setopt hist_verify            # show command with history expansion to user befo
 #setopt share_history         # share command history data
 
 # force zsh to show the complete history
-# alias history="history 0"
+alias history="history 0"
 
 # configure `time` format
 TIMEFMT=$'\nreal\t%E\nuser\t%U\nsys\t%S\ncpu\t%P'
@@ -92,7 +92,8 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 configure_prompt() {
-    prompt_symbol=\(Ծ‸Ծ\)
+    # prompt_symbol=\(Ծ‸Ծ\)
+    prompt_symbol=[/_\\]
     # Skull emoji for root terminal
     #[ "$EUID" -eq 0 ] && prompt_symbol=💀
     case "$PROMPT_ALTERNATIVE" in
@@ -481,8 +482,8 @@ if [[ -f $proxy_ip_file ]]; then
     fi
 else
     if [[ -d "/home/$USER" ]]; then
-        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
-        echo "${RED}or ${GREEN}echo 'no proxy' > \$proxy_ip_file${NC} for no proxy needed${NC}"
+        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${NC}${GREEN}echo 'ip port' > \$proxy_ip_file${NC}"
+        echo "${RED}or ${GREEN}echo 'no proxy' > \$proxy_ip_file ${NC}${RED}for no proxy needed${NC}"
     fi
 fi
 
@@ -538,6 +539,9 @@ case $os_type in
                 export_path="$path:$export_path"
             fi
         done
+
+        alias python="env -u PYTHONHOME -u PYTHONPATH python"
+        alias pip="env -u PYTHONHOME -u PYTHONPATH pip"
         ;;
 esac
 export PATH=$export_path
@@ -560,7 +564,7 @@ alias size="du -abh --time -d 1"
     # sort by size: `size | sort -h`
 
 alias rcp="rsync -avtz --progress"
-    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src dst`
+    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src dst@host:/path/to/dst`
 
 alias x="curl"
 alias xi="curl -I"

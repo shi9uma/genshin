@@ -10,6 +10,98 @@ args = vars(ap.parse_args())
 
 args['dir'] # 取值
 
+class CLIStyle:
+    """CLI 工具统一样式配置"""
+    COLORS = {
+        "TITLE": 7,      # 青色 - 主标题
+        "SUB_TITLE": 2,  # 红色 - 子标题
+        "CONTENT": 3,    # 绿色 - 普通内容
+        "EXAMPLE": 7,    # 青色 - 示例
+        "WARNING": 4,    # 黄色 - 警告
+        "ERROR": 2,      # 红色 - 错误
+    }
+
+    @staticmethod
+    def color(text: str = "", color: int = COLORS["CONTENT"]) -> str:
+        """统一的颜色处理函数"""
+        color_table = {
+            0: "{}",  # 无色
+            1: "\033[1;30m{}\033[0m",  # 黑色加粗
+            2: "\033[1;31m{}\033[0m",  # 红色加粗
+            3: "\033[1;32m{}\033[0m",  # 绿色加粗
+            4: "\033[1;33m{}\033[0m",  # 黄色加粗
+            5: "\033[1;34m{}\033[0m",  # 蓝色加粗
+            6: "\033[1;35m{}\033[0m",  # 紫色加粗
+            7: "\033[1;36m{}\033[0m",  # 青色加粗
+            8: "\033[1;37m{}\033[0m",  # 白色加粗
+        }
+        return color_table[color].format(text)
+
+class ColoredArgumentParser(argparse.ArgumentParser):
+    """统一的命令行参数解析器"""
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            metavar, = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        else:
+            parts = []
+            if action.nargs == 0:
+                parts.extend(map(lambda x: CLIStyle.color(x, CLIStyle.COLORS["SUB_TITLE"]), 
+                               action.option_strings))
+            else:
+                default = action.dest.upper()
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    parts.append(CLIStyle.color(
+                        f'{option_string} {args_string}', 
+                        CLIStyle.COLORS["SUB_TITLE"]
+                    ))
+            return ', '.join(parts)
+
+    def format_help(self):
+        formatter = self._get_formatter()
+        
+        # 添加描述
+        if self.description:
+            formatter.add_text(CLIStyle.color(self.description, CLIStyle.COLORS["TITLE"]))
+            
+        # 添加用法
+        formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+        
+        # 添加参数组
+        formatter.add_text(CLIStyle.color("\n可选参数:", CLIStyle.COLORS["TITLE"]))
+        for action_group in self._action_groups:
+            formatter.start_section(action_group.title)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+            
+        # 添加示例和注释
+        if self.epilog:
+            formatter.add_text(self.epilog)
+            
+        return formatter.format_help()
+
+def create_example_text(script_name: str, examples: list, notes: list = None) -> str:
+    """创建统一的示例文本
+    Args:
+        script_name: 脚本名称
+        examples: 示例列表，每个元素是 (描述, 命令) 的元组
+        notes: 注意事项列表
+    """
+    text = f'\n{CLIStyle.color("示例:", CLIStyle.COLORS["SUB_TITLE"])}'
+    
+    for desc, cmd in examples:
+        text += f'\n  {CLIStyle.color(f"# {desc}", CLIStyle.COLORS["EXAMPLE"])}'
+        text += f'\n  {CLIStyle.color(f"{script_name} {cmd}", CLIStyle.COLORS["CONTENT"])}'
+        text += '\n'
+    
+    if notes:
+        text += f'\n{CLIStyle.color("注意事项:", CLIStyle.COLORS["SUB_TITLE"])}'
+        for note in notes:
+            text += f'\n  {CLIStyle.color(f"- {note}", CLIStyle.COLORS["CONTENT"])}'
+    
+    return text 
+
 
 # ============================== misc ============================== #
 def exec(cmd: str, print_output=False):

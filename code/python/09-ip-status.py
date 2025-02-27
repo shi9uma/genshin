@@ -1,37 +1,42 @@
 # -*- coding: utf-8 -*-
-# 感谢 https://ip-api.com 提供的接口
+# Thanks to https://ip-api.com for providing the API
 
 import subprocess
 import json
 import argparse
+import os
+import sys
 
-class Config:
-    BASE_URL = "http://ip-api.com"
+# CLI Style Template
+class CLIStyle:
+    """CLI Tool Style Configuration"""
     COLORS = {
-        "TITLE": 7,
-        "SUB_TITLE": 2,
-        "CONTENT": 3,
+        "TITLE": 7,      # Cyan - Main Title
+        "SUB_TITLE": 2,  # Red - Subtitle
+        "CONTENT": 3,    # Green - Content
+        "EXAMPLE": 7,    # Cyan - Examples
+        "WARNING": 4,    # Yellow - Warnings
+        "ERROR": 2,      # Red - Errors
     }
-    EXCLUDE_KEYS = ["status", "query"]
 
-def color(text: str = "", color: int = 2) -> str:
-    """
-    返回对应的控制台 ANSI 颜色
-    """
-    color_table = {
-        0: "{}",  # 无色
-        1: "\033[1;30m{}\033[0m",  # 黑色加粗
-        2: "\033[1;31m{}\033[0m",  # 红色加粗
-        3: "\033[1;32m{}\033[0m",  # 绿色加粗
-        4: "\033[1;33m{}\033[0m",  # 黄色加粗
-        5: "\033[1;34m{}\033[0m",  # 蓝色加粗
-        6: "\033[1;35m{}\033[0m",  # 紫色加粗
-        7: "\033[1;36m{}\033[0m",  # 青色加粗
-        8: "\033[1;37m{}\033[0m",  # 白色加粗
-    }
-    return color_table[color].format(text)
+    @staticmethod
+    def color(text: str = "", color: int = COLORS["CONTENT"]) -> str:
+        """Unified color function"""
+        color_table = {
+            0: "{}",  # No color
+            1: "\033[1;30m{}\033[0m",  # Black bold
+            2: "\033[1;31m{}\033[0m",  # Red bold
+            3: "\033[1;32m{}\033[0m",  # Green bold
+            4: "\033[1;33m{}\033[0m",  # Yellow bold
+            5: "\033[1;34m{}\033[0m",  # Blue bold
+            6: "\033[1;35m{}\033[0m",  # Purple bold
+            7: "\033[1;36m{}\033[0m",  # Cyan bold
+            8: "\033[1;37m{}\033[0m",  # White bold
+        }
+        return color_table[color].format(text)
 
 class ColoredArgumentParser(argparse.ArgumentParser):
+    """Unified command line argument parser"""
     def _format_action_invocation(self, action):
         if not action.option_strings:
             metavar, = self._metavar_formatter(action, action.dest)(1)
@@ -39,101 +44,90 @@ class ColoredArgumentParser(argparse.ArgumentParser):
         else:
             parts = []
             if action.nargs == 0:
-                parts.extend(map(lambda x: color(x, Config.COLORS["SUB_TITLE"]), action.option_strings))
+                parts.extend(map(lambda x: CLIStyle.color(x, CLIStyle.COLORS["SUB_TITLE"]), 
+                               action.option_strings))
             else:
                 default = action.dest.upper()
                 args_string = self._format_args(action, default)
                 for option_string in action.option_strings:
-                    parts.append(color(f'{option_string} {args_string}', Config.COLORS["SUB_TITLE"]))
+                    parts.append(CLIStyle.color(
+                        f'{option_string} {args_string}', 
+                        CLIStyle.COLORS["SUB_TITLE"]
+                    ))
             return ', '.join(parts)
 
     def format_help(self):
         formatter = self._get_formatter()
-        formatter.add_text(self.description)
-        formatter.add_usage(self.usage, self._actions,
-                          self._mutually_exclusive_groups)
-        formatter.add_text(color("\n可选参数:", Config.COLORS["TITLE"]))
         
+        if self.description:
+            formatter.add_text(CLIStyle.color(self.description, CLIStyle.COLORS["TITLE"]))
+            
+        formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+        
+        formatter.add_text(CLIStyle.color("\nOptional Arguments:", CLIStyle.COLORS["TITLE"]))
         for action_group in self._action_groups:
             formatter.start_section(action_group.title)
             formatter.add_arguments(action_group._group_actions)
             formatter.end_section()
             
-        formatter.add_text(self.epilog)
+        if self.epilog:
+            formatter.add_text(self.epilog)
+            
         return formatter.format_help()
 
-ap = ColoredArgumentParser(
-    description=color('IP地址查询工具 - 基于 ip-api.com 接口', Config.COLORS["TITLE"]),
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog=f'''
-{color("示例:", Config.COLORS["SUB_TITLE"])}
-  {color("%(prog)s", Config.COLORS["CONTENT"])}                     # 查询本机公网IP信息
-  {color("%(prog)s -i 8.8.8.8", Config.COLORS["CONTENT"])}         # 查询指定IP信息
-  {color("%(prog)s -c", Config.COLORS["CONTENT"])}                 # 显示curl命令
-  {color("%(prog)s -f json", Config.COLORS["CONTENT"])}           # 以JSON格式输出
-  
-{color("输出信息包含:", Config.COLORS["SUB_TITLE"])}
-  {color("- IP地址", Config.COLORS["CONTENT"])}
-  {color("- 国家/地区", Config.COLORS["CONTENT"])}
-  {color("- 城市", Config.COLORS["CONTENT"])}
-  {color("- ISP提供商", Config.COLORS["CONTENT"])}
-  {color("- 地理位置(经纬度)", Config.COLORS["CONTENT"])}
-  {color("- 时区", Config.COLORS["CONTENT"])}
-''')
+def create_example_text(script_name: str, examples: list, notes: list = None) -> str:
+    """Create unified example text"""
+    text = f'\n{CLIStyle.color("Examples:", CLIStyle.COLORS["SUB_TITLE"])}'
+    
+    for desc, cmd in examples:
+        text += f'\n  {CLIStyle.color(f"# {desc}", CLIStyle.COLORS["EXAMPLE"])}'
+        text += f'\n  {CLIStyle.color(f"{script_name} {cmd}", CLIStyle.COLORS["CONTENT"])}'
+        text += '\n'
+    
+    if notes:
+        text += f'\n{CLIStyle.color("Notes:", CLIStyle.COLORS["SUB_TITLE"])}'
+        for note in notes:
+            text += f'\n  {CLIStyle.color(f"- {note}", CLIStyle.COLORS["CONTENT"])}'
+    
+    return text
 
-ap.add_argument("-i", "--ip", 
-    default="", 
-    type=str,
-    metavar=color("IP", Config.COLORS["CONTENT"]),
-    help=color("指定要查询的IP地址", Config.COLORS["CONTENT"])
-)
-ap.add_argument("-c", "--cmd", 
-    action="store_true",
-    help=color("显示对应的curl命令", Config.COLORS["CONTENT"])
-)
-ap.add_argument("-f", "--format",
-    choices=['text', 'json', 'csv'],
-    default='text',
-    help=color("指定输出格式(默认: text)", Config.COLORS["CONTENT"])
-)
-ap.add_argument("-t", "--timeout",
-    type=int,
-    default=5,
-    metavar=color("SECONDS", Config.COLORS["CONTENT"]),
-    help=color("设置请求超时时间(默认: 5秒)", Config.COLORS["CONTENT"])
-)
-args = vars(ap.parse_args())
+class Config:
+    BASE_URL = "http://ip-api.com"
+
+def execute_curl(url):
+    """Execute curl command and return response"""
+    try:
+        result = subprocess.run(
+            ["curl", "-s", "--connect-timeout", "5", "-m", "10", url],
+            capture_output=True,
+            text=True,
+            encoding="utf-8"
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            raise Exception(f"Request failed: {result.stderr}")
+    except subprocess.TimeoutExpired:
+        print(CLIStyle.color("\nError: Request timed out", CLIStyle.COLORS["ERROR"]))
+        print(CLIStyle.color("Please check your network connection or try again later", CLIStyle.COLORS["WARNING"]))
+        exit(1)
+    except Exception as e:
+        print(CLIStyle.color(f"\nError executing curl command: {str(e)}", CLIStyle.COLORS["ERROR"]))
+        print(CLIStyle.color("Please make sure curl is installed and network is accessible", CLIStyle.COLORS["WARNING"]))
+        exit(1)
 
 class IPRSSClient:
     def __init__(self, args):
         self.ip = ""
         self.args = args
 
-    def execute_curl(self, url):
-        try:
-            result = subprocess.run(
-                ["curl", "-s", "--connect-timeout", "5", "-m", "10", url],
-                capture_output=True,
-                text=True,
-                encoding="utf-8"
-            )
-            if result.returncode == 0:
-                return result.stdout.strip()
-            else:
-                raise Exception(f"请求失败: {result.stderr}")
-        except Exception as e:
-            print(color(f"执行curl命令时出错: {str(e)}", 2))
-            exit(1)
-
     def get_ip_with_location(self):
-        """
-        获取公网 IP 地址 + 详细区域
-        """
+        """Get public IP address with location details"""
         url = f"{Config.BASE_URL}/json"
-        if args["ip"] != "":
-            self.ip = args["ip"]
+        if self.args["ip"] != "":
+            self.ip = self.args["ip"]
             url += f"/{self.ip}"
-        response = self.execute_curl(url)
+        response = execute_curl(url)
         response_json = json.loads(response)
         if response_json.get("status", "") == "success":
             data = response_json
@@ -141,7 +135,7 @@ class IPRSSClient:
             raise Exception(
                 f"Failed to get public ip address, Error: {response_json.get('msg', '')}"
             )
-        print(color("IP with Location:", Config.COLORS["TITLE"]))
+        print(CLIStyle.color("IP with Location:", CLIStyle.COLORS["TITLE"]))
         self.ip = data["query"]
         format_data = {
             **{
@@ -151,65 +145,112 @@ class IPRSSClient:
         }
         format_dict(format_data, indent=2)
 
-
 def format_dict(data: dict, indent=0, exclude_keys=None):
+    """Format dictionary output"""
     if exclude_keys is None:
-        exclude_keys = Config.EXCLUDE_KEYS
+        exclude_keys = ["status", "query"]
 
     for key, value in data.items():
         if key in exclude_keys:
             continue
         if isinstance(value, dict):
-            print(" " * indent + f"{color(key, Config.COLORS['CONTENT'])}:")
+            print(" " * indent + f"{CLIStyle.color(key, CLIStyle.COLORS['SUB_TITLE'])}:")
             format_dict(value, indent + 4, exclude_keys)
         else:
+            # 根据值的类型使用不同的颜色
+            if isinstance(value, bool):
+                value_color = CLIStyle.COLORS["WARNING"]
+            elif isinstance(value, (int, float)):
+                value_color = CLIStyle.COLORS["EXAMPLE"]
+            else:
+                value_color = CLIStyle.COLORS["CONTENT"]
+            
             print(
                 " " * indent
-                + f"{color(key, Config.COLORS['SUB_TITLE'])}: {color(value, Config.COLORS['CONTENT'])}"
+                + f"{CLIStyle.color(key, CLIStyle.COLORS['SUB_TITLE'])}: {CLIStyle.color(str(value), value_color)}"
             )
 
-
-def check_arg(args, type) -> str:
-    try:
-        if args[type]:
-            return args[type]
-    except BaseException:
-        return None
-
-
-def cmd():
-    print(color("curl cmd:", Config.COLORS["TITLE"]))
-    print(color(f"{' ' * Config.COLORS['SUB_TITLE']}curl {Config.BASE_URL}/json/<ip>", Config.COLORS["CONTENT"]))
-
-
 def check_ip_and_return_str(ip: str) -> str:
-    """
-    检查IP地址是否合法并提取有效IP地址
+    """Check if IP address is valid and extract it
     
     Args:
-        ip (str): 输入的IP地址字符串
+        ip (str): Input IP address string
         
     Returns:
-        str: 提取出的有效IP地址
+        str: Extracted valid IP address
         
     Raises:
-        AssertionError: 当未找到有效IP地址时抛出
+        AssertionError: When no valid IP address is found
     """
     import re
-    assert re.search(r"\d+\.\d+\.\d+\.\d+", ip), "未找到有效的IP地址"
+    assert re.search(r"\d+\.\d+\.\d+\.\d+", ip), "No valid IP address found"
     return re.search(r"\d+\.\d+\.\d+\.\d+", ip).group()
 
+def main():
+    script_name = os.path.basename(sys.argv[0])
+    
+    # Define examples and notes
+    examples = [
+        ("Check local IP", ""),
+        ("Check specific IP", "-i 8.8.8.8"),
+        ("Show curl command", "-c"),
+        ("Output as JSON", "-f json")
+    ]
+    
+    notes = [
+        "Shows IP address information",
+        "Includes country/region, city, ISP",
+        "Shows geographical location (lat/long)",
+        "Displays timezone information"
+    ]
 
-if __name__ == "__main__":
-    if args["ip"]:
-        args["ip"] = check_ip_and_return_str(args["ip"])
+    ap = ColoredArgumentParser(
+        description=CLIStyle.color('IP Address Lookup Tool - Powered by ip-api.com', CLIStyle.COLORS["TITLE"]),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=create_example_text(script_name, examples, notes)
+    )
+
+    ap.add_argument("-i", "--ip", 
+        default="", 
+        type=str,
+        metavar=CLIStyle.color("IP", CLIStyle.COLORS["CONTENT"]),
+        help=CLIStyle.color("Specify IP address to lookup", CLIStyle.COLORS["CONTENT"])
+    )
+    ap.add_argument("-c", "--cmd", 
+        action="store_true",
+        help=CLIStyle.color("Show corresponding curl command", CLIStyle.COLORS["CONTENT"])
+    )
+    ap.add_argument("-f", "--format",
+        choices=['text', 'json', 'csv'],
+        default='text',
+        help=CLIStyle.color("Specify output format (default: text)", CLIStyle.COLORS["CONTENT"])
+    )
+    ap.add_argument("-t", "--timeout",
+        type=int,
+        default=5,
+        metavar=CLIStyle.color("SECONDS", CLIStyle.COLORS["CONTENT"]),
+        help=CLIStyle.color("Set request timeout (default: 5s)", CLIStyle.COLORS["CONTENT"])
+    )
+
+    args = vars(ap.parse_args())
 
     if args["cmd"]:
-        cmd()
+        print(CLIStyle.color("curl command:", CLIStyle.COLORS["TITLE"]))
+        print(CLIStyle.color(f"{' ' * 2}curl {Config.BASE_URL}/json/<ip>", CLIStyle.COLORS["CONTENT"]))
         exit()
 
-    args = {"ip": args["ip"] if args["ip"] else ""}
-
+    if args["ip"]:
+        args["ip"] = check_ip_and_return_str(args["ip"])
+    
     client = IPRSSClient(args)
-
     client.get_ip_with_location()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(CLIStyle.color("\nOperation cancelled by user", CLIStyle.COLORS["ERROR"]))
+        sys.exit(0)
+    except Exception as e:
+        print(CLIStyle.color(f"\nError: {str(e)}", CLIStyle.COLORS["ERROR"]))
+        sys.exit(1)

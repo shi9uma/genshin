@@ -20,6 +20,90 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich import box
 
+# CLI Style Template
+class CLIStyle:
+    """CLI Tool Style Configuration"""
+    COLORS = {
+        "TITLE": 7,      # Cyan - Main Title
+        "SUB_TITLE": 2,  # Red - Subtitle
+        "CONTENT": 3,    # Green - Content
+        "EXAMPLE": 7,    # Cyan - Examples
+        "WARNING": 4,    # Yellow - Warnings
+        "ERROR": 2,      # Red - Errors
+    }
+
+    @staticmethod
+    def color(text: str = "", color: int = COLORS["CONTENT"]) -> str:
+        """Unified color function"""
+        color_table = {
+            0: "{}",  # No color
+            1: "\033[1;30m{}\033[0m",  # Black bold
+            2: "\033[1;31m{}\033[0m",  # Red bold
+            3: "\033[1;32m{}\033[0m",  # Green bold
+            4: "\033[1;33m{}\033[0m",  # Yellow bold
+            5: "\033[1;34m{}\033[0m",  # Blue bold
+            6: "\033[1;35m{}\033[0m",  # Purple bold
+            7: "\033[1;36m{}\033[0m",  # Cyan bold
+            8: "\033[1;37m{}\033[0m",  # White bold
+        }
+        return color_table[color].format(text)
+
+class ColoredArgumentParser(argparse.ArgumentParser):
+    """Unified command line argument parser"""
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            metavar, = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        else:
+            parts = []
+            if action.nargs == 0:
+                parts.extend(map(lambda x: CLIStyle.color(x, CLIStyle.COLORS["SUB_TITLE"]), 
+                               action.option_strings))
+            else:
+                default = action.dest.upper()
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    parts.append(CLIStyle.color(
+                        f'{option_string} {args_string}', 
+                        CLIStyle.COLORS["SUB_TITLE"]
+                    ))
+            return ', '.join(parts)
+
+    def format_help(self):
+        formatter = self._get_formatter()
+        
+        if self.description:
+            formatter.add_text(CLIStyle.color(self.description, CLIStyle.COLORS["TITLE"]))
+            
+        formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+        
+        formatter.add_text(CLIStyle.color("\nOptional Arguments:", CLIStyle.COLORS["TITLE"]))
+        for action_group in self._action_groups:
+            formatter.start_section(action_group.title)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+            
+        if self.epilog:
+            formatter.add_text(self.epilog)
+            
+        return formatter.format_help()
+
+def create_example_text(script_name: str, examples: list, notes: list = None) -> str:
+    """Create unified example text"""
+    text = f'\n{CLIStyle.color("Examples:", CLIStyle.COLORS["SUB_TITLE"])}'
+    
+    for desc, cmd in examples:
+        text += f'\n  {CLIStyle.color(f"# {desc}", CLIStyle.COLORS["EXAMPLE"])}'
+        text += f'\n  {CLIStyle.color(f"{script_name} {cmd}", CLIStyle.COLORS["CONTENT"])}'
+        text += '\n'
+    
+    if notes:
+        text += f'\n{CLIStyle.color("Notes:", CLIStyle.COLORS["SUB_TITLE"])}'
+        for note in notes:
+            text += f'\n  {CLIStyle.color(f"- {note}", CLIStyle.COLORS["CONTENT"])}'
+    
+    return text
+
 def quiet_import():
     try:
         import argparse
@@ -80,7 +164,7 @@ def load_config(config_path):
         try:
             os.makedirs(ollama_dir_path)
         except Exception as e:
-            print(color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
+            print(CLIStyle.color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
             return config
     
     default_config = get_ollama_config_path()
@@ -89,20 +173,6 @@ def load_config(config_path):
             return json.load(f)
     
     return config
-
-def color(text: str = '', color: int = 2) -> str:
-    color_table = {
-        0: '{}',
-        1: '\033[1;30m{}\033[0m',
-        2: '\033[1;31m{}\033[0m',
-        3: '\033[1;32m{}\033[0m',
-        4: '\033[1;33m{}\033[0m',
-        5: '\033[1;34m{}\033[0m',
-        6: '\033[1;35m{}\033[0m',
-        7: '\033[1;36m{}\033[0m',
-        8: '\033[1;37m{}\033[0m',
-    }
-    return color_table[color].format(text)
 
 def show_loading_animation():
     """Show loading animation"""
@@ -114,7 +184,7 @@ def show_loading_animation():
         if should_exit:
             break
         elapsed = time.time() - start_time  # Calculate elapsed time
-        sys.stdout.write(color(f"\r{animation[i]} Generating response... ({elapsed:.1f}s)", 6))
+        sys.stdout.write(CLIStyle.color(f"\r{animation[i]} Generating response... ({elapsed:.1f}s)", 6))
         sys.stdout.flush()
         time.sleep(0.1)
         i = (i + 1) % len(animation)
@@ -138,13 +208,13 @@ class OllamaClient:
         try:
             self.client = Client(host=self.host)
         except Exception as e:
-            print(color("\nConnection Error:", 2))
-            print(color(f"Failed to connect to Ollama service at {self.host}", 2))
-            print(color(f"Reason: {str(e)}", 2))
-            print(color("\nPossible solutions:", 3))
-            print(color("1. Check if Ollama service is running", 7))
-            print(color("2. Verify IP address and port", 7))
-            print(color("3. Check network connectivity", 7))
+            print(CLIStyle.color("\nConnection Error:", 2))
+            print(CLIStyle.color(f"Failed to connect to Ollama service at {self.host}", 2))
+            print(CLIStyle.color(f"Reason: {str(e)}", 2))
+            print(CLIStyle.color("\nPossible solutions:", 3))
+            print(CLIStyle.color("1. Check if Ollama service is running", 7))
+            print(CLIStyle.color("2. Verify IP address and port", 7))
+            print(CLIStyle.color("3. Check network connectivity", 7))
             sys.exit(1)
     
     def _get_models(self):
@@ -153,9 +223,9 @@ class OllamaClient:
             response = self.client.list()
             return json.loads(response.model_dump_json())['models']
         except Exception as e:
-            print(color("\nAPI Error:", 2))
-            print(color("Failed to get model list", 2))
-            print(color(f"Reason: {str(e)}", 2))
+            print(CLIStyle.color("\nAPI Error:", 2))
+            print(CLIStyle.color("Failed to get model list", 2))
+            print(CLIStyle.color(f"Reason: {str(e)}", 2))
             return []
     
     def list_models(self):
@@ -170,22 +240,22 @@ class OllamaClient:
         """显示模型列表"""
         models = self._get_models()
         if not models:
-            print(color("\nNo models available.", 2))
+            print(CLIStyle.color("\nNo models available.", 2))
             return
         
-        print(color("Available models:", 3))
+        print(CLIStyle.color("Available models:", 3))
         for model in models:
             param_size = model.get('details', {}).get('parameter_size', 'N/A')
             size_mb = model.get('size', 0) / (1024 * 1024)  # 转换为 MB
             formatted_size = format_size(size_mb)
-            print(color(f"- {model['model']} ({param_size} params, {formatted_size})", 7))
+            print(CLIStyle.color(f"- {model['model']} ({param_size} params, {formatted_size})", 7))
     
     def show_model_selection(self, current_model=None):
         """显示模型选择界面"""
         try:
             models = self._get_models()
             if not models:
-                print(color("\nNo models available.", 2))
+                print(CLIStyle.color("\nNo models available.", 2))
                 return None
             
             console = Console()
@@ -252,8 +322,8 @@ class OllamaClient:
                 return None
             
         except Exception as e:
-            print(color(f"\nError displaying model selection: {str(e)}", 2))
-            print(color("\nAvailable models:", 3))
+            print(CLIStyle.color(f"\nError displaying model selection: {str(e)}", 2))
+            print(CLIStyle.color("\nAvailable models:", 3))
             self.show_model_list()  # 如果 rich 界面失败，回退到简单列表显示
             return None
     
@@ -263,16 +333,16 @@ class OllamaClient:
         except Exception as e:
             error_msg = str(e)
             if "502" in error_msg:
-                print(color("\nServer Error (502):", 2))
-                print(color("The Ollama server is not responding properly", 2))
-                print(color("\nPossible solutions:", 3))
-                print(color("1. Check if the model is properly loaded", 7))
-                print(color("2. Restart the Ollama service", 7))
-                print(color("3. Try again in a few moments", 7))
+                print(CLIStyle.color("\nServer Error (502):", 2))
+                print(CLIStyle.color("The Ollama server is not responding properly", 2))
+                print(CLIStyle.color("\nPossible solutions:", 3))
+                print(CLIStyle.color("1. Check if the model is properly loaded", 7))
+                print(CLIStyle.color("2. Restart the Ollama service", 7))
+                print(CLIStyle.color("3. Try again in a few moments", 7))
             else:
-                print(color("\nGeneration Error:", 2))
-                print(color("Failed to generate response", 2))
-                print(color(f"Reason: {error_msg}", 2))
+                print(CLIStyle.color("\nGeneration Error:", 2))
+                print(CLIStyle.color("Failed to generate response", 2))
+                print(CLIStyle.color(f"Reason: {error_msg}", 2))
             raise
     
     def print_response(self, content):
@@ -300,16 +370,16 @@ class OllamaClient:
         except Exception as e:
             error_msg = str(e)
             if "502" in error_msg:
-                print(color("\nServer Error (502):", 2))
-                print(color("The Ollama server is not responding properly", 2))
-                print(color("\nPossible solutions:", 3))
-                print(color("1. Check if the model is properly loaded", 7))
-                print(color("2. Restart the Ollama service", 7))
-                print(color("3. Try again in a few moments", 7))
+                print(CLIStyle.color("\nServer Error (502):", 2))
+                print(CLIStyle.color("The Ollama server is not responding properly", 2))
+                print(CLIStyle.color("\nPossible solutions:", 3))
+                print(CLIStyle.color("1. Check if the model is properly loaded", 7))
+                print(CLIStyle.color("2. Restart the Ollama service", 7))
+                print(CLIStyle.color("3. Try again in a few moments", 7))
             else:
-                print(color("\nChat Error:", 2))
-                print(color("Failed to get response", 2))
-                print(color(f"Reason: {error_msg}", 2))
+                print(CLIStyle.color("\nChat Error:", 2))
+                print(CLIStyle.color("Failed to get response", 2))
+                print(CLIStyle.color(f"Reason: {error_msg}", 2))
             raise
     
     def status(self):
@@ -330,7 +400,7 @@ class OllamaClient:
                 if not os.path.exists(ollama_dir_path):
                     os.makedirs(ollama_dir_path)
             except Exception as e:
-                print(color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
+                print(CLIStyle.color(f"\nError creating directory {ollama_dir_path}: {str(e)}", 2))
                 return
         
         # Ensure target file directory exists
@@ -339,7 +409,7 @@ class OllamaClient:
             try:
                 os.makedirs(config_dir)
             except Exception as e:
-                print(color(f"\nError creating directory {config_dir}: {str(e)}", 2))
+                print(CLIStyle.color(f"\nError creating directory {config_dir}: {str(e)}", 2))
                 return
         
         if os.path.exists(config_path):
@@ -348,16 +418,16 @@ class OllamaClient:
                     existing_config = json.load(f)
                     default_config.update(existing_config)
             except json.JSONDecodeError:
-                print(color(f"Warning: Existing config file '{config_path}' is invalid, using default values", 4))
+                print(CLIStyle.color(f"Warning: Existing config file '{config_path}' is invalid, using default values", 4))
         
         try:
             with open(config_path, 'w') as f:
                 json.dump(default_config, f, indent=4)
-            print(color(f"Config file generated at: {config_path}", 3))
-            print(color("\nConfig contents:", 7))
+            print(CLIStyle.color(f"Config file generated at: {config_path}", 3))
+            print(CLIStyle.color("\nConfig contents:", 7))
             print(json.dumps(default_config, indent=4))
         except Exception as e:
-            print(color(f"Error generating config file: {str(e)}", 2))
+            print(CLIStyle.color(f"Error generating config file: {str(e)}", 2))
 
 def check_required_params(args, config):
     """Check if required parameters are complete"""
@@ -378,21 +448,21 @@ def check_required_params(args, config):
     
     if errors:
         default_config = get_ollama_config_path()
-        print(color("\nConfiguration Error:", 2))
+        print(CLIStyle.color("\nConfiguration Error:", 2))
         for error in errors:
-            print(color(f"- {error}", 2))
+            print(CLIStyle.color(f"- {error}", 2))
         
-        print(color("\nSuggestions:", 3))
+        print(CLIStyle.color("\nSuggestions:", 3))
         for suggestion in suggestions:
-            print(color(f"- {suggestion}", 7))
+            print(CLIStyle.color(f"- {suggestion}", 7))
         
-        print(color("\nYou can:", 3))
-        print(color("1. Create default config file (recommended):", 7))
-        print(color(f"   {os.path.basename(sys.argv[0])} --new-config {default_config}", 8))
-        print(color("2. Use existing config file:", 7))
-        print(color(f"   {os.path.basename(sys.argv[0])} -c config.json", 8))
-        print(color("3. Specify all parameters manually:", 7))
-        print(color(f"   {os.path.basename(sys.argv[0])} -i 127.0.0.1 -p 11434 -m llama3.2:1b", 8))
+        print(CLIStyle.color("\nYou can:", 3))
+        print(CLIStyle.color("1. Create default config file (recommended):", 7))
+        print(CLIStyle.color(f"   {os.path.basename(sys.argv[0])} --new-config {default_config}", 8))
+        print(CLIStyle.color("2. Use existing config file:", 7))
+        print(CLIStyle.color(f"   {os.path.basename(sys.argv[0])} -c config.json", 8))
+        print(CLIStyle.color("3. Specify all parameters manually:", 7))
+        print(CLIStyle.color(f"   {os.path.basename(sys.argv[0])} -i 127.0.0.1 -p 11434 -m llama3.2:1b", 8))
         sys.exit(1)
 
 def get_user_input(prompt_text=None):
@@ -497,80 +567,41 @@ def main():
             with open(ollama_config_path, 'r') as f:
                 default_config = json.load(f)
         except json.JSONDecodeError:
-            print(color(f"\nWarning: Default config file '{ollama_config_path}' is invalid", 4))
+            print(CLIStyle.color(f"\nWarning: Default config file '{ollama_config_path}' is invalid", 4))
     
-    examples = f'''
-{color("Required:", 2)}
-  - Model name (-m or in config)
-  - Either specify server details (-i, -p) or use a config file (-c)
-  - Default config file {ollama_config_path} will be used if exists
-
-{color("Config File Format:", 3)}
-  {{
-    "ip": "127.0.0.1",
-    "port": "11434",
-    "model": "llama3.2:1b",
-    "ssl": false,
-    "pre_prompt": "1. Answer in Chinese\\n2. Be concise"
-  }}
-
-{color("Examples:", 3)}
-  {color("# Start chat with local server", 7)}
-  {script_name} -m llama3.2:1b
-
-  {color("# Use config file (recommended)", 7)}
-  {script_name} -c config.json
-
-  {color("# Connect to remote server", 7)}
-  {script_name} -i 127.0.0.1 -p 11434 -m llama3.2:1b
-
-  {color("# List available models", 7)}
-  {script_name} -l
-
-  {color("# Show server status", 7)}
-  {script_name} --status
-
-  {color("# Generate new config file", 7)}
-  {script_name} --new-config config.json
-
-  {color("# Use custom pre-prompt", 7)}
-  {script_name} -m llama3.2:1b --pre-prompt "1. Answer in Chinese\\n2. Be concise"
-
-  {color("# Use SSL connection", 7)}
-  {script_name} -s -i api.example.com -p 443 -m llama3.2:1b
-
-  {color("# Generate single response and exit", 7)}
-  {script_name} -c config.json --exit "What is Python?"
-  {script_name} -i 127.0.0.1 -p 11434 -m llama3.2:1b --exit "What is Python?"
-'''
+    # Define examples and notes
+    examples = [
+        ("Basic chat", "-m llama2"),
+        ("Use specific model", "-m codellama"),
+        ("Single response", "-m llama2 --exit \"What is Python?\""),
+        ("List models", "-l"),
+        ("Show status", "--status"),
+        ("Use config file", "-c config.json")
+    ]
     
-    class ColoredHelpFormatter(argparse.RawDescriptionHelpFormatter):
-        def __init__(self, prog, indent_increment=2, max_help_position=24, width=None):
-            super().__init__(prog, indent_increment, max_help_position, width)
-        
-        def format_help(self):
-            help_text = super().format_help()
-            help_text = help_text.replace('usage:', color('usage:', 3))
-            help_text = help_text.replace('options:', color('options:', 3))
-            help_text = help_text.replace('Ollama CLI Tool', color('Ollama CLI Tool', 4))
-            return help_text
-    
-    ap = argparse.ArgumentParser(
-        description=color('Ollama CLI Tool', 4),
-        formatter_class=ColoredHelpFormatter,
-        epilog=examples
+    notes = [
+        "Press Ctrl+C to exit chat",
+        "Use --pre-prompt to set system instructions",
+        "Model responses are streamed in real-time",
+        "Configuration can be saved in ~/.ollama/config.json"
+    ]
+
+    ap = ColoredArgumentParser(
+        description=CLIStyle.color('Ollama CLI Chat Tool', CLIStyle.COLORS["TITLE"]),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=create_example_text(script_name, examples, notes)
     )
-    ap.add_argument('-c', '--config', type=str, help='Path to config file (JSON)')
-    ap.add_argument('--new-config', type=str, help='Generate new config file at specified path')
-    ap.add_argument('-s', '--ssl', action='store_true', help='Use SSL connection')
-    ap.add_argument('-m', '--model', type=str, help='Model name (e.g., llama3.2:1b)')
-    ap.add_argument('-i', '--ip', type=str, help='API IP address (default: 127.0.0.1)')
+    ap.add_argument('-i', '--ip', type=str, default='127.0.0.1', help='API host address (default: 127.0.0.1)')
     ap.add_argument('-p', '--port', type=str, default='11434', help='API port number (default: 11434)')
+    ap.add_argument('-m', '--model', type=str, help='Model name to use')
     ap.add_argument('-l', '--list', action='store_true', help='List available models')
     ap.add_argument('--status', action='store_true', help='Show Ollama status')
-    ap.add_argument('--pre-prompt', type=str, help='Set pre-prompt instructions for the model (e.g., "1. Answer in Chinese\\n2. Be concise")')
+    ap.add_argument('--pre-prompt', type=str, help='Set pre-prompt instructions')
     ap.add_argument('-e', '--exit', type=str, help='Generate single response and exit')
+    ap.add_argument('-c', '--config', type=str, help='Config file path')
+    ap.add_argument('--new-config', type=str, help='Generate new config file')
     ap.add_argument('--show-config', action='store_true', help='Show current configuration')
+    ap.add_argument('--ssl', action='store_true', help='Use HTTPS for API connection')
     
     args = vars(ap.parse_args())
     
@@ -583,16 +614,16 @@ def main():
     if args['config']:
         config = load_config(args['config'])
         if not config:
-            print(color(f"\nError: Config file '{args['config']}' not found or empty", 2))
+            print(CLIStyle.color(f"\nError: Config file '{args['config']}' not found or empty", 2))
             if os.path.exists(ollama_config_path):
-                print(color(f"\nUsing default config file: {ollama_config_path}", 3))
+                print(CLIStyle.color(f"\nUsing default config file: {ollama_config_path}", 3))
                 config = default_config
             else:
-                print(color("\nYou can:", 3))
-                print(color("1. Generate a new config file:", 7))
-                print(color(f"  {script_name} --new-config {args['config']}", 8))
-                print(color("2. Create default config file:", 7))
-                print(color(f"  {script_name} --new-config {ollama_config_path}", 8))
+                print(CLIStyle.color("\nYou can:", 3))
+                print(CLIStyle.color("1. Generate a new config file:", 7))
+                print(CLIStyle.color(f"  {script_name} --new-config {args['config']}", 8))
+                print(CLIStyle.color("2. Create default config file:", 7))
+                print(CLIStyle.color(f"  {script_name} --new-config {ollama_config_path}", 8))
             return
     else:
         # 如果没有指定配置文件，使用默认配置
@@ -622,7 +653,7 @@ def main():
     if args['status']:
         try:
             status = client.status()
-            print(color("Ollama Status:", 3))
+            print(CLIStyle.color("Ollama Status:", 3))
             pprint.pprint(status)
         except KeyboardInterrupt:
             sys.exit(0)
@@ -635,8 +666,8 @@ def main():
     
     available_models = client.get_available_models()
     if args['model'] not in available_models:
-        print(color(f"\nError: Model '{args['model']}' is not available", 2))
-        print(color("\nPlease select a model:", 3))
+        print(CLIStyle.color(f"\nError: Model '{args['model']}' is not available", 2))
+        print(CLIStyle.color("\nPlease select a model:", 3))
         args['model'] = client.show_model_selection(args['model'])
         if not args['model']:
             return
@@ -656,23 +687,23 @@ def main():
             
             try:
                 start_time = time.time()
-                print(f"\n{color(args['model'], 6)}:")  # 添加模型名称提示
+                print(f"\n{CLIStyle.color(args['model'], 6)}:")  # 添加模型名称提示
                 response = client.chat(args['model'], messages)
                 
                 assistant_message = response.message
                 messages.append({"role": "assistant", "content": assistant_message['content']})
                 elapsed = time.time() - start_time  # 获取总响应时间
-                print(f"\n{color(f'[Responded in {elapsed:.1f}s]', 8)}")  # 使用不同颜色
-                print(color(split_line_char * split_line_length, 8))  # 添加底部分隔符
+                print(f"\n{CLIStyle.color(f'[Responded in {elapsed:.1f}s]', 8)}")  # 使用不同颜色
+                print(CLIStyle.color(split_line_char * split_line_length, 8))  # 添加底部分隔符
             except Exception:
                 sys.exit(1)
             return
         except Exception:
             sys.exit(1)
     
-    print(color("Starting chat with model: ", 3) + color(args['model'], 6))
-    print(color("Press Ctrl+C to exit", 7))
-    print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
+    print(CLIStyle.color("Starting chat with model: ", 3) + CLIStyle.color(args['model'], 6))
+    print(CLIStyle.color("Press Ctrl+C to exit", 7))
+    print(f"\n{CLIStyle.color('You:', 4)}")  # 移除 end=' '，让输入在下一行
     
     messages = []
     # Add pre-prompt if specified
@@ -694,27 +725,27 @@ def main():
             messages.append({"role": "user", "content": user_input})
             try:
                 start_time = time.time()
-                print(f"\n{color(args['model'], 6)}:")
+                print(f"\n{CLIStyle.color(args['model'], 6)}:")
                 
                 response = client.chat(args['model'], messages)
                 elapsed = time.time() - start_time
                 
                 messages.append({"role": "assistant", "content": response.message['content']})
-                print(f"\n{color(f'[Responded in {elapsed:.1f}s]', 8)}")
-                print(color(split_line_char * split_line_length, 8))
-                print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
+                print(f"\n{CLIStyle.color(f'[Responded in {elapsed:.1f}s]', 8)}")
+                print(CLIStyle.color(split_line_char * split_line_length, 8))
+                print(f"\n{CLIStyle.color('You:', 4)}")  # 移除 end=' '，让输入在下一行
             except Exception as e:
-                print(color(f"\nError: {str(e)}", 2))
+                print(CLIStyle.color(f"\nError: {str(e)}", 2))
                 if should_exit:
                     break
                 messages.pop()
-                print(f"\n{color('You:', 4)}")  # 移除 end=' '，让输入在下一行
+                print(f"\n{CLIStyle.color('You:', 4)}")  # 移除 end=' '，让输入在下一行
 
     except EOFError:
         pass  # Handle EOFError, exit silently
     finally:
         if should_exit:
-            print(color("\nchat ended, exit.", 3))
+            print(CLIStyle.color("\nchat ended, exit.", 3))
         sys.exit(0)
 
 if __name__ == "__main__":
@@ -723,5 +754,5 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)  # Exit silently
     except Exception as e:
-        print(color(f"\nError: {str(e)}", 2))
+        print(CLIStyle.color(f"\nError: {str(e)}", 2))
         sys.exit(1)

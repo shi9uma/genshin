@@ -16,6 +16,94 @@ import time
 import hashlib
 import re
 
+# CLI 帮助样式模板
+class CLIStyle:
+    """CLI 工具统一样式配置"""
+    COLORS = {
+        "TITLE": 7,      # 青色 - 主标题
+        "SUB_TITLE": 2,  # 红色 - 子标题
+        "CONTENT": 3,    # 绿色 - 普通内容
+        "EXAMPLE": 7,    # 青色 - 示例
+        "WARNING": 4,    # 黄色 - 警告
+        "ERROR": 2,      # 红色 - 错误
+    }
+
+    @staticmethod
+    def color(text: str = "", color: int = COLORS["CONTENT"]) -> str:
+        """统一的颜色处理函数"""
+        color_table = {
+            0: "{}",  # 无色
+            1: "\033[1;30m{}\033[0m",  # 黑色加粗
+            2: "\033[1;31m{}\033[0m",  # 红色加粗
+            3: "\033[1;32m{}\033[0m",  # 绿色加粗
+            4: "\033[1;33m{}\033[0m",  # 黄色加粗
+            5: "\033[1;34m{}\033[0m",  # 蓝色加粗
+            6: "\033[1;35m{}\033[0m",  # 紫色加粗
+            7: "\033[1;36m{}\033[0m",  # 青色加粗
+            8: "\033[1;37m{}\033[0m",  # 白色加粗
+        }
+        return color_table[color].format(text)
+
+class ColoredArgumentParser(argparse.ArgumentParser):
+    """统一的命令行参数解析器"""
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            metavar, = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        else:
+            parts = []
+            if action.nargs == 0:
+                parts.extend(map(lambda x: CLIStyle.color(x, CLIStyle.COLORS["SUB_TITLE"]), 
+                               action.option_strings))
+            else:
+                default = action.dest.upper()
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    parts.append(CLIStyle.color(
+                        f'{option_string} {args_string}', 
+                        CLIStyle.COLORS["SUB_TITLE"]
+                    ))
+            return ', '.join(parts)
+
+    def format_help(self):
+        formatter = self._get_formatter()
+        
+        # 添加描述
+        if self.description:
+            formatter.add_text(CLIStyle.color(self.description, CLIStyle.COLORS["TITLE"]))
+            
+        # 添加用法
+        formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+        
+        # 添加参数组
+        formatter.add_text(CLIStyle.color("\n可选参数:", CLIStyle.COLORS["TITLE"]))
+        for action_group in self._action_groups:
+            formatter.start_section(action_group.title)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+            
+        # 添加示例和注释
+        if self.epilog:
+            formatter.add_text(self.epilog)
+            
+        return formatter.format_help()
+
+def create_example_text(script_name: str, examples: list, notes: list = None) -> str:
+    """创建统一的示例文本"""
+    text = f'\n{CLIStyle.color("Examples:", CLIStyle.COLORS["SUB_TITLE"])}'
+    
+    for desc, cmd in examples:
+        text += f'\n  {CLIStyle.color(f"# {desc}", CLIStyle.COLORS["EXAMPLE"])}'
+        text += f'\n  {CLIStyle.color(f"{script_name} {cmd}", CLIStyle.COLORS["CONTENT"])}'
+        text += '\n'
+    
+    if notes:
+        text += f'\n{CLIStyle.color("Notes:", CLIStyle.COLORS["SUB_TITLE"])}'
+        for note in notes:
+            text += f'\n  {CLIStyle.color(f"- {note}", CLIStyle.COLORS["CONTENT"])}'
+    
+    return text
+
 # Global variable definitions
 shodan_dir_name = ".shodan"
 shodan_dir_path = os.path.expanduser(f"~/{shodan_dir_name}")
@@ -27,22 +115,6 @@ shodan_result_dir = os.path.join(shodan_dir_path, "result")
 is_searching = False
 
 
-def color(text: str = "", color: int = 2) -> str:
-    """Return corresponding ANSI color for console output"""
-    color_table = {
-        0: "{}",  # No color
-        1: "\033[1;30m{}\033[0m",  # Black bold
-        2: "\033[1;31m{}\033[0m",  # Red bold
-        3: "\033[1;32m{}\033[0m",  # Green bold
-        4: "\033[1;33m{}\033[0m",  # Yellow bold
-        5: "\033[1;34m{}\033[0m",  # Blue bold
-        6: "\033[1;35m{}\033[0m",  # Purple bold
-        7: "\033[1;36m{}\033[0m",  # Cyan bold
-        8: "\033[1;37m{}\033[0m",  # White bold
-    }
-    return color_table[color].format(text)
-
-
 def show_loading_animation():
     """Display loading animation"""
     animation = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
@@ -51,12 +123,19 @@ def show_loading_animation():
     start_time = time.time()
     while is_searching:
         elapsed = time.time() - start_time
-        sys.stdout.write(f"\r{color(f'{animation[i]} Pending... ({elapsed:.1f}s)', 6)}")
+        sys.stdout.write(f"\r{CLIStyle.color(f'{animation[i]} Pending... ({elapsed:.1f}s)', 6)}")
         sys.stdout.flush()
         time.sleep(0.1)
         i = (i + 1) % len(animation)
     sys.stdout.write("\r" + " " * 50 + "\r")
     sys.stdout.flush()
+
+
+def truncate(text, width):
+    """截断文本并添加省略号"""
+    if len(text) > width:
+        return text[:width-3] + "..."
+    return text
 
 
 class ShodanClient:
@@ -81,7 +160,7 @@ class ShodanClient:
                         self.client = shodan.Shodan(self.api_key)
                         return
             except Exception as e:
-                print(color(f"Error loading config: {str(e)}", 2))
+                print(CLIStyle.color(f"Error loading config: {str(e)}", 2))
 
         # If custom config doesn't exist or is invalid, try loading shodan cli config
         shodan_cli_config = os.path.expanduser("~/.config/shodan/api_key")
@@ -93,9 +172,9 @@ class ShodanClient:
                         self.client = shodan.Shodan(self.api_key)
                         # Sync shodan cli config to custom config
                         self.sync_from_cli_config()
-                        print(color("Using API key from Shodan CLI config", 7))
+                        print(CLIStyle.color("Using API key from Shodan CLI config", 7))
             except Exception as e:
-                print(color(f"Error loading Shodan CLI config: {str(e)}", 2))
+                print(CLIStyle.color(f"Error loading Shodan CLI config: {str(e)}", 2))
 
     def sync_from_cli_config(self):
         """Sync shodan cli config to custom config file"""
@@ -115,9 +194,9 @@ class ShodanClient:
             }
             with open(shodan_config_path, "w") as f:
                 json.dump(config, f, indent=4)
-            print(color(f"Synced API key to: {shodan_config_path}", 7))
+            print(CLIStyle.color(f"Synced API key to: {shodan_config_path}", 7))
             print(
-                color(
+                CLIStyle.color(
                     f"Plan type: {info.get('plan', 'unknown')} ({'Paid' if is_paid else 'Free'})",
                     7,
                 )
@@ -127,7 +206,7 @@ class ShodanClient:
             self.is_paid = is_paid
 
         except Exception as e:
-            print(color(f"Error syncing config: {str(e)}", 2))
+            print(CLIStyle.color(f"Error syncing config: {str(e)}", 2))
 
     def init_api_key(self, api_key):
         """Initialize API key"""
@@ -147,16 +226,16 @@ class ShodanClient:
             # Save configuration
             config = {
                 "api_key": api_key,
-                "is_paid": is_paid,  # Save paid status
+                "is_paid": is_paid,
                 "plan": info.get("plan", "unknown"),
             }
             with open(shodan_config_path, "w") as f:
                 json.dump(config, f, indent=4)
 
-            print(color("API key successfully initialized!", 3))
-            print(color(f"Config saved to: {shodan_config_path}", 7))
+            print(CLIStyle.color("API key successfully initialized!", 3))
+            print(CLIStyle.color(f"Config saved to: {shodan_config_path}", 7))
             print(
-                color(
+                CLIStyle.color(
                     f"Plan type: {info.get('plan', 'unknown')} ({'Paid' if is_paid else 'Free'})",
                     7,
                 )
@@ -167,8 +246,8 @@ class ShodanClient:
             self.is_paid = is_paid  # Update instance attribute
 
         except Exception as e:
-            print(color("Error initializing API key:", 2))
-            print(color(str(e), 2))
+            print(CLIStyle.color("Error initializing API key:", 2))
+            print(CLIStyle.color(str(e), 2))
             sys.exit(1)
 
     def _get_cache_filename(self, query, page=1):
@@ -258,18 +337,18 @@ class ShodanClient:
                 json.dump(index_data, f, indent=2)
 
         except Exception as e:
-            print(color(f"Warning: Failed to update search index: {str(e)}", 4))
+            print(CLIStyle.color(f"Warning: Failed to update search index: {str(e)}", 4))
 
     def search(self, query, page=1, no_cache=False, delete_cache=False):
         """Execute search and handle caching"""
         if not self.client:
-            print(color("Error: API key not configured. Use 'init' command first.", 2))
+            print(CLIStyle.color("Error: API key not configured. Use 'init' command first.", 2))
             return None
 
         # Check paid API access for pagination
         if page > 1 and not self.is_paid:
             print(
-                color(
+                CLIStyle.color(
                     "Warning: Free API can only access the first page of results (max 100)",
                     4,
                 )
@@ -287,9 +366,9 @@ class ShodanClient:
             if delete_cache and os.path.exists(cache_file):
                 try:
                     os.remove(cache_file)
-                    print(color("Deleted existing cache.", 7))
+                    print(CLIStyle.color("Deleted existing cache.", 7))
                 except Exception as e:
-                    print(color(f"Error deleting cache: {str(e)}", 2))
+                    print(CLIStyle.color(f"Error deleting cache: {str(e)}", 2))
 
             # Check if we need to perform a new search
             need_new_search = no_cache or delete_cache or not os.path.exists(cache_file)
@@ -299,7 +378,7 @@ class ShodanClient:
                 prev_cache_file = self._get_cache_filename(query, page - 1)
                 if not os.path.exists(prev_cache_file):
                     print(
-                        color(
+                        CLIStyle.color(
                             f"Previous page {page - 1} not found, performing new search...",
                             7,
                         )
@@ -310,7 +389,7 @@ class ShodanClient:
                 # Print search information first
                 offset = (page - 1) * 100
                 print(
-                    f"\nSearching with query: {color(query, 7)}, page: {color(str(page), 7)}, offset: {color(str(offset), 7)}"
+                    f"\nSearching with query: {CLIStyle.color(query, 7)}, page: {CLIStyle.color(str(page), 7)}, offset: {CLIStyle.color(str(offset), 7)}"
                 )
                 print()  # Add empty line
 
@@ -332,15 +411,15 @@ class ShodanClient:
                             json.dump(results, f, indent=2)
                         self._update_search_index(query, cache_file, results, page)
                     except Exception as e:
-                        print(color(f"Error saving cache: {str(e)}", 2))
+                        print(CLIStyle.color(f"Error saving cache: {str(e)}", 2))
             else:
                 # Use cached results
                 try:
                     with open(cache_file, "r") as f:
                         results = json.load(f)
-                        print(color("Using cached results...", 7), end="")
+                        print(CLIStyle.color("Using cached results...", 7), end="")
                 except Exception as e:
-                    print(color(f"Error reading cache: {str(e)}", 2))
+                    print(CLIStyle.color(f"Error reading cache: {str(e)}", 2))
                     # If cache read fails, perform new search
                     is_searching = True
                     loading_thread = threading.Thread(target=show_loading_animation)
@@ -354,7 +433,7 @@ class ShodanClient:
 
         except Exception as e:
             is_searching = False
-            print(color(f"\nError during search: {str(e)}", 2))
+            print(CLIStyle.color(f"\nError during search: {str(e)}", 2))
             return None
 
     def _do_search(self, query, page=1):
@@ -363,17 +442,35 @@ class ShodanClient:
             try:
                 # Use page parameter for pagination
                 response = self.client.search(query, page=page)
+                
+                # Filter out IPv6 results
+                if response and "matches" in response:
+                    # 只保留 IPv4 地址的结果
+                    response["matches"] = [
+                        match for match in response["matches"]
+                        if match.get("ip_str", "").count(":") == 0  # IPv6 地址包含多个冒号
+                    ]
+                    # 更新总数
+                    response["total"] = len(response["matches"])
+
+                if not response or "matches" not in response:
+                    print(CLIStyle.color("No results found or invalid response", 2))
+                    return None
+
+                print(CLIStyle.color(f"\nGot {len(response.get('matches', []))} results", 7))
+                return response
+
             except shodan.APIError as e:
                 if "Search cursor timed out" in str(e):
-                    print(color("\nError: Search cursor timed out.", 2))
+                    print(CLIStyle.color("\nError: Search cursor timed out.", 2))
                     print(
-                        color(
+                        CLIStyle.color(
                             "Note: Shodan API may timeout when accessing higher page numbers directly.",
                             4,
                         )
                     )
                     print(
-                        color(
+                        CLIStyle.color(
                             "Suggestion: Start from page 1 or try a lower page number.",
                             4,
                         )
@@ -382,28 +479,21 @@ class ShodanClient:
                 else:
                     raise e
 
-            if not response or "matches" not in response:
-                print(color("No results found or invalid response", 2))
-                return None
-
-            print(color(f"\nGot {len(response.get('matches', []))} results", 7))
-            return response
-
         except Exception as e:
-            print(color("Search error:", 2))
-            print(color(str(e), 2))
+            print(CLIStyle.color("Search error:", 2))
+            print(CLIStyle.color(str(e), 2))
             return None
 
     def show_info(self):
         """Display Shodan API information and configuration"""
         if not self.client:
-            print(color("Error: API key not configured. Use 'init' command first.", 2))
+            print(CLIStyle.color("Error: API key not configured. Use 'init' command first.", 2))
             return
 
         try:
             info = self.client.info()
             if not info:
-                print(color("Error: Could not retrieve Shodan info", 2))
+                print(CLIStyle.color("Error: Could not retrieve Shodan info", 2))
                 return
 
             console = Console()
@@ -448,39 +538,157 @@ class ShodanClient:
             console.print()
 
         except Exception as e:
-            print(color("Error getting info:", 2))
-            print(color(str(e), 2))
+            print(CLIStyle.color("Error getting info:", 2))
+            print(CLIStyle.color(str(e), 2))
             return
+
+    def get_terminal_width(self):
+        """获取终端宽度"""
+        try:
+            import shutil
+            return shutil.get_terminal_size().columns
+        except:
+            return 80  # 默认宽度
+
+    def truncate(self, text, width):
+        """截断文本并添加省略号"""
+        if len(text) > width:
+            return text[:width-3] + "..."
+        return text
+
+    def display_results(self, matches, total):
+        """根据终端宽度动态显示结果"""
+        console = Console()
+        console.print()
+        
+        # 计算终端宽度
+        term_width = self.get_terminal_width()
+        
+        # 定义列配置
+        # (列名, 最小宽度, 优先级[数字越小优先级越高])
+        columns = [
+            ("IP", 15, 1),
+            ("Port", 6, 1),
+            ("URL", 30, 1),
+            ("Organization", 30, 2),
+            ("Location", 25, 3),
+            ("Timestamp (UTC+8)", 19, 4)
+        ]
+        
+        # 创建表格
+        results_table = Table(
+            box=box.ROUNDED,
+            header_style="bold cyan",
+            border_style="cyan",
+            show_lines=True,
+            padding=(0, 1)
+        )
+        
+        # 计算基础边框和padding占用的宽度
+        border_width = 4  # 左右边框各2个字符
+        padding_width = len(columns) * 2  # 每列左右padding各1个字符
+        available_width = term_width - border_width - padding_width
+        
+        # 根据可用宽度决定显示哪些列
+        current_width = 0
+        added_columns = []
+        
+        # 按优先级添加列
+        for priority in range(1, 5):
+            for col_name, min_width, col_priority in columns:
+                if col_priority == priority:
+                    if current_width + min_width <= available_width:
+                        results_table.add_column(col_name, style="bold green", width=min_width)
+                        current_width += min_width
+                        added_columns.append(col_name)
+        
+        # 添加数据行
+        for match in matches:
+            if not isinstance(match, dict):
+                continue
+            
+            row_data = []
+            for col_name, min_width, _ in columns:
+                if col_name not in added_columns:
+                    continue
+                
+                if col_name == "IP":
+                    row_data.append(match.get("ip_str", "N/A"))
+                elif col_name == "Port":
+                    row_data.append(str(match.get("port", "N/A")))
+                elif col_name == "URL":
+                    ip = match.get("ip_str", "N/A")
+                    port = match.get("port", "N/A")
+                    protocol = "https" if port in ["443", "8443"] else "http"
+                    row_data.append(f"{protocol}://{ip}:{port}")
+                elif col_name == "Organization":
+                    org = match.get("org", "N/A")
+                    if org != "N/A":
+                        org = self.truncate(org, 27)
+                    row_data.append(org)
+                elif col_name == "Location":
+                    location_data = match.get("location", {})
+                    country = location_data.get("country_name", "N/A")
+                    city = location_data.get("city", "N/A")
+                    longitude = location_data.get("longitude", "N/A")
+                    latitude = location_data.get("latitude", "N/A")
+                    location = f"{country}, {city}\n({latitude}°N, {longitude}°E)"
+                    row_data.append(location)
+                elif col_name == "Timestamp (UTC+8)":
+                    timestamp = match.get("timestamp")
+                    if timestamp:
+                        try:
+                            ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                            ts = ts.astimezone(timezone(timedelta(hours=8)))
+                            row_data.append(ts.strftime("%Y-%m-%d %H:%M:%S"))
+                        except:
+                            row_data.append("N/A")
+                    else:
+                        row_data.append("N/A")
+            
+            results_table.add_row(*row_data)
+        
+        # 显示表格和统计信息
+        console.print(results_table)
+        console.print()
+        
+        # 显示查询信息和统计
+        total_matches = len(matches)
+        if args.limit and args.limit > 0:
+            console.print(
+                f"[grey]Total Results: {total} | Retrieved: {total_matches} | Displayed: {len(matches)} (limited by --limit)[/grey]"
+            )
+        else:
+            console.print(
+                f"[grey]Total Results: {total} | Matches Retrieved: {total_matches}[/grey]"
+            )
+        console.print()
 
 
 def main():
     script_name = os.path.basename(sys.argv[0])
+    
+    # Define examples and notes
+    examples = [
+        ("Initialize API key", "init YOUR_API_KEY"),
+        ("Basic search", "search \"apache country:cn\""),
+        ("Cache control", "search \"nginx port:443\" --no-cache"),
+        ("Complex query", "search 'http.favicon.hash:\"-620522584\" country:\"cn\"' --delete-cache"),
+        ("Show API info", "info")
+    ]
+    
+    notes = [
+        "Will automatically use API key from ~/.config/shodan/api_key if available",
+        "Custom config is stored in ~/.shodan/config.json",
+        "Search results are cached in ~/.shodan/result/",
+        "Use --no-cache to skip cache, --delete-cache to refresh cache",
+        "For complex searches, enclose the entire query in quotes"
+    ]
 
-    examples = f"""
-{color("Examples:", 3)}
-  {color("# Initialize API key", 7)}
-  {script_name} init YOUR_API_KEY
-
-  {color("# Search for specific terms", 7)}
-  {script_name} search "apache country:cn"
-  {script_name} search "nginx port:443" --no-cache
-  {script_name} search 'http.favicon.hash:"-620522584" country:"cn"' --delete-cache
-
-  {color("# Show API information and config", 7)}
-  {script_name} info
-
-{color("Notes:", 3)}
-  {color("- Will automatically use API key from ~/.config/shodan/api_key if available", 7)}
-  {color("- Custom config is stored in ~/.shodan/config.json", 7)}
-  {color("- Search results are cached in ~/.shodan/result/", 7)}
-  {color("- Use --no-cache to skip cache, --delete-cache to refresh cache", 7)}
-  {color("- For complex searches, enclose the entire query in quotes", 7)}
-"""
-
-    parser = argparse.ArgumentParser(
-        description=color("Shodan CLI Tool", 4),
-        epilog=examples,
+    parser = ColoredArgumentParser(
+        description=CLIStyle.color('Shodan CLI Tool', CLIStyle.COLORS["TITLE"]),
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=create_example_text(script_name, examples, notes)
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -493,25 +701,25 @@ def main():
     search_parser = subparsers.add_parser(
         "search",
         help="Search Shodan",
-        description=color("Search Shodan for specific terms", 4),
+        description=CLIStyle.color("Search Shodan for specific terms", CLIStyle.COLORS["TITLE"]),
         epilog=f"""
-{color("Examples:", 3)}
-  {color("# Basic search", 7)}
+{CLIStyle.color("Examples:", CLIStyle.COLORS["SUB_TITLE"])}
+  {CLIStyle.color("# Basic search", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} search "apache country:cn"
   
-  {color("# Search with quotes", 7)}
+  {CLIStyle.color("# Search with quotes", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} search 'http.html:"hello world"'
   {script_name} search 'http.favicon.hash:"-620522584"'
   
-  {color("# Cache control", 7)}
+  {CLIStyle.color("# Cache control", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} search "nginx port:443" --no-cache
   {script_name} search "apache" --delete-cache
   
-  {color("# Pagination (Paid API only)", 7)}
+  {CLIStyle.color("# Pagination (Paid API only)", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} search "nginx" --page 2
   {script_name} search "apache country:cn" --page 3
 
-  {color("# Limit results", 7)}
+  {CLIStyle.color("# Limit results", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} search "nginx" --limit 10
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -557,12 +765,12 @@ def main():
 
         # Strict result validation
         if not results:
-            print(color("No results found", 2))
+            print(CLIStyle.color("No results found", CLIStyle.COLORS["ERROR"]))
             return
 
         matches = results.get("matches", [])
         if not matches:
-            print(color("No matches found", 2))
+            print(CLIStyle.color("No matches found", CLIStyle.COLORS["ERROR"]))
             return
 
         # Apply limit if specified
@@ -570,110 +778,13 @@ def main():
         if args.limit and args.limit > 0:
             matches = matches[: args.limit]
 
-        console = Console()
-        console.print()
-
-        # Get total results count
-        total = results.get("total", 0)
-        console.print()
-
-        # Setup results table
-        results_table = Table(
-            box=box.ROUNDED,
-            header_style="bold cyan",
-            border_style="cyan",
-            show_lines=True,
-            padding=(0, 1),  # Reduce padding to save space
-        )
-
-        # Set up columns - IP, Port, URL and Location with no width limit for full display
-        results_table.add_column("IP", style="bold green", no_wrap=True)
-        results_table.add_column("Port", style="yellow", no_wrap=True)
-        results_table.add_column("URL", style="cyan", no_wrap=True)
-        results_table.add_column("Organization", style="blue", width=30)
-        results_table.add_column("Location", style="magenta", no_wrap=True)
-        results_table.add_column("Timestamp (UTC+8)", style="green", width=19)
-
-        try:
-            for match in matches:
-                if not isinstance(match, dict):
-                    continue
-
-                # Safely get data
-                def safe_get(data, key, default="N/A"):
-                    """Safely get dictionary value"""
-                    try:
-                        value = data.get(key)
-                        return str(value) if value is not None else default
-                    except:
-                        return default
-
-                def truncate(text, width):
-                    """Truncate text and add ellipsis"""
-                    if len(text) > width:
-                        return text[: width - 3] + "..."
-                    return text
-
-                # IP, Port, URL full display, no truncation
-                ip = safe_get(match, "ip_str")
-                port = safe_get(match, "port")
-                protocol = "https" if port in ["443", "8443"] else "http"
-                url = f"{protocol}://{ip}:{port}"
-
-                # Organization truncation length adjustment
-                org = safe_get(match, "org")
-                if org != "N/A":
-                    org = truncate(org, 27)  # Adjusted to 27, leaving some margin space
-
-                # Location information full display, no truncation
-                location_data = match.get("location", {})
-                country = safe_get(location_data, "country_name")
-                city = safe_get(location_data, "city")
-                longitude = safe_get(location_data, "longitude")
-                latitude = safe_get(location_data, "latitude")
-                location = f"{country}, {city}\n({latitude}°N, {longitude}°E)"
-
-                # Process timestamp
-                timestamp = match.get("timestamp")
-                if timestamp:
-                    try:
-                        ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-                        ts = ts.astimezone(timezone(timedelta(hours=8)))
-                        timestamp = ts.strftime("%Y-%m-%d %H:%M:%S")
-                    except:
-                        timestamp = "N/A"
-                else:
-                    timestamp = "N/A"
-
-                results_table.add_row(ip, port, url, org, location, timestamp)
-
-            console.print(results_table)
-            console.print()
-
-            # Display query information and statistics after the table
-            console.print(f"Query: [cyan]{query}[/cyan]")
-            if args.page > 1:
-                console.print(f"Page: [yellow]{args.page}[/yellow]")
-
-            if args.limit and args.limit > 0:
-                console.print(
-                    f"[grey]Total Results: {total} | Retrieved: {total_matches} | Displayed: {len(matches)} (limited by --limit)[/grey]"
-                )
-            else:
-                console.print(
-                    f"[grey]Total Results: {total} | Matches Retrieved: {total_matches}[/grey]"
-                )
-            console.print()
-
-        except Exception as e:
-            print(color(f"Error displaying results: {str(e)}", 2))
-            return
+        client.display_results(matches, results.get("total", 0))
 
     elif args.command == "info":
         try:
             client.show_info()
         except Exception as e:
-            print(color(f"Error displaying info: {str(e)}", 2))
+            print(CLIStyle.color(f"Error displaying info: {str(e)}", CLIStyle.COLORS["ERROR"]))
             return
 
 
@@ -681,8 +792,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(color("\nOperation cancelled by user", 2))
+        print(CLIStyle.color("\nOperation cancelled by user", CLIStyle.COLORS["ERROR"]))
         sys.exit(0)
     except Exception as e:
-        print(color(f"\nError: {str(e)}", 2))
+        print(CLIStyle.color(f"\nError: {str(e)}", CLIStyle.COLORS["ERROR"]))
         sys.exit(1)

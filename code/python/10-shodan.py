@@ -19,6 +19,7 @@ import base64
 import mmh3
 import requests
 import urllib.parse
+from bs4 import BeautifulSoup
 
 # CLI 帮助样式模板
 class CLIStyle:
@@ -447,14 +448,11 @@ class ShodanClient:
                 # Use page parameter for pagination
                 response = self.client.search(query, page=page)
                 
-                # Filter out IPv6 results
                 if response and "matches" in response:
-                    # 只保留 IPv4 地址的结果
                     response["matches"] = [
                         match for match in response["matches"]
                         if match.get("ip_str", "").count(":") == 0  # IPv6 地址包含多个冒号
                     ]
-                    # 更新总数
                     response["total"] = len(response["matches"])
 
                 if not response or "matches" not in response:
@@ -762,12 +760,20 @@ def main():
   
   {CLIStyle.color("# Calculate hash from URL", CLIStyle.COLORS["EXAMPLE"])}
   {script_name} hash https://example.com/favicon.ico
+  
+  {CLIStyle.color("# Calculate hash from website (auto-detect favicon)", CLIStyle.COLORS["EXAMPLE"])}
+  {script_name} hash https://example.com
+
+{CLIStyle.color("Notes:", CLIStyle.COLORS["SUB_TITLE"])}
+  {CLIStyle.color("- For URLs, if the provided path is not a valid favicon,", CLIStyle.COLORS["CONTENT"])}
+  {CLIStyle.color("  the tool will try to find favicon at standard locations", CLIStyle.COLORS["CONTENT"])}
+  {CLIStyle.color("- Supported favicon formats: .ico, .png", CLIStyle.COLORS["CONTENT"])}
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     hash_parser.add_argument(
         "path_or_url", 
-        help="Path to local favicon.ico file or URL"
+        help="Path to local favicon file or URL (can be website URL)"
     )
 
     args = parser.parse_args()
@@ -827,15 +833,104 @@ def calculate_favicon_hash(path_or_url):
     try:
         # Determine if input is a URL or file path
         is_url = path_or_url.lower().startswith(('http://', 'https://'))
+        favicon_source = path_or_url  # 默认使用输入路径作为来源
         
         if is_url:
-            print(CLIStyle.color(f"Downloading favicon from URL: {path_or_url}", CLIStyle.COLORS["CONTENT"]))
+            print(CLIStyle.color(f"Downloading from URL: {path_or_url}", CLIStyle.COLORS["CONTENT"]))
             try:
+                # First check if the URL directly points to a favicon
                 response = requests.get(path_or_url, timeout=10)
                 if response.status_code != 200:
                     print(CLIStyle.color(f"Error: HTTP status code {response.status_code}", CLIStyle.COLORS["ERROR"]))
                     return
+                
+                # Check if the content is a valid favicon
+                content_type = response.headers.get('Content-Type', '').lower()
                 content = response.content
+                is_favicon = _is_valid_favicon_content(content_type, content)
+                
+                # If not a direct favicon URL, try to find favicon at the website
+                if not is_favicon:
+                    base_url = _get_base_url(path_or_url)
+                    print(CLIStyle.color(f"URL is not a direct favicon. Trying to find favicon at: {base_url}", CLIStyle.COLORS["CONTENT"]))
+                    
+                    # Try standard favicon locations
+                    favicon_paths = [
+                        '/favicon.ico', 
+                        '/favicon.png', 
+                        '/assets/favicon.ico', 
+                        '/images/favicon.ico',
+                        '/static/favicon.ico',
+                        '/public/favicon.ico'
+                    ]
+                    
+                    favicon_found = False
+                    for path in favicon_paths:
+                        try:
+                            favicon_url = urllib.parse.urljoin(base_url, path)
+                            print(CLIStyle.color(f"Trying: {favicon_url}", CLIStyle.COLORS["CONTENT"]))
+                            favicon_response = requests.get(favicon_url, timeout=10)
+                            
+                            if favicon_response.status_code == 200:
+                                favicon_content_type = favicon_response.headers.get('Content-Type', '').lower()
+                                if _is_valid_favicon_content(favicon_content_type, favicon_response.content):
+                                    content = favicon_response.content
+                                    favicon_found = True
+                                    favicon_source = favicon_url  # 更新favicon来源
+                                    print(CLIStyle.color(f"Found valid favicon at: {favicon_url}", CLIStyle.COLORS["CONTENT"]))
+                                    break
+                        except Exception as e:
+                            print(CLIStyle.color(f"Error trying {path}: {str(e)}", CLIStyle.COLORS["ERROR"]))
+                            continue
+                    
+                    # If still not found, try to parse HTML to find favicon link
+                    if not favicon_found:
+                        try:
+                            print(CLIStyle.color("Searching for favicon link in HTML...", CLIStyle.COLORS["CONTENT"]))
+                            soup = BeautifulSoup(response.content, 'html.parser')
+                            
+                            # Look for favicon in link tags
+                            favicon_links = []
+                            for link in soup.find_all('link'):
+                                rel = link.get('rel', [])
+                                if isinstance(rel, str):
+                                    rel = [rel]
+                                
+                                if any(r.lower() in ['icon', 'shortcut icon'] for r in rel):
+                                    href = link.get('href')
+                                    if href:
+                                        favicon_links.append(href)
+                            
+                            # Try each found favicon link
+                            for href in favicon_links:
+                                try:
+                                    # Handle relative URLs
+                                    if not href.startswith(('http://', 'https://')):
+                                        href = urllib.parse.urljoin(base_url, href)
+                                    
+                                    print(CLIStyle.color(f"Trying HTML link: {href}", CLIStyle.COLORS["CONTENT"]))
+                                    favicon_response = requests.get(href, timeout=10)
+                                    
+                                    if favicon_response.status_code == 200:
+                                        favicon_content_type = favicon_response.headers.get('Content-Type', '').lower()
+                                        if _is_valid_favicon_content(favicon_content_type, favicon_response.content):
+                                            content = favicon_response.content
+                                            favicon_found = True
+                                            favicon_source = href  # 更新favicon来源
+                                            print(CLIStyle.color(f"Found valid favicon at: {href}", CLIStyle.COLORS["CONTENT"]))
+                                            break
+                                except Exception as e:
+                                    print(CLIStyle.color(f"Error trying HTML link {href}: {str(e)}", CLIStyle.COLORS["ERROR"]))
+                                    continue
+                        except ImportError:
+                            print(CLIStyle.color("BeautifulSoup not installed. Skipping HTML parsing.", CLIStyle.COLORS["ERROR"]))
+                        except Exception as e:
+                            print(CLIStyle.color(f"Error parsing HTML: {str(e)}", CLIStyle.COLORS["ERROR"]))
+                    
+                    if not favicon_found:
+                        print(CLIStyle.color("Error: Could not find a valid favicon at the URL or standard locations", CLIStyle.COLORS["ERROR"]))
+                        print(CLIStyle.color("Please provide a direct link to a favicon file (.ico, .png)", CLIStyle.COLORS["ERROR"]))
+                        return
             except Exception as e:
                 print(CLIStyle.color(f"Error downloading favicon: {str(e)}", CLIStyle.COLORS["ERROR"]))
                 return
@@ -848,9 +943,19 @@ def calculate_favicon_hash(path_or_url):
             print(CLIStyle.color(f"Reading favicon from file: {path_or_url}", CLIStyle.COLORS["CONTENT"]))
             with open(path_or_url, 'rb') as f:
                 content = f.read()
+            
+            # Check if the file is a valid favicon
+            if not _is_valid_favicon_file(path_or_url, content):
+                print(CLIStyle.color("Error: The file does not appear to be a valid favicon", CLIStyle.COLORS["ERROR"]))
+                print(CLIStyle.color("Please provide a valid favicon file (.ico, .png)", CLIStyle.COLORS["ERROR"]))
+                return
         
-        # Calculate hash using Shodan's method
-        b64_content = base64.b64encode(content)
+        # 在计算哈希值之前显示favicon来源
+        print(CLIStyle.color(f"Using favicon from: {favicon_source}", CLIStyle.COLORS["CONTENT"]))
+        
+        # Calculate hash using Shodan's updated method
+        print(CLIStyle.color("Calculating favicon hash...", CLIStyle.COLORS["CONTENT"]))
+        b64_content = base64.encodebytes(content)
         hash_value = mmh3.hash(b64_content)
         
         # Display results - simplified output without panel
@@ -865,6 +970,46 @@ def calculate_favicon_hash(path_or_url):
     except Exception as e:
         print(CLIStyle.color(f"Error calculating hash: {str(e)}", CLIStyle.COLORS["ERROR"]))
         return
+
+def _is_valid_favicon_content(content_type, content):
+    """Check if content appears to be a valid favicon"""
+    # Check content type
+    valid_types = ['image/x-icon', 'image/vnd.microsoft.icon', 'image/png', 'image/ico']
+    content_type_valid = any(valid_type in content_type for valid_type in valid_types)
+    
+    # Check file signatures
+    is_ico = content.startswith(b'\x00\x00\x01\x00')  # ICO file signature
+    is_png = content.startswith(b'\x89PNG\r\n\x1a\n')  # PNG file signature
+    
+    # A valid favicon should have either a correct content type or a valid file signature
+    # Also check minimum size to avoid empty files
+    if (content_type_valid or is_ico or is_png) and len(content) > 16:
+        return True
+    
+    return False
+
+def _is_valid_favicon_file(file_path, content):
+    """Check if file appears to be a valid favicon"""
+    # Check file extension
+    valid_extensions = ['.ico', '.png']
+    has_valid_extension = any(file_path.lower().endswith(ext) for ext in valid_extensions)
+    
+    # Check file signatures
+    is_ico = content.startswith(b'\x00\x00\x01\x00')  # ICO file signature
+    is_png = content.startswith(b'\x89PNG\r\n\x1a\n')  # PNG file signature
+    
+    # A valid favicon file should have both a valid extension and a valid file signature
+    # Also check minimum size to avoid empty files
+    if has_valid_extension and (is_ico or is_png) and len(content) > 16:
+        return True
+    
+    return False
+
+def _get_base_url(url):
+    """Extract base URL from a given URL"""
+    parsed = urllib.parse.urlparse(url)
+    base_url = f"{parsed.scheme}://{parsed.netloc}"
+    return base_url
 
 
 if __name__ == "__main__":

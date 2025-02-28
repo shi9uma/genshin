@@ -6,7 +6,29 @@ create_dir() {
     fi
 }
 
-app=(ddns-go alist qbittorrent synctv transfersh hedgedoc outline reference cyberchef gtfobins explainshell hastebin codeserver matrix)
+app=(
+    ddns-go 
+    alist 
+    qbittorrent 
+    synctv 
+    transfersh 
+    hedgedoc 
+    outline 
+    reference 
+    cyberchef 
+    gtfobins 
+    explainshell 
+    hastebin 
+    codeserver 
+    matrix
+    redroid
+    homepage
+    frp-panel
+    openwebui
+    drawio
+    portainer
+)
+
 app_length=${#app[@]}
 url_base=https://raw.githubusercontent.com/shi9uma/genshin/main/app
 work_dir=$(dirname $0)

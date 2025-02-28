@@ -12,6 +12,6 @@ services:
       - /host/tmp:/docker/tmp
     ports:
       - 80:80	# host:docker
-    restart: always
+    restart: unless-stopped
 
 # sudo docker-compose -f docker-compose.yml up -d

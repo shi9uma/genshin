@@ -137,29 +137,6 @@ mkdir -p \
 	$APP_DIR_PATH/frp \
 	$APP_DIR_PATH/java
 
-# ## game
-# mkdir -p \
-# 	$GAME_DIR_PATH/genshin \
-# 	$GAME_DIR_PATH/minecraft \
-# 	$GAME_DIR_PATH/steam
-
-# ## server
-# mkdir -p \
-# 	$SERVER_DIR_PATH/01-ddns-go \
-# 	$SERVER_DIR_PATH/02-alist \
-# 	$SERVER_DIR_PATH/03-qbittorrent \
-# 	$SERVER_DIR_PATH/04-synctv \
-# 	$SERVER_DIR_PATH/05-filebrowser \
-# 	$SERVER_DIR_PATH/06-transfer \
-# 	$SERVER_DIR_PATH/07-hedgedoc \
-# 	$SERVER_DIR_PATH/08-outline \
-# 	$SERVER_DIR_PATH/09-reference \
-# 	$SERVER_DIR_PATH/10-cyberchef \
-# 	$SERVER_DIR_PATH/11-gtfobins \
-# 	$SERVER_DIR_PATH/12-hastebin \
-#	$SERVER_DIR_PATH/13-codeserver \
-#	$SERVER_DIR_PATH/14-matrix
-
 # pwn
 PWN_DIR_PATH="$APP_DIR_PATH/pwn"
 PWNDBG_DIR_PATH="$PWN_DIR_PATH/pwndbg"
@@ -169,6 +146,5 @@ mkdir -p $PWN_DIR_PATH $PWNDBG_DIR_PATH $PWNDBG_REPO_DIR_PATH
 
 git clone https://github.com/pwndbg/pwndbg.git $PWNDBG_REPO_DIR_PATH
 cd $PWNDBG_REPO_DIR_PATH && chmod +x ./setup.sh && all_proxy="$PROXY_POINT" ./setup.sh
-
 
 chown -R $USER:$USER $HOME_DIR_PATH

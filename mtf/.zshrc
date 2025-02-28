@@ -303,14 +303,6 @@ tmp() {
 
 }
 
-app() {
-    if [[ ! -d '/home/app' ]]; then
-        echo ${RED}"path /home/app invalid!"${NC}
-    else
-        cd /home/app
-    fi
-}
-
 tsh() {
     new_shell_script=$1
     if [[ "$new_shell_script" != /* ]]; then
@@ -472,8 +464,15 @@ if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"
 fi
 
-if [[ -d "$HOME/cargo/repo" ]]; then
-    alias repo="cd $HOME/cargo/repo"
+leader_path_name="cargo"
+if [[ -d "$HOME/$leader_path_name" ]]; then
+    alias home="cd $HOME/$leader_path_name"
+fi
+if [[ -d "$HOME/$leader_path_name/app" ]]; then
+    alias app="cd $HOME/$leader_path_name/app"
+fi
+if [[ -d "$HOME/$leader_path_name/repo" ]]; then
+    alias repo="cd $HOME/$leader_path_name/repo"
 fi
 
 ## export
@@ -516,7 +515,7 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
-            "/usr/local/nodejs/bin"
+            "/usr/lib/nodejs/bin"
 
             "/opt/homebrew/bin"
             "/opt/homebrew/opt/make/libexec/gnubin"
@@ -543,7 +542,7 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
-            "/usr/local/nodejs/bin"
+            "/usr/lib/nodejs/bin"
             "$export_path"
         )
 
@@ -565,7 +564,7 @@ export PATH=$export_path
 # ==============================================================
 
 # alias
-alias l="ls -alh"
+alias l="ls -ah"
 alias ll="ls -alh"
 alias lt="ls -alht"
 alias lss="ls -alhS"
@@ -577,7 +576,7 @@ alias size="du -abh --time -d 1"
     # sort by size: `size | sort -h`
 
 alias rcp="rsync -avtz --progress"
-    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src dst@host:/path/to/dst`
+    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src user@host:/path/to/dst`
 
 alias x="curl"
 alias xi="curl -I"

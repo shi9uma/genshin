@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# need pip install shodan rich
+# need pip install shodan rich mmh3
 
 import os
 import sys
@@ -15,6 +15,10 @@ import threading
 import time
 import hashlib
 import re
+import base64
+import mmh3
+import requests
+import urllib.parse
 
 # CLI 帮助样式模板
 class CLIStyle:
@@ -674,7 +678,9 @@ def main():
         ("Basic search", "search \"apache country:cn\""),
         ("Cache control", "search \"nginx port:443\" --no-cache"),
         ("Complex query", "search 'http.favicon.hash:\"-620522584\" country:\"cn\"' --delete-cache"),
-        ("Show API info", "info")
+        ("Show API info", "info"),
+        ("Calculate favicon hash", "hash /path/to/favicon.ico"),
+        ("Calculate favicon hash from URL", "hash https://example.com/favicon.ico")
     ]
     
     notes = [
@@ -682,7 +688,8 @@ def main():
         "Custom config is stored in ~/.shodan/config.json",
         "Search results are cached in ~/.shodan/result/",
         "Use --no-cache to skip cache, --delete-cache to refresh cache",
-        "For complex searches, enclose the entire query in quotes"
+        "For complex searches, enclose the entire query in quotes",
+        "Use 'hash' command to calculate favicon hash for Shodan searches"
     ]
 
     parser = ColoredArgumentParser(
@@ -743,6 +750,26 @@ def main():
     # info command
     subparsers.add_parser("info", help="Show Shodan API information and config")
 
+    # hash command
+    hash_parser = subparsers.add_parser(
+        "hash", 
+        help="Calculate favicon hash for Shodan searches",
+        description=CLIStyle.color("Calculate favicon hash for Shodan searches", CLIStyle.COLORS["TITLE"]),
+        epilog=f"""
+{CLIStyle.color("Examples:", CLIStyle.COLORS["SUB_TITLE"])}
+  {CLIStyle.color("# Calculate hash from local file", CLIStyle.COLORS["EXAMPLE"])}
+  {script_name} hash /path/to/favicon.ico
+  
+  {CLIStyle.color("# Calculate hash from URL", CLIStyle.COLORS["EXAMPLE"])}
+  {script_name} hash https://example.com/favicon.ico
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    hash_parser.add_argument(
+        "path_or_url", 
+        help="Path to local favicon.ico file or URL"
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -786,6 +813,58 @@ def main():
         except Exception as e:
             print(CLIStyle.color(f"Error displaying info: {str(e)}", CLIStyle.COLORS["ERROR"]))
             return
+
+    elif args.command == "hash":
+        try:
+            calculate_favicon_hash(args.path_or_url)
+        except Exception as e:
+            print(CLIStyle.color(f"Error calculating favicon hash: {str(e)}", CLIStyle.COLORS["ERROR"]))
+            return
+
+
+def calculate_favicon_hash(path_or_url):
+    """Calculate Shodan favicon hash from file path or URL"""
+    try:
+        # Determine if input is a URL or file path
+        is_url = path_or_url.lower().startswith(('http://', 'https://'))
+        
+        if is_url:
+            print(CLIStyle.color(f"Downloading favicon from URL: {path_or_url}", CLIStyle.COLORS["CONTENT"]))
+            try:
+                response = requests.get(path_or_url, timeout=10)
+                if response.status_code != 200:
+                    print(CLIStyle.color(f"Error: HTTP status code {response.status_code}", CLIStyle.COLORS["ERROR"]))
+                    return
+                content = response.content
+            except Exception as e:
+                print(CLIStyle.color(f"Error downloading favicon: {str(e)}", CLIStyle.COLORS["ERROR"]))
+                return
+        else:
+            # Local file
+            if not os.path.exists(path_or_url):
+                print(CLIStyle.color(f"Error: File not found: {path_or_url}", CLIStyle.COLORS["ERROR"]))
+                return
+                
+            print(CLIStyle.color(f"Reading favicon from file: {path_or_url}", CLIStyle.COLORS["CONTENT"]))
+            with open(path_or_url, 'rb') as f:
+                content = f.read()
+        
+        # Calculate hash using Shodan's method
+        b64_content = base64.b64encode(content)
+        hash_value = mmh3.hash(b64_content)
+        
+        # Display results - simplified output without panel
+        console = Console()
+
+        console.print(f"[bold red]Favicon Hash:[/bold red] [bold green]{hash_value}[/bold green]")
+        console.print(
+            "[bold cyan]Example Shodan search query:[/bold cyan]", 
+            f"[yellow]http.favicon.hash:\"{hash_value}\"[/yellow]"
+        )
+        
+    except Exception as e:
+        print(CLIStyle.color(f"Error calculating hash: {str(e)}", CLIStyle.COLORS["ERROR"]))
+        return
 
 
 if __name__ == "__main__":

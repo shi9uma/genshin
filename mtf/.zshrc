@@ -488,7 +488,7 @@ if [[ -f $proxy_ip_file ]]; then
         proxy_port=$(cat $proxy_ip_file | awk '{print $2}')
 
         if [[ -z "$proxy_port" ]]; then
-            proxy_port=7890
+            proxy_port=1080
         fi
         export all_proxy="http://$proxy_ip:$proxy_port"
     fi

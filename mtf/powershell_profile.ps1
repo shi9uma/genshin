@@ -88,7 +88,7 @@ Set-Alias wireshark WiresharkPortable64
 
 # proxy export
 $proxy_host = "127.0.0.1"
-$proxy_port = "7890"
+$proxy_port = "1080"
 $env:http_proxy="http://${proxy_host}:${proxy_port}"
 $env:https_proxy="http://${proxy_host}:${proxy_port}"
 

@@ -35,7 +35,12 @@ fi
 encrypt_script_path="$genshin_dir_path/code/python/02-ez-encrypt.py"
 salt_path="$genshin_dir_path/paimon"
 
-src_file_path="/d/software/mihomo-party/data/profiles/192281f8f10.yaml"
+if [ -d "/d/software/mihomo-party" ]; then
+    src_file_path="/d/software/mihomo-party/data/profiles/192281f8f10.yaml"
+else
+    src_file_path="/home/wkyuu/.config/mihomo-party/profiles/magic.yaml"
+fi
+
 target_file_path="$workdir/magic.yaml"
 # loop encrypt/decrypt if needed
 src_file_dir="/path/to/src/file/dir"

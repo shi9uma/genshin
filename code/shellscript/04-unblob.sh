@@ -5,8 +5,8 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-if [ $(id -u) -ne 0 ]; then
-    echo "run as su"
+if [ $(id | grep -c "docker") -eq 0 ]; then
+    echo "you are not in docker group, add it by sudo usermod -aG docker $USER"
     exit 1
 fi
 

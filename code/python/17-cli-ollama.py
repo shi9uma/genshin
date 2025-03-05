@@ -518,13 +518,23 @@ def show_current_config(args, config):
     """Display current configuration information"""
     console = Console()
     
+    # 检查命令行参数是否被明确指定（而不是使用默认值）
+    cmd_args = sys.argv[1:]
+    explicitly_set = {
+        'ip': '--ip' in cmd_args or '-i' in cmd_args,
+        'port': '--port' in cmd_args or '-p' in cmd_args,
+        'model': '--model' in cmd_args or '-m' in cmd_args,
+        'ssl': '--ssl' in cmd_args,
+        'pre_prompt': '--pre-prompt' in cmd_args
+    }
+    
     # Merge command line args and config file
     current_config = {
-        'ip': args['ip'] or config.get('ip', '127.0.0.1'),
-        'port': args['port'] or config.get('port', '11434'),
-        'model': args['model'] or config.get('model', ''),
-        'ssl': args['ssl'] or config.get('ssl', False),
-        'pre_prompt': args['pre_prompt'] or config.get('pre_prompt', '')
+        'ip': args['ip'] if explicitly_set['ip'] else config.get('ip', '127.0.0.1'),
+        'port': args['port'] if explicitly_set['port'] else config.get('port', '11434'),
+        'model': args['model'] if explicitly_set['model'] else config.get('model', ''),
+        'ssl': args['ssl'] if explicitly_set['ssl'] else config.get('ssl', False),
+        'pre_prompt': args['pre_prompt'] if explicitly_set['pre_prompt'] else config.get('pre_prompt', '')
     }
     
     # Create table
@@ -543,7 +553,7 @@ def show_current_config(args, config):
     
     # Add config info to table
     for key, value in current_config.items():
-        source = "Command Line" if args.get(key) else "Config File" if key in config else "Default"
+        source = "Command Line" if explicitly_set.get(key) else "Config File" if key in config else "Default"
         # Handle multiline pre_prompt display
         if key == 'pre_prompt' and value:
             value = value.replace('\n', '\\n')
@@ -645,8 +655,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=create_example_text(script_name, examples, notes)
     )
-    ap.add_argument('-i', '--ip', type=str, default='127.0.0.1', help='API host address (default: 127.0.0.1)')
-    ap.add_argument('-p', '--port', type=str, default='11434', help='API port number (default: 11434)')
+    ap.add_argument('-i', '--ip', type=str, help='API host address (default: 127.0.0.1)')
+    ap.add_argument('-p', '--port', type=str, help='API port number (default: 11434)')
     ap.add_argument('-m', '--model', type=str, help='Model name to use')
     ap.add_argument('-l', '--list', action='store_true', help='List available models')
     ap.add_argument('--status', action='store_true', help='Show Ollama status')
@@ -696,6 +706,20 @@ def main():
     if args['show_config']:
         show_current_config(args, config)
         return
+    
+    # 设置默认值（仅在需要完整配置的命令时使用）
+    if not args['show_config'] and not args['list'] and not args['status']:
+        # 只有在这些参数未明确设置时，才从配置文件中获取值
+        if args['ip'] is None:
+            args['ip'] = config.get('ip', '127.0.0.1')
+        if args['port'] is None:
+            args['port'] = config.get('port', '11434')
+        if args['model'] is None:
+            args['model'] = config.get('model', '')
+        if not args['ssl']:
+            args['ssl'] = config.get('ssl', False)
+        if args['pre_prompt'] is None:
+            args['pre_prompt'] = config.get('pre_prompt', '')
     
     # 只在需要完整配置的命令时检查参数
     if not args['list'] and not args['status'] and not args['new_config'] and not args['show_config']:

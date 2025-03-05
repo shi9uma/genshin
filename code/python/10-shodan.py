@@ -21,6 +21,64 @@ import requests
 import urllib.parse
 from bs4 import BeautifulSoup
 
+# 全局日志级别
+DEBUG_MODE = False
+
+def clean_path(path):
+    """清理路径，只保留文件名"""
+    return os.path.basename(path)
+
+def color(text, color_code=0):
+    """为调试信息添加颜色"""
+    color_table = {
+        0: "{}",  # 无色
+        1: "\033[1;30m{}\033[0m",  # 黑色加粗
+        2: "\033[1;31m{}\033[0m",  # 红色加粗
+        3: "\033[1;32m{}\033[0m",  # 绿色加粗
+        4: "\033[1;33m{}\033[0m",  # 黄色加粗
+        5: "\033[1;34m{}\033[0m",  # 蓝色加粗
+        6: "\033[1;35m{}\033[0m",  # 紫色加粗
+        7: "\033[1;36m{}\033[0m",  # 青色加粗
+        8: "\033[1;37m{}\033[0m",  # 白色加粗
+    }
+    return color_table[color_code].format(text)
+
+def debug(*args, file=None, append=True, **kwargs):
+    '''
+    打印传入的参数值，并显示其在源码的文件和行号
+    
+    参数:
+        *args: 要打印的参数
+        file: 输出文件路径，默认为None（输出到控制台）
+        append: 是否追加到文件，默认为True
+        **kwargs: 要打印的键值对参数
+    '''
+    if not DEBUG_MODE:
+        return
+        
+    import inspect
+    frame = inspect.currentframe().f_back
+    info = inspect.getframeinfo(frame)
+    
+    output = f"{color(clean_path(info.filename), 3)}: {color(info.lineno, 4)} {color('|', 7)} "
+    
+    for i, arg in enumerate(args):
+        arg_str = str(arg)
+        output += f"{color(arg_str, 2)} "
+    
+    for k, v in kwargs.items():
+        output += f"{color(k+'=', 6)}{color(str(v), 2)} "
+    
+    output += '\n'
+    
+    if file:
+        mode = 'a' if append else 'w'
+        with open(file, mode) as f:
+            clean_output = re.sub(r'\033\[\d+;\d+m|\033\[0m', '', output)
+            f.write(clean_output)
+    else:
+        print(output, end='')
+
 # CLI 帮助样式模板
 class CLIStyle:
     """CLI 工具统一样式配置"""
@@ -81,7 +139,7 @@ class ColoredArgumentParser(argparse.ArgumentParser):
         formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
         
         # 添加参数组
-        formatter.add_text(CLIStyle.color("\n可选参数:", CLIStyle.COLORS["TITLE"]))
+        formatter.add_text(CLIStyle.color("\nOptional Arguments:", CLIStyle.COLORS["TITLE"]))
         for action_group in self._action_groups:
             formatter.start_section(action_group.title)
             formatter.add_arguments(action_group._group_actions)
@@ -347,11 +405,13 @@ class ShodanClient:
     def search(self, query, page=1, no_cache=False, delete_cache=False):
         """Execute search and handle caching"""
         if not self.client:
+            debug("API key not configured")
             print(CLIStyle.color("Error: API key not configured. Use 'init' command first.", 2))
             return None
 
         # Check paid API access for pagination
         if page > 1 and not self.is_paid:
+            debug("Free API pagination limit", page=page, is_paid=self.is_paid)
             print(
                 CLIStyle.color(
                     "Warning: Free API can only access the first page of results (max 100)",
@@ -366,6 +426,7 @@ class ShodanClient:
         try:
             # Check cache - now includes page number
             cache_file = self._get_cache_filename(query, page)
+            debug("Cache file", cache_file=cache_file)
 
             # If delete_cache is specified and cache exists, delete it
             if delete_cache and os.path.exists(cache_file):
@@ -405,6 +466,8 @@ class ShodanClient:
                 loading_thread.start()
 
                 results = self._do_search(query, page)
+                debug("Search results", total=results.get("total") if results else None, 
+                      matches_count=len(results.get("matches", [])) if results and "matches" in results else 0)
                 is_searching = False
                 loading_thread.join()
 
@@ -422,8 +485,10 @@ class ShodanClient:
                 try:
                     with open(cache_file, "r") as f:
                         results = json.load(f)
+                        debug("Loaded from cache", cache_file=cache_file)
                         print(CLIStyle.color("Using cached results...", 7), end="")
                 except Exception as e:
+                    debug("Cache read error", error=str(e))
                     print(CLIStyle.color(f"Error reading cache: {str(e)}", 2))
                     # If cache read fails, perform new search
                     is_searching = True
@@ -438,6 +503,7 @@ class ShodanClient:
 
         except Exception as e:
             is_searching = False
+            debug("Search error", error=str(e))
             print(CLIStyle.color(f"\nError during search: {str(e)}", 2))
             return None
 
@@ -445,17 +511,21 @@ class ShodanClient:
         """Execute actual search operation against Shodan API"""
         try:
             try:
+                debug("Executing Shodan API search", query=query, page=page)
                 # Use page parameter for pagination
                 response = self.client.search(query, page=page)
                 
                 if response and "matches" in response:
+                    debug("Raw response", total=response.get("total"), matches_count=len(response.get("matches", [])))
                     response["matches"] = [
                         match for match in response["matches"]
                         if match.get("ip_str", "").count(":") == 0  # IPv6 地址包含多个冒号
                     ]
                     response["total"] = len(response["matches"])
+                    debug("Filtered response", total=response.get("total"), matches_count=len(response.get("matches", [])))
 
                 if not response or "matches" not in response:
+                    debug("Invalid response", response=response)
                     print(CLIStyle.color("No results found or invalid response", 2))
                     return None
 
@@ -463,6 +533,7 @@ class ShodanClient:
                 return response
 
             except shodan.APIError as e:
+                debug("Shodan API error", error=str(e))
                 if "Search cursor timed out" in str(e):
                     print(CLIStyle.color("\nError: Search cursor timed out.", 2))
                     print(
@@ -482,6 +553,7 @@ class ShodanClient:
                     raise e
 
         except Exception as e:
+            debug("Search execution error", error=str(e))
             print(CLIStyle.color("Search error:", 2))
             print(CLIStyle.color(str(e), 2))
             return None
@@ -560,11 +632,13 @@ class ShodanClient:
 
     def display_results(self, matches, total, limit=None):
         """根据终端宽度动态显示结果"""
+        debug("Displaying results", matches_count=len(matches) if matches else 0, total=total, limit=limit)
         console = Console()
         console.print()
         
         # 计算终端宽度
         term_width = self.get_terminal_width()
+        debug("Terminal width", width=term_width)
         
         # 定义列配置
         # (列名, 最小宽度, 优先级[数字越小优先级越高])
@@ -678,7 +752,8 @@ def main():
         ("Complex query", "search 'http.favicon.hash:\"-620522584\" country:\"cn\"' --delete-cache"),
         ("Show API info", "info"),
         ("Calculate favicon hash", "hash /path/to/favicon.ico"),
-        ("Calculate favicon hash from URL", "hash https://example.com/favicon.ico")
+        ("Calculate favicon hash from URL", "hash https://example.com/favicon.ico"),
+        ("Debug mode", "search \"nginx\" --log")
     ]
     
     notes = [
@@ -687,7 +762,8 @@ def main():
         "Search results are cached in ~/.shodan/result/",
         "Use --no-cache to skip cache, --delete-cache to refresh cache",
         "For complex searches, enclose the entire query in quotes",
-        "Use 'hash' command to calculate favicon hash for Shodan searches"
+        "Use 'hash' command to calculate favicon hash for Shodan searches",
+        "Use --log to enable debug mode for troubleshooting"
     ]
 
     parser = ColoredArgumentParser(
@@ -695,6 +771,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=create_example_text(script_name, examples, notes)
     )
+
+    # 添加全局参数
+    parser.add_argument("--log", action="store_true", help="Enable debug logging")
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
@@ -778,6 +857,13 @@ def main():
 
     args = parser.parse_args()
 
+    # 设置全局调试模式
+    global DEBUG_MODE
+    DEBUG_MODE = args.log
+    
+    if DEBUG_MODE:
+        print(CLIStyle.color("Debug mode enabled", CLIStyle.COLORS["CONTENT"]))
+
     if not args.command:
         parser.print_help()
         return
@@ -789,6 +875,8 @@ def main():
 
     elif args.command == "search":
         query = " ".join(args.query)
+        debug("Search query", query=query, page=args.page, no_cache=args.no_cache, delete_cache=args.delete_cache)
+        
         results = client.search(
             query,
             page=args.page,
@@ -798,10 +886,13 @@ def main():
 
         # Strict result validation
         if not results:
+            debug("No results found", results=results)
             print(CLIStyle.color("No results found", CLIStyle.COLORS["ERROR"]))
             return
 
         matches = results.get("matches", [])
+        debug("Matches count", count=len(matches) if matches else 0)
+        
         if not matches:
             print(CLIStyle.color("No matches found", CLIStyle.COLORS["ERROR"]))
             return
@@ -831,6 +922,7 @@ def main():
 def calculate_favicon_hash(path_or_url):
     """Calculate Shodan favicon hash from file path or URL"""
     try:
+        debug("Calculating favicon hash", path_or_url=path_or_url)
         # Determine if input is a URL or file path
         is_url = path_or_url.lower().startswith(('http://', 'https://'))
         favicon_source = path_or_url  # 默认使用输入路径作为来源
@@ -841,6 +933,7 @@ def calculate_favicon_hash(path_or_url):
                 # First check if the URL directly points to a favicon
                 response = requests.get(path_or_url, timeout=10)
                 if response.status_code != 200:
+                    debug("HTTP error", status_code=response.status_code)
                     print(CLIStyle.color(f"Error: HTTP status code {response.status_code}", CLIStyle.COLORS["ERROR"]))
                     return
                 
@@ -848,6 +941,7 @@ def calculate_favicon_hash(path_or_url):
                 content_type = response.headers.get('Content-Type', '').lower()
                 content = response.content
                 is_favicon = _is_valid_favicon_content(content_type, content)
+                debug("Content validation", content_type=content_type, is_favicon=is_favicon, content_length=len(content))
                 
                 # If not a direct favicon URL, try to find favicon at the website
                 if not is_favicon:
@@ -968,6 +1062,7 @@ def calculate_favicon_hash(path_or_url):
         )
         
     except Exception as e:
+        debug("Error in calculate_favicon_hash", error=str(e))
         print(CLIStyle.color(f"Error calculating hash: {str(e)}", CLIStyle.COLORS["ERROR"]))
         return
 
@@ -1019,5 +1114,8 @@ if __name__ == "__main__":
         print(CLIStyle.color("\nOperation cancelled by user", CLIStyle.COLORS["ERROR"]))
         sys.exit(0)
     except Exception as e:
+        if DEBUG_MODE:
+            import traceback
+            traceback.print_exc()
         print(CLIStyle.color(f"\nError: {str(e)}", CLIStyle.COLORS["ERROR"]))
         sys.exit(1)

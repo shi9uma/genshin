@@ -69,7 +69,7 @@ class ColoredArgumentParser(argparse.ArgumentParser):
         formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
         
         # 添加参数组
-        formatter.add_text(CLIStyle.color("\n可选参数:", CLIStyle.COLORS["TITLE"]))
+        formatter.add_text(CLIStyle.color("\nOptional Arguments:", CLIStyle.COLORS["TITLE"]))
         for action_group in self._action_groups:
             formatter.start_section(action_group.title)
             formatter.add_arguments(action_group._group_actions)

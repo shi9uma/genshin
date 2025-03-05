@@ -64,6 +64,42 @@ sudo apt-get update
 
 ## docker-compose
 
+`dockerfile` 模板：
+
+```dockerfile
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+ENV PYTHONUNBUFFERED=1
+
+ENV WORKDIR=/work
+
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubuntu/|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubuntu/|g' /etc/apt/sources.list
+
+RUN apt-get update && apt-get install -y \
+    curl wget net-tools iproute2 \
+    gnupg2 \
+    software-properties-common \
+    build-essential \
+    vim
+
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3.12 python3.12-dev python3.12-venv && \
+    curl https://bootstrap.pypa.io/get-pip.py | python3.12
+
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+RUN ln -s /usr/bin/python3.12 /usr/bin/python
+
+RUN mkdir -p ${WORKDIR}
+
+WORKDIR ${WORKDIR}
+```
+
 `docker-compose.yml` 模板：
 
 ```yaml
@@ -76,11 +112,13 @@ services:
       - UID=1000
       - GID=1000
       - CONTAINER_TIMEZONE=Asia/Shanghai
+    tty: true
+    stdin_open: true
     volumes:
-      - /host/tmp:/docker/tmp
+      - /host:/docker
     ports:
       - 80:80	# host:docker
-    restart: always
+    restart: unless-stopped
 
 # sudo docker-compose -f docker-compose.yml up -d
 ```

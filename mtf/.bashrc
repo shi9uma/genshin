@@ -23,6 +23,14 @@ HISTFILESIZE=2000
 # check the window size after each command and update LINES and COLUMNS if necessary
 shopt -s checkwinsize
 
+# enable autocd if bash version >= 4.0
+if ((BASH_VERSINFO[0] >= 4)); then
+    shopt -s autocd
+fi
+
+# configure `time` format
+TIMEFORMAT=$'\nreal\t%3lR\nuser\t%3lU\nsys\t%3lS\ncpu\t%P'
+
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
@@ -48,7 +56,8 @@ fi
 
 # Configure prompt
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\(Ծ‸Ծ\)\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    # Use a more advanced prompt similar to zsh
+    PS1='\[\033[01;32m\]\u\[\033[00m\]@\[\033[01;32m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -66,12 +75,23 @@ esac
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    export LS_COLORS="$LS_COLORS:ow=30;44:" # fix ls color for folders with 777 permissions
+    
     alias ls='ls --color=auto'
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
     alias diff='diff --color=auto'
     alias ip='ip --color=auto'
+    
+    # LESS colors for man pages
+    export LESS_TERMCAP_mb=$'\E[1;31m'     # begin blink
+    export LESS_TERMCAP_md=$'\E[1;36m'     # begin bold
+    export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
+    export LESS_TERMCAP_so=$'\E[01;33m'    # begin reverse video
+    export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
+    export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
+    export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 fi
 
 # ==============================================================
@@ -119,14 +139,6 @@ tmp() {
         cd /tmp/tmp/$1
     else
         echo "usage: tmp [dir]"
-    fi
-}
-
-app() {
-    if [[ ! -d '/home/app' ]]; then
-        echo -e "${RED}path /home/app invalid!${NC}"
-    else
-        cd /home/app
     fi
 }
 
@@ -210,51 +222,11 @@ w2u() {
 }
 
 sd() {
-
-    if [ $# -eq 0 ]; then
-        echo "usage: sd {show|args}"
-        return
+    sd_path="$HOME/.genshin/sd.py"
+    if [[ ! -f $sd_path ]]; then
+        _curl $sd_path $github_url_base/code/python/10-shodan.py
     fi
-
-    if [[ "$1" == "show" ]]; then
-        echo "shodan search --fields ip_str,port,org,location ARGS | awk ' { print \"http://\"\$1\":\"\$2} '"
-        return
-    fi
-
-    shodan_api_key_path="$HOME/.config/shodan/api_key"
-    if [[ ! -f $shodan_api_key_path ]]; then
-        echo ${RED}"shodan api key not found. run \"shodan init api_key\" first"${NC}
-    else
-        count=0
-        shodan search --fields ip_str,port,org,location --separator "<>" "$@" | awk '{
-            split($0, result, "<>");
-
-            ip = result[1];
-            if (ip == "") {
-                next;
-            }
-            
-            port = result[2];
-
-            if (port == "443") {
-                protocol = "https";
-            } else {
-                protocol = "http";
-            }
-
-            org = result[3];
-            location = result[4];            
-
-            print "| " protocol "://" ip ":" port;
-            print "> " org;
-            print "> " location;
-            print "-----------------------------\n";
-
-            count++;
-        } END {
-            print "total result: " count;
-        }'
-    fi
+    python3 $sd_path "$@"
 }
 
 unblob() {
@@ -298,8 +270,34 @@ find_genshin() {
         current_dir=$(dirname "$current_dir")
     done
 
-    echo -e "${RED}Error: $target_dir_name directory not found${nc}"
+    echo -e "${RED}Error: $target_dir_name directory not found${NC}"
     return 1
+}
+
+# 从zshrc添加的新函数
+ollama() {
+    ollama_dir_path="$HOME/.ollama"
+    if [[ ! -d $ollama_dir_path ]]; then
+        mkdir -p $ollama_dir_path
+    fi
+    ollama_path="$ollama_dir_path/cli-ollama.py"
+    if [[ ! -f $ollama_path ]]; then
+        _curl $ollama_path $github_url_base/code/python/17-cli-ollama.py
+    fi
+    python3 $ollama_path "$@"
+}
+
+exp() {
+    if [[ ! -f "/usr/bin/dolphin" ]]; then
+        echo -e "${RED}dolphin not found, try ${GREEN}sudo apt install dolphin-emu${NC}"
+        return 1
+    fi
+    if [[ $# -eq 0 ]]; then
+        dolphin . &>/dev/null &
+    else
+        dolphin "$@" &>/dev/null &
+    fi
+    return 0
 }
 
 ## file, dir
@@ -307,17 +305,42 @@ if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
     alias mc="python /home/game/minecraft/tool/rcon.py"
 fi
 
-if [[ -d "$HOME/repo" ]]; then
+# 从zshrc添加的目录别名
+leader_path_name="cargo"
+if [[ -d "$HOME/$leader_path_name" ]]; then
+    alias home="cd $HOME/$leader_path_name"
+fi
+if [[ -d "$HOME/$leader_path_name/app" ]]; then
+    alias app="cd $HOME/$leader_path_name/app"
+fi
+if [[ -d "$HOME/$leader_path_name/repo" ]]; then
+    alias repo="cd $HOME/$leader_path_name/repo"
+fi
+# 保留原有的repo别名
+if [[ ! -d "$HOME/$leader_path_name/repo" && -d "$HOME/repo" ]]; then
     alias repo="cd $HOME/repo"
 fi
 
 ## export
-proxy_ip_file="$HOME/.proxy_ip"
-if [[ -f ~/.proxy_ip ]]; then
-    export all_proxy="http://$(cat $proxy_ip_file):7890"
+proxy_ip_file="$HOME/.proxy-ip"
+if [[ -f $proxy_ip_file ]]; then
+    if [[ $(cat $proxy_ip_file) == "no proxy" ]]; then
+        :
+    elif [[ $( stat -c %s $proxy_ip_file) -eq 0 ]]; then
+        echo -e "${RED}proxy ip file: $proxy_ip_file is empty, delete it or ${GREEN}echo 'ip port' > \$proxy_ip_file${NC} ${NC}"
+    else
+        proxy_ip=$(cat $proxy_ip_file | awk '{print $1}')
+        proxy_port=$(cat $proxy_ip_file | awk '{print $2}')
+
+        if [[ -z "$proxy_port" ]]; then
+            proxy_port=1080
+        fi
+        export all_proxy="http://$proxy_ip:$proxy_port"
+    fi
 else
-    if [[ -d "/home/wkyuu" ]]; then
-        echo "${RED}proxy ip file: $proxy_ip_file not found, try ${GREEN}echo ip > \$proxy_ip_file${NC} ${NC}"
+    if [[ -d "/home/$USER" ]]; then
+        echo -e "${RED}proxy ip file: $proxy_ip_file not found, try ${NC}${GREEN}echo 'ip port' > \$proxy_ip_file${NC}"
+        echo -e "${RED}or ${GREEN}echo 'no proxy' > \$proxy_ip_file ${NC}${RED}for no proxy needed${NC}"
     fi
 fi
 
@@ -337,19 +360,21 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
+            "/usr/lib/nodejs/bin"
             "/opt/homebrew/bin"
             "/opt/homebrew/opt/make/libexec/gnubin"
             "/opt/metasploit-framework/bin"
         )
 
+        export_path=$PATH
         for path in "${darwin_paths[@]}"; do
             if [[ -d "$path" ]]; then
-                export export_path="$path:$export_path"
+                export_path="$path:$export_path"
             fi
         done
         
-        alias python="/opt/homebrew/bin/python3"
-        alias pip="/opt/homebrew/bin/pip3"
+        # alias python="/opt/homebrew/bin/python3"
+        # alias pip="/opt/homebrew/bin/pip3"
 
         alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
         alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
@@ -360,19 +385,23 @@ case $os_type in
             "$HOME/.bin"
             "$HOME/.local/bin"
             "$HOME/.cargo/bin"
-            "$export_path"
+            "/usr/lib/nodejs/bin"
         )
 
+        export_path=$PATH
         for path in "${linux_paths[@]}"; do
             if [[ -d "$path" ]]; then
-                export export_path="$path:$export_path"
+                export_path="$path:$export_path"
             fi
         done
+        
+        alias python="env -u PYTHONHOME -u PYTHONPATH python"
+        alias pip="env -u PYTHONHOME -u PYTHONPATH pip"
         ;;
 esac
 export PATH=$export_path
 
-if [[ $DONT_FASTFETCH -ne 1 ]]; then
+if [[ -z "$DONT_FASTFETCH" || $DONT_FASTFETCH -ne 1 ]]; then
     if [ -f /usr/bin/fastfetch ]; then
         fastfetch
     fi
@@ -384,7 +413,7 @@ fi
 # ==============================================================
 
 # alias
-alias l="ls -alh"
+alias l="ls -ah"
 alias ll="ls -alh"
 alias lt="ls -alht"
 alias lss="ls -alhS"
@@ -396,15 +425,13 @@ alias size="du -abh --time -d 1"
     # sort by size: `size | sort -h`
 
 alias rcp="rsync -avtz --progress"
-    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src dst`
+    # use ssh option: `rcp -e "ssh -p 22000 -i ~/.ssh/id_rsa" src user@host:/path/to/dst`
 
 alias x="curl"
 alias xi="curl -I"
 alias reg="grep -ir"
-alias zshrc="source ~/.zshrc"
-alias wky="sudo su wkyuu"
-alias chwky="chown -R wkyuu:wkyuu"
-alias tldr="tldr --language=zh"
-alias transfer="sd http.favicon.hash:\"-620522584\""
+alias bashrc="source ~/.bashrc"
+alias f="fastfetch"
+alias transfer="sd search http.favicon.hash:-620522584"
 alias random="cat /dev/urandom|head|base64|md5sum|cut -d \" \" -f 1"
 # end alias

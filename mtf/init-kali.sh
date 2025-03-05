@@ -5,7 +5,7 @@ if [ "$(id -u)" -ne 0 ]; then
 	exit 1
 fi
 
-PROXY_POINT="http://192.168.9.4:7890"
+PROXY_POINT="http://198.18.0.1:1080"
 GITHUB_URL_BASE="https://raw.githubusercontent.com/shi9uma/genshin/main"
 export all_proxy="$PROXY_POINT"
 
@@ -56,7 +56,7 @@ fi
 
 apt install -y \
 	aptitude \
-	locales net-tools curl openvpn rsync proxychains4 jq traceroute \
+	locales iproute2 net-tools curl openvpn rsync proxychains4 jq traceroute \
 	file fd-find xxd btop tmux strace last coreutils \
 	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
 	qemu-user-static qemu-system qemu-utils bridge-utils \

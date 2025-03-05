@@ -8,3 +8,4 @@
 2. https://github.com/imrk51/hacking-books.git
 3. https://github.com/swisskyrepo/PayloadsAllTheThings.git
 4. https://github.com/HackTricks-wiki/hacktricks.git
+5. https://github.com/Just-Hack-For-Fun/Linux-INCIDENT-RESPONSE-COOKBOOK.git

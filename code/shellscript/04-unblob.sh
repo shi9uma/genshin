@@ -18,7 +18,7 @@ fi
 file_path=$1
 file_name=$(basename $file_path)
 
-work_dir="$(cd $(dirname $0); pwd)"
+work_dir=$(pwd)
 input_dir="$work_dir/input"
 output_dir="$work_dir/output"
 rootfs_dir="$work_dir/$file_name-rootfs"

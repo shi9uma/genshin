@@ -382,12 +382,12 @@ w2u() {
 
 unblob() {
     unblob_path="$HOME/.genshin/unblob.sh"
+    to_extract_file=$1
     if [[ ! -f $unblob_path ]]; then
         _curl $unblob_path $github_url_base/code/shellscript/04-unblob.sh
         chmod +x $unblob_path
     fi
-    cp $unblob_path .
-    eval $PWD/unblob.sh $1
+    eval $unblob_path $to_extract_file
 }
 
 call_bridge() {

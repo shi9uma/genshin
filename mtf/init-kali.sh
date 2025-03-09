@@ -56,9 +56,9 @@ fi
 
 apt install -y \
 	aptitude \
-	locales iproute2 net-tools curl openvpn rsync proxychains4 jq traceroute \
+	locales iproute2 net-tools iftop curl openvpn rsync proxychains4 jq traceroute \
 	file fd-find xxd btop tmux strace last coreutils \
-	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git \
+	scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip git ntfs-3g \
 	qemu-user-static qemu-system qemu-utils bridge-utils \
 	python3-pip python3-venv python3-shodan python3-ropgadget \
 	fzf ripgrep vim \

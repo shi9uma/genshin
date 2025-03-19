@@ -18,15 +18,13 @@ app=(
     cyberchef 
     gtfobins 
     explainshell 
-    hastebin 
-    codeserver 
+    hastebin
+    drawio
+    openwebui
     matrix
-    redroid
     homepage
     frp-panel
-    openwebui
-    drawio
-    portainer
+    redroid 
 )
 
 app_length=${#app[@]}

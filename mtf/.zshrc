@@ -550,9 +550,6 @@ case $os_type in
                 export_path="$path:$export_path"
             fi
         done
-
-        alias python="env -u PYTHONHOME -u PYTHONPATH python"
-        alias pip="env -u PYTHONHOME -u PYTHONPATH pip"
         ;;
 esac
 export PATH=$export_path

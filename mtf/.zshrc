@@ -459,17 +459,11 @@ exp() {
 }
 
 ## file, dir
-if [[ -f "/home/game/minecraft/tool/rcon.py" ]]; then
-    alias mc="python /home/game/minecraft/tool/rcon.py"
+if [[ -f "$HOME/$leader_path_name/game/minecraft/tool/rcon.py" ]]; then
+    alias mc="python $HOME/$leader_path_name/game/minecraft/tool/rcon.py"
 fi
 
 leader_path_name="cargo"
-if [[ -d "$HOME/$leader_path_name" ]]; then
-    alias home="cd $HOME/$leader_path_name"
-fi
-if [[ -d "$HOME/$leader_path_name/app" ]]; then
-    alias app="cd $HOME/$leader_path_name/app"
-fi
 if [[ -d "$HOME/$leader_path_name/repo" ]]; then
     alias repo="cd $HOME/$leader_path_name/repo"
 fi

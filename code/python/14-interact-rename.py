@@ -1,287 +1,810 @@
 # -*- coding: utf-8 -*-
+# pip install rich
 
 import os
+import sys
 import argparse
 import re
+from rich.console import Console
+from rich.table import Table
+from rich import box
+from rich.panel import Panel
 
-# data
-work_dir = os.getcwd()
+# Global variables
+DEBUG_MODE = False
+WORK_DIR = os.getcwd()
+VERSION = "1.0.0"
 
-video_file_ext_list = (
+# File extensions
+VIDEO_EXTENSIONS = (
     '.mp4', '.flv', '.wmv', '.avi', '.webm', '3gp', '.mpg', '.mov', '.rm', '.rmvb', '.mkv'
 )
 
-image_file_ext_list = (
+IMAGE_EXTENSIONS = (
     '.jpg', '.png', '.jpeg', '.bmp'
 )
 
-ignore_file_list = [
-    'desktop.ini', 'Thumbs.db', '._.DS_Store', '.DS_Store', '._.localized', '.localized', '._', '.git', '.gitignore', '.gitattributes', '.vscode', '__pycache__'
+# Files to ignore
+IGNORE_FILES = [
+    'desktop.ini', 'Thumbs.db', '._.DS_Store', '.DS_Store', '._.localized', 
+    '.localized', '._', '.git', '.gitignore', '.gitattributes', '.vscode', '__pycache__'
 ]
 
-ex_ignore_file_list = [
+SCRIPT_IGNORE_FILES = [
     'rename.py', 'tools.py', 'interact-rename.py'
 ]
 
-# test file list; use `tree -L 1`
-test_filelist = '''
-|-- 07fb14fe76fdb56d727419558dbd24d1.jpg
-|-- 0905a026f284804c008dfa9c614fe840.jpg
-|-- 0cdcf5efe5129a7cc314c80e6705dc8e.jpg
-|-- 61-111-106393714_p0.jpg
-|-- 110978512_p0.png
-|-- 1150BDAF40C2E5F3B5E75952DB81525E.jpg
-|-- 5FEF561475DD4AE1F4F570B233EC3096.jpg
-|-- 5a8279e190b11769ab06ad50ece263bd.jpg
-|-- 5f2feaf62596df85282ea1389a2c35b1.jpg
-|-- f5e3d3806e0b6939c2fcdc0170e55521-1231-sadsa-safhgasjghf.jpg
-`-- {98CA9747-AB19-7815-BBC0-2D6D01A9A2AD}.jpg
-'''
+# CLI colors
+CLI_COLORS = {
+    "TITLE": 7,      # Cyan - Main title
+    "SUB_TITLE": 2,  # Red - Subtitle
+    "CONTENT": 3,    # Green - Normal content
+    "EXAMPLE": 7,    # Cyan - Examples
+    "WARNING": 4,    # Yellow - Warnings
+    "ERROR": 2,      # Red - Errors
+}
 
+class FileType:
+    """File type definitions and operations"""
+    
+    VIDEO = 'video'
+    IMAGE = 'image'
+    
+    EXTENSIONS = {
+        VIDEO: VIDEO_EXTENSIONS,
+        IMAGE: IMAGE_EXTENSIONS
+    }
+    
+    DEFAULT_OUTPUT = {
+        VIDEO: '.mp4',
+        IMAGE: '.png'
+    }
+    
+    @classmethod
+    def get_extensions(cls, file_type: str) -> tuple:
+        """Get extensions for file type"""
+        return cls.EXTENSIONS.get(file_type, ())
+        
+    @classmethod
+    def get_default_ext(cls, file_type: str) -> str:
+        """Get default output extension for file type"""
+        return cls.DEFAULT_OUTPUT.get(file_type, '')
 
-def color(text) -> str:
-    return '\033[1;33m{}\033[0m'.format(text)
+def color(text: str, color_code: int = 0) -> str:
+    """
+    Add color to text output
+    ```python
+    color(
+        text,    # Text to colorize
+        color_code=0    # Color code (0-8)
+    )
 
+    return = Colorized text string
+    ```
+    """
+    color_table = {
+        0: "{}",  # No color
+        1: "\033[1;30m{}\033[0m",  # Bold black
+        2: "\033[1;31m{}\033[0m",  # Bold red
+        3: "\033[1;32m{}\033[0m",  # Bold green
+        4: "\033[1;33m{}\033[0m",  # Bold yellow
+        5: "\033[1;34m{}\033[0m",  # Bold blue
+        6: "\033[1;35m{}\033[0m",  # Bold purple
+        7: "\033[1;36m{}\033[0m",  # Bold cyan
+        8: "\033[1;37m{}\033[0m",  # Bold white
+    }
+    return color_table[color_code].format(text)
 
-def fgx(text=False, _fgx='='):
-    _fgx = _fgx * 10
-    print('\033[1;34m{}\033[0m {} \033[1;34m{}\033[0m'.format(
-        _fgx, text if text else '分割线', _fgx))
+def debug(*args, file=None, append=True, **kwargs):
+    """
+    Print debug information with file and line number
+    ```python
+    debug(
+        'Hello',    # Arg 1 to print
+        'World',    # Arg 2 to print
+        file='debug.log',  # Output file path (default: None)
+        append=True,  # Append to file (default: True)
+        **kwargs  # Key-value pairs to print
+    )
+    ```
+    """
+    if not DEBUG_MODE:
+        return
+        
+    import inspect
+    frame = inspect.currentframe().f_back
+    info = inspect.getframeinfo(frame)
+    
+    output = f"{color(os.path.basename(info.filename), 3)}: {color(info.lineno, 4)} {color('|', 7)} "
+    
+    for i, arg in enumerate(args):
+        arg_str = str(arg)
+        output += f"{color(arg_str, 2)} "
+    
+    for k, v in kwargs.items():
+        output += f"{color(k+'=', 6)}{color(str(v), 2)} "
+    
+    output += '\n'
+    
+    if file:
+        mode = 'a' if append else 'w'
+        with open(file, mode) as f:
+            clean_output = re.sub(r'\033\[\d+;\d+m|\033\[0m', '', output)
+            f.write(clean_output)
+    else:
+        print(output, end='')
 
+def divider(text: str = False, char: str = '=') -> None:
+    """Print a divider line with optional text"""
+    divider_str = char * 10
+    print(f"{color(divider_str, 5)} {text if text else 'Divider'} {color(divider_str, 5)}")
 
-def is_ignore(file_item, ignore_file_list: list) -> bool:
-    for file_name in ignore_file_list:
-        if file_name == file_item:
-            return True
-    return False
+class FileRenamer:
+    """File renaming operations manager"""
+    
+    def __init__(self, directory: str):
+        self.directory = directory
+        self.console = Console()
+        self.total_files = 0
+        self.modified_files = 0
+        
+    def _show_statistics(self) -> None:
+        """Display operation statistics"""
+        print()  # Empty line for better readability
+        stats = [
+            (f"Total Files", self.total_files),
+            (f"Modified Files", self.modified_files)
+        ]
+        print(color("Statistics:", CLI_COLORS["TITLE"]))
+        for label, value in stats:
+            print(f"  {color(label, CLI_COLORS['SUB_TITLE'])}: {color(str(value), CLI_COLORS['CONTENT'])}")
+        print()  # Empty line for better readability
 
+    def is_ignored(self, filename: str, ignore_list: list) -> bool:
+        """Check if file should be ignored"""
+        return filename in ignore_list
+        
+    def get_file_list(self, include_dirs: bool = False) -> list:
+        """Get list of files to process"""
+        files = [
+            f for f in os.listdir(self.directory)
+            if os.path.isfile(os.path.join(self.directory, f)) or 
+            (include_dirs and os.path.isdir(os.path.join(self.directory, f)))
+        ]
+        files.sort()
+        file_list = [f for f in files if not self.is_ignored(f, IGNORE_FILES + SCRIPT_IGNORE_FILES)]
+        self.total_files = len(file_list)
+        return file_list
 
-def show_files(file_list):
-    fgx('工作目录文件列表如下')
-    [print('{}{}'.format(color('|'), file_name)) for file_name in file_list]
-    print('')
-
-# main function
-
-
-def fast_rename(directory, type, width=3):
-    assert type in ['img', 'video'], 'type error, \'img\' or \'video\''
-
-    files = [filename for filename in os.listdir(directory) if filename.lower(
-    ).endswith(video_file_ext_list if type == 'video' else image_file_ext_list)]
-    files.sort()
-    for index, filename in enumerate(files):
-        new_filename = '{}{}'.format(
-            str(index + 1).zfill(width), '.mp4' if type == 'video' else '.png')
-        if new_filename == filename:
-            continue
-        src = os.path.join(directory, filename)
-        dst = os.path.join(directory, new_filename)
-        os.rename(src, dst)
-        print('{} {} => {}'.format(color('|'), filename, color(new_filename)))
-
-
-def prefix_rename(file_list, width=3, mode='add', start_num=1):
-    assert width > 0, 'width 必须大于 0'
-    assert mode in ['add', 'remove'], 'mode error, \'add\' or \'remove\''
-    assert start_num > 0, 'start_num 必须大于 0'
-
-    if mode == 'add':
-        for index, filename in enumerate(file_list):
-            index += 1
-            if start_num != 1:
-                index += start_num - 1
-            new_filename = '{}-{}'.format(str(index).zfill(width), filename)
-            src = os.path.join(work_dir, filename)
-            dst = os.path.join(work_dir, new_filename)
-            os.rename(src, dst)
-            print('{} {} => {}'.format(color('|'),
-                  filename, color(new_filename)))
-    elif mode == 'remove':
+    def show_files(self, file_list: list) -> None:
+        """Display list of files in workspace"""
+        divider('Files in workspace')
         for filename in file_list:
-            new_filename = re.sub(
-                r'^\d{{{},}}-(.*)$'.format(width), r'\1', filename)
-            src = os.path.join(work_dir, filename)
-            dst = os.path.join(work_dir, new_filename)
-            os.rename(src, dst)
-            print('{} {} => {}'.format(color('|'),
-                  filename, color(new_filename)))
+            print(color(filename, CLI_COLORS["CONTENT"]))
+        print()
 
-
-def interact_rename(file_list):
-    # banner
-    banner = '''
-交互式批量重命名, 输入基本名字样式, 搭配正则匹配, 仅修改相应项目
-例如有文件列表: ['24建筑美学基础15.pdf', '24建筑美学基础12.pdf', '建筑美学基础11.pdf']
-想要批量修改成统一格式: ['2024_建筑美学基础-11.pdf', '2024_建筑美学基础-12.pdf', '2024_建筑美学基础-15.pdf']
-则输入基本名字样式: \033[1;33m2024_建筑美学基础->\033[0m
-注意: 1. 使用 > 符号来表示想要自定义内容的位置; 2. 不需要填写后缀名, 修改成的文件与源文件的后缀相同
-    '''
-    print(banner)
-    fgx('^_^')
-
-    # 设定 base_name
-    base_name = True
-    while (base_name):
-        base_name = input('基本名字样式: ')
-        check_base_name = base_name.replace('>', color('自定义'))
-        print('基本名字样式为: {}'.format(check_base_name))
-        if input('确认吗?(输入 {} 重新自定义, 输入其他(回车等)则确认): '.format(color('[F]'))) != 'f':
-            break
-    fgx('已确认基本名字样式为: {}'.format(check_base_name))
-    print('')
-
-    # 开始修改名字
-    for old_file_path in file_list:
-        while (True):
-            _, file_ext = os.path.splitext(old_file_path)
-            if file_ext == '':
-                break
-            print('正在将 {} 修改成 {}{}'.format(
-                color(old_file_path), check_base_name, file_ext))
-
-            temp_file_name = list(base_name)
-            new_name = []
-            count = 1
-            for reg_index in range(len(temp_file_name)):
-                if temp_file_name[reg_index] == '>':
-                    new_name.append(input('自定义 {} => '.format(color(count))))
-                    count += 1
-                else:
-                    new_name.append(temp_file_name[reg_index])
-            new_name = ''.join(new_name)
-            new_name = '{}{}'.format(new_name, file_ext)
-            print('新的文件名为: {}'.format(color(new_name)))
-            flag = input('输入 {} 重新修改, 输入 {} 跳过当前文件, 输入其他(回车等)则确认该修改'.format(
-                color('[F]'), color('[S]')))
-            if flag == 'F':
+    def fast_rename(self, file_type: str, width: int = 3) -> None:
+        """
+        Fast rename files with sequential numbers
+        ```python
+        fast_rename(
+            file_type,    # 'video' or 'image'
+            width=3    # Width of number padding
+        )
+        ```
+        """
+        if file_type not in [FileType.VIDEO, FileType.IMAGE]:
+            print(color(f"Error: type must be '{FileType.VIDEO}' or '{FileType.IMAGE}'", CLI_COLORS["ERROR"]))
+            return
+            
+        extensions = FileType.get_extensions(file_type)
+        if not extensions:
+            print(color(f"Error: No extensions defined for type '{file_type}'", CLI_COLORS["ERROR"]))
+            return
+            
+        files = []
+        for ext in extensions:
+            files.extend([f for f in os.listdir(self.directory) if f.lower().endswith(ext)])
+        
+        if not files:
+            print(color(f"No {file_type} files found in directory", CLI_COLORS["WARNING"]))
+            return
+            
+        files.sort()
+        default_ext = FileType.get_default_ext(file_type)
+        self.modified_files = 0
+        
+        for index, filename in enumerate(files, 1):
+            new_name = f"{str(index).zfill(width)}{default_ext}"
+            if new_name == filename:
                 continue
-            elif flag == 'S':
-                fgx('文件 {} 未修改, 跳过...'.format(color(old_file_path)), '=')
-                print('')
+                
+            try:
+                src = os.path.join(self.directory, filename)
+                dst = os.path.join(self.directory, new_name)
+                
+                if os.path.exists(dst):
+                    print(color(f"Warning: Skipping '{filename}' as '{new_name}' already exists", CLI_COLORS["WARNING"]))
+                    continue
+                    
+                os.rename(src, dst)
+                print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+                self.modified_files += 1
+            except OSError as e:
+                print(color(f"Error renaming '{filename}': {str(e)}", CLI_COLORS["ERROR"]))
+        
+        self._show_statistics()
+
+    def prefix_rename(self, file_list: list, width: int = 3, mode: str = 'add', start_num: int = 1) -> None:
+        """
+        Add or remove numeric prefixes to filenames
+        ```python
+        prefix_rename(
+            file_list,    # List of files to process
+            width=3,    # Width of number padding
+            mode='add',    # 'add' or 'remove'
+            start_num=1    # Starting number for add mode
+        )
+        ```
+        """
+        if not file_list:
+            print(color("No files to process", CLI_COLORS["WARNING"]))
+            return
+            
+        if mode not in ['add', 'remove']:
+            print(color("Error: mode must be 'add' or 'remove'", CLI_COLORS["ERROR"]))
+            return
+            
+        changes = []  # Store changes to apply them after preview
+        self.modified_files = 0
+
+        if mode == 'add':
+            # First check for potential conflicts
+            for index, filename in enumerate(file_list, start_num):
+                new_name = f"{str(index).zfill(width)}-{filename}"
+                dst = os.path.join(self.directory, new_name)
+                
+                if os.path.exists(dst) and dst != os.path.join(self.directory, filename):
+                    print(color(f"Error: '{new_name}' already exists", CLI_COLORS["ERROR"]))
+                    return
+                    
+                changes.append((filename, new_name))
+                print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+        else:
+            # Remove mode
+            prefix_pattern = re.compile(r'^\d{%d,}-(.*)$' % width)
+            for filename in file_list:
+                match = prefix_pattern.match(filename)
+                if match:
+                    new_name = match.group(1)
+                    dst = os.path.join(self.directory, new_name)
+                    
+                    if os.path.exists(dst) and dst != os.path.join(self.directory, filename):
+                        print(color(f"Error: '{new_name}' already exists", CLI_COLORS["ERROR"]))
+                        return
+                        
+                    changes.append((filename, new_name))
+                    print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+        
+        if not changes:
+            print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
+            return
+            
+        # Confirm changes
+        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+            try:
+                # Apply changes
+                for old_name, new_name in changes:
+                    src = os.path.join(self.directory, old_name)
+                    dst = os.path.join(self.directory, new_name)
+                    os.rename(src, dst)
+                    self.modified_files += 1
+                divider('Changes confirmed')
+                self._show_statistics()
+            except OSError as e:
+                print(color(f"Error during rename: {str(e)}", CLI_COLORS["ERROR"]))
+        else:
+            divider('Changes cancelled')
+
+    def interactive_rename(self, file_list: list) -> None:
+        """
+        Interactive file renaming with pattern matching
+        ```python
+        interactive_rename(
+            file_list    # List of files to process
+        )
+        ```
+        """
+        banner = Panel(
+            "[cyan]Interactive Batch Rename[/cyan]\n\n"
+            "Enter base name pattern with '>' symbol for custom input positions\n"
+            "Example files: ['24architecture15.pdf', '24architecture12.pdf', 'architecture11.pdf']\n"
+            "Target format: ['2024_architecture-11.pdf', '2024_architecture-12.pdf', '2024_architecture-15.pdf']\n"
+            "Base pattern: [yellow]2024_architecture->[/yellow]\n"
+            "Notes: \n"
+            "1. Use '>' symbol to mark positions for custom input\n"
+            "2. File extensions will be preserved automatically",
+            title="Instructions",
+            border_style="cyan"
+        )
+        self.console.print(banner)
+        self.show_files(file_list)
+        self.modified_files = 0
+
+        while True:
+            base_name = input(color('Base pattern: ', CLI_COLORS["CONTENT"]))
+            if not base_name:
+                continue
+                
+            check_name = base_name.replace('>', color('custom', CLI_COLORS["CONTENT"]))
+            print(f'Pattern preview: {check_name}')
+            
+            if input(f'Confirm pattern? ({color("[F]", CLI_COLORS["WARNING"])} to modify, ENTER to confirm): ').lower() != 'f':
                 break
-            else:
-                os.rename(old_file_path, os.path.join(work_dir, new_name))
-                fgx('{} => {}'.format(color(old_file_path), color(new_name)), '=')
-                print('')
-                break
+                
+        divider('Pattern confirmed')
+        print()
 
+        for old_file in file_list:
+            while True:
+                file_name, ext = os.path.splitext(old_file)
+                if not ext:
+                    break
+                    
+                print(f'Processing: {color(old_file, CLI_COLORS["CONTENT"])}')
+                
+                new_parts = []
+                count = 1
+                for char in base_name:
+                    if char == '>':
+                        custom = input(f'Input {color(str(count), CLI_COLORS["CONTENT"])} => ')
+                        new_parts.append(custom)
+                        count += 1
+                    else:
+                        new_parts.append(char)
+                        
+                new_name = f'{"".join(new_parts)}{ext}'
+                print(f'New name: {color(new_name, CLI_COLORS["CONTENT"])}')
+                
+                choice = input(f'Action? ({color("[F]", CLI_COLORS["WARNING"])} to modify, '
+                             f'{color("[S]", CLI_COLORS["WARNING"])} to skip, ENTER to confirm): ').upper()
+                             
+                if choice == 'F':
+                    continue
+                elif choice == 'S':
+                    print(f'Skipped: {color(old_file, CLI_COLORS["CONTENT"])}')
+                    print()
+                    break
+                else:
+                    os.rename(old_file, os.path.join(self.directory, new_name))
+                    print(f'Renamed: {color(old_file, CLI_COLORS["CONTENT"])} => {color(new_name, CLI_COLORS["CONTENT"])}')
+                    print()
+                    self.modified_files += 1
+                    break
+        
+        self._show_statistics()
 
-def replace_file_name(file_list, old, new):
-    assert old is not None and new is not None, 'old 和 new 不能为空'
-    for file_name in file_list:
-        new_filename = file_name.replace(old, new)
-        if new_filename == file_name:
-            continue
-        src = os.path.join(work_dir, file_name)
-        dst = os.path.join(work_dir, new_filename)
-        os.rename(src, dst)
-        print('{} {} => {}'.format(color('|'), file_name, color(new_filename)))
-
-
-def sort_file(file_list, width=3):
-    assert width > 0, 'width 必须大于 0'
-    change_list = []  # [ [index, src, dst], []... ]
-    for index, file_name in enumerate(file_list):
-        new_filename = '{}-{}'.format(str(index + 1).zfill(width), file_name)
-        src = os.path.join(work_dir, file_name)
-        dst = os.path.join(work_dir, new_filename)
-        change_list.append([index, src, dst])
-        print('{} {} => {}'.format(color('|'), file_name, color(new_filename)))
-
-    if input('是否确认以上修改?(输入 {} 以确认, 输入其他(回车等)则退出): '.format(color('[Y]'))) == 'Y':
-        for index, src, dst in change_list:
+    def replace_in_name(self, file_list: list, old_text: str, new_text: str) -> None:
+        """
+        Replace text in filenames
+        ```python
+        replace_in_name(
+            file_list,    # List of files to process
+            old_text,    # Text to replace
+            new_text    # Replacement text
+        )
+        ```
+        """
+        if not old_text:
+            print(color("Error: old text cannot be empty", CLI_COLORS["ERROR"]))
+            return
+            
+        self.modified_files = 0
+        for filename in file_list:
+            new_name = filename.replace(old_text, new_text)
+            if new_name == filename:
+                continue
+                
+            src = os.path.join(self.directory, filename)
+            dst = os.path.join(self.directory, new_name)
             os.rename(src, dst)
-        fgx('已确认以上修改', '=')
+            print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+            self.modified_files += 1
+            
+        self._show_statistics()
+
+    def sort_files(self, file_list: list, width: int = 3) -> None:
+        """
+        Sort and rename files with numeric prefixes
+        ```python
+        sort_files(
+            file_list,    # List of files to process
+            width=3    # Width of number padding
+        )
+        ```
+        """
+        changes = []
+        self.modified_files = 0
+        
+        for index, filename in enumerate(file_list, 1):
+            new_name = f"{str(index).zfill(width)}-{filename}"
+            src = os.path.join(self.directory, filename)
+            dst = os.path.join(self.directory, new_name)
+            changes.append((src, dst))
+            print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+            
+        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+            for src, dst in changes:
+                os.rename(src, dst)
+                self.modified_files += 1
+            divider('Changes confirmed')
+            self._show_statistics()
+        else:
+            divider('Changes cancelled')
+
+    def lowercase_files(self, file_list: list) -> None:
+        """
+        Convert filenames to lowercase
+        ```python
+        lowercase_files(
+            file_list    # List of files to process
+        )
+        ```
+        """
+        changes = []
+        self.modified_files = 0
+        
+        # First pass: check for case conflicts
+        case_conflicts = {}
+        for filename in file_list:
+            lower_name = filename.lower()
+            if lower_name in case_conflicts:
+                case_conflicts[lower_name].append(filename)
+            else:
+                case_conflicts[lower_name] = [filename]
+        
+        # Handle case conflicts
+        for lower_name, conflicting_files in case_conflicts.items():
+            if len(conflicting_files) > 1:
+                print(color(f"Warning: Case conflict detected for '{lower_name}':", CLI_COLORS["WARNING"]))
+                for i, f in enumerate(conflicting_files, 1):
+                    print(color(f"  {i}. {f}", CLI_COLORS["WARNING"]))
+                print(color("Skipping these files to avoid data loss", CLI_COLORS["WARNING"]))
+                continue
+            
+            # No conflict, process the file
+            filename = conflicting_files[0]
+            if filename == lower_name:
+                continue
+                
+            src = os.path.join(self.directory, filename)
+            
+            # For Windows, we need to use a temporary name first
+            if sys.platform == 'win32' and filename.lower() == lower_name:
+                temp_name = f"{filename}.tmp"
+                temp_path = os.path.join(self.directory, temp_name)
+                try:
+                    os.rename(src, temp_path)
+                    changes.append((filename, temp_name))
+                    changes.append((temp_name, lower_name))
+                except OSError as e:
+                    print(color(f"Error renaming '{filename}': {str(e)}", CLI_COLORS["ERROR"]))
+                    continue
+            else:
+                changes.append((filename, lower_name))
+            
+            print(f"{filename} => {color(lower_name, CLI_COLORS['CONTENT'])}")
+            
+        if not changes:
+            print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
+            return
+            
+        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+            try:
+                for old_name, new_name in changes:
+                    src = os.path.join(self.directory, old_name)
+                    dst = os.path.join(self.directory, new_name)
+                    if os.path.exists(src):  # Check if source exists (for temp files)
+                        os.rename(src, dst)
+                        if not old_name.endswith('.tmp'):  # Don't count temporary renames
+                            self.modified_files += 1
+                divider('Changes confirmed')
+                self._show_statistics()
+            except OSError as e:
+                print(color(f"Error during rename: {str(e)}", CLI_COLORS["ERROR"]))
+        else:
+            # If cancelled, we need to clean up any temporary files
+            if sys.platform == 'win32':
+                for old_name, new_name in changes:
+                    if old_name.endswith('.tmp'):
+                        try:
+                            temp_path = os.path.join(self.directory, old_name)
+                            orig_path = os.path.join(self.directory, old_name[:-4])  # Remove .tmp
+                            if os.path.exists(temp_path):
+                                os.rename(temp_path, orig_path)
+                        except OSError:
+                            pass
+            divider('Changes cancelled')
+
+def create_example_text() -> str:
+    """Create formatted example text for help menu"""
+    script_name = os.path.basename(sys.argv[0])
+    
+    examples = [
+        ("Fast rename images", "fast -t image -w 3"),
+        ("Fast rename videos", "fast -t video"),
+        ("Add numeric prefix", "prefix -w 3 -m add -s 1"),
+        ("Remove numeric prefix", "prefix -m remove"),
+        ("Interactive rename", "interactive"),
+        ("Replace text in filenames", "replace '_' '-'"),
+        ("Sort and rename", "sort -w 3"),
+        ("Convert to lowercase", "lowercase"),
+        ("Debug mode", "--debug"),
+    ]
+    
+    text = f'\n{color("Examples:", CLI_COLORS["SUB_TITLE"])}'
+    
+    for desc, cmd in examples:
+        text += f'\n  {color(f"# {desc}", CLI_COLORS["EXAMPLE"])}'
+        text += f'\n  {color(f"{script_name} {cmd}", CLI_COLORS["CONTENT"])}'
+        text += '\n'
+    
+    notes = [
+        "All commands support -d/--dirs option to include directories",
+        "Use --debug option to enable debug mode",
+        "Fast rename supports file types: image, video",
+        "try replace 'sth' '\"\"' to remove the string",
+        "Interactive rename uses '>' symbol to mark custom input positions",
+        "Lowercase command converts all uppercase letters to lowercase in filenames"
+    ]
+    
+    text += f'\n{color("Notes:", CLI_COLORS["SUB_TITLE"])}'
+    for note in notes:
+        text += f'\n  {color(f"- {note}", CLI_COLORS["CONTENT"])}'
+    
+    return text
+
+def create_help_text(parser: argparse.ArgumentParser) -> str:
+    """
+    Create formatted help text for the parser
+    ```python
+    create_help_text(
+        parser    # ArgumentParser instance
+    )
+
+    return = Formatted help text string
+    ```
+    """
+    help_parts = []
+    
+    # Add description
+    if parser.description:
+        help_parts.append(color(parser.description, CLI_COLORS["TITLE"]))
+        help_parts.append("")
+    
+    # Add usage
+    prog_name = parser.prog
+    help_parts.append(f"{color('Usage:', CLI_COLORS['TITLE'])} {prog_name} [OPTIONS] COMMAND")
+    help_parts.append("")
+    
+    # Add global options
+    help_parts.append(color("Global Options:", CLI_COLORS["TITLE"]))
+    help_parts.extend([
+        f"  {color('-h, --help', CLI_COLORS['SUB_TITLE'])}         Show this help message and exit",
+        f"  {color('-d, --dirs', CLI_COLORS['SUB_TITLE'])}         Include directories",
+        f"  {color('--debug', CLI_COLORS['SUB_TITLE'])}            Enable debug mode",
+        f"  {color('-v, --version', CLI_COLORS['SUB_TITLE'])}         Show program version"
+    ])
+    help_parts.append("")
+    
+    # Add commands
+    help_parts.append(color("Commands:", CLI_COLORS["TITLE"]))
+    help_parts.extend([
+        f"  {color('fast', CLI_COLORS['SUB_TITLE'])}              Fast rename files with sequential numbers",
+        f"  {color('prefix', CLI_COLORS['SUB_TITLE'])}            Add or remove numeric prefixes",
+        f"  {color('interactive', CLI_COLORS['SUB_TITLE'])}        Interactive rename with pattern matching",
+        f"  {color('replace', CLI_COLORS['SUB_TITLE'])}           Replace text in filenames",
+        f"  {color('sort', CLI_COLORS['SUB_TITLE'])}              Sort and rename files",
+        f"  {color('lowercase', CLI_COLORS['SUB_TITLE'])}          Convert filenames to lowercase"
+    ])
+    help_parts.append("")
+    
+    # Add examples
+    help_parts.append(create_example_text())
+    
+    return "\n".join(help_parts)
+
+def create_command_help(parser: argparse.ArgumentParser, command: str) -> str:
+    """
+    Create formatted help text for a specific command
+    ```python
+    create_command_help(
+        parser,     # ArgumentParser instance
+        command     # Command name
+    )
+
+    return = Formatted help text string
+    ```
+    """
+    help_parts = []
+    
+    # Add description
+    if parser.description:
+        help_parts.append(color(parser.description, CLI_COLORS["TITLE"]))
+        help_parts.append("")
+    
+    # Add usage based on command
+    prog_name = parser.prog
+    if command == 'fast':
+        help_parts.extend([
+            f"{color('Usage:', CLI_COLORS['TITLE'])} {prog_name} fast [OPTIONS]",
+            "",
+            color("Options:", CLI_COLORS["TITLE"]),
+            f"  {color('-t, --type', CLI_COLORS['SUB_TITLE'])} TYPE     File type (image, video) [default: image]",
+            f"  {color('-w, --width', CLI_COLORS['SUB_TITLE'])} WIDTH   Number width [default: 3]"
+        ])
+    elif command == 'prefix':
+        help_parts.extend([
+            f"{color('Usage:', CLI_COLORS['TITLE'])} {prog_name} prefix [OPTIONS]",
+            "",
+            color("Options:", CLI_COLORS["TITLE"]),
+            f"  {color('-w, --width', CLI_COLORS['SUB_TITLE'])} WIDTH   Number width [default: 3]",
+            f"  {color('-m, --mode', CLI_COLORS['SUB_TITLE'])} MODE     Operation mode (add, remove) [default: add]",
+            f"  {color('-s, --start', CLI_COLORS['SUB_TITLE'])} START   Starting number [default: 1]"
+        ])
+    elif command == 'replace':
+        help_parts.extend([
+            f"{color('Usage:', CLI_COLORS['TITLE'])} {prog_name} replace OLD NEW",
+            "",
+            color("Arguments:", CLI_COLORS["TITLE"]),
+            f"  OLD                  Text to replace",
+            f"  NEW                  Replacement text"
+        ])
+    elif command == 'sort':
+        help_parts.extend([
+            f"{color('Usage:', CLI_COLORS['TITLE'])} {prog_name} sort [OPTIONS]",
+            "",
+            color("Options:", CLI_COLORS["TITLE"]),
+            f"  {color('-w, --width', CLI_COLORS['SUB_TITLE'])} WIDTH   Number width [default: 3]"
+        ])
+    
+    help_parts.append("")
+    return "\n".join(help_parts)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Batch file renaming tool - supports multiple renaming modes',
+        add_help=False
+    )
+    
+    # Global options
+    parser.add_argument(
+        '-h', '--help',
+        action='store_true',
+        help='Show this help message and exit'
+    )
+    parser.add_argument(
+        '-d', '--dirs',
+        action='store_true',
+        help='Include directories'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug mode'
+    )
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version=f'%(prog)s {VERSION}',
+        help='Show program version'
+    )
+    
+    # Subcommands
+    subparsers = parser.add_subparsers(dest='command')
+    
+    # Fast rename command
+    fast_parser = subparsers.add_parser('fast', help='Fast rename files')
+    fast_parser.add_argument(
+        '-t', '--type',
+        choices=[FileType.IMAGE, FileType.VIDEO],
+        default=FileType.IMAGE,
+        help=f'File type (default: {FileType.IMAGE})'
+    )
+    fast_parser.add_argument(
+        '-w', '--width',
+        type=int,
+        default=3,
+        help='Number width (default: 3)'
+    )
+    
+    # Prefix rename command
+    prefix_parser = subparsers.add_parser('prefix', help='Add or remove numeric prefixes')
+    prefix_parser.add_argument(
+        '-w', '--width',
+        type=int,
+        default=3,
+        help='Number width (default: 3)'
+    )
+    prefix_parser.add_argument(
+        '-m', '--mode',
+        choices=['add', 'remove'],
+        default='add',
+        help='Operation mode (default: add)'
+    )
+    prefix_parser.add_argument(
+        '-s', '--start',
+        type=int,
+        default=1,
+        help='Starting number (default: 1)'
+    )
+    
+    # Interactive rename command
+    subparsers.add_parser('interactive', help='Interactive rename')
+    
+    # Replace text command
+    replace_parser = subparsers.add_parser('replace', help='Replace text in filenames')
+    replace_parser.add_argument('old', help='Text to replace')
+    replace_parser.add_argument('new', help='Replacement text')
+    
+    # Sort files command
+    sort_parser = subparsers.add_parser('sort', help='Sort and rename files')
+    sort_parser.add_argument(
+        '-w', '--width',
+        type=int,
+        default=3,
+        help='Number width (default: 3)'
+    )
+    
+    # Lowercase command
+    subparsers.add_parser('lowercase', help='Convert filenames to lowercase')
+    
+    args = parser.parse_args()
+    
+    # Show help
+    if args.help:
+        if args.command:
+            print(create_command_help(parser, args.command))
+        else:
+            print(create_help_text(parser))
+        return
+    
+    if args.debug:
+        global DEBUG_MODE
+        DEBUG_MODE = True
+        debug("Debug mode enabled")
+    
+    renamer = FileRenamer(WORK_DIR)
+    file_list = renamer.get_file_list(args.dirs)
+    
+    if not file_list and args.command:
+        print(color("Error: No files found to process", CLI_COLORS["ERROR"]))
+        return
+    
+    if args.command == 'fast':
+        renamer.fast_rename(args.type, args.width)
+    elif args.command == 'prefix':
+        renamer.prefix_rename(file_list, args.width, args.mode, args.start)
+    elif args.command == 'interactive':
+        renamer.interactive_rename(file_list)
+    elif args.command == 'replace':
+        renamer.replace_in_name(file_list, args.old, args.new)
+    elif args.command == 'sort':
+        renamer.sort_files(file_list, args.width)
+    elif args.command == 'lowercase':
+        renamer.lowercase_files(file_list)
     else:
-        fgx('已取消以上修改', '=')
+        print(create_help_text(parser))
 
-
-def make_test_file(workdir):
-    def touch(path):
-        with open(path, 'a'):
-            pass
-
-    def mkdir(path):
-        os.makedirs(path, exist_ok=True)
-
-    if os.path.basename(workdir) == 'tests_dir':
-        directory = workdir
-    else:
-        directory = os.path.join(workdir, 'tests_dir')
-    if not os.path.exists(directory):
-        mkdir(directory)
-
-    filename_list = [filename for filename in test_filelist.replace(
-        '|-- ', '').replace('`-- ', '').split('\n') if filename != '']
-    for filename in filename_list:
-        touch(os.path.join(directory, filename))
-
-    if len(filename_list) == len(os.listdir(directory)):
-        print('已创建 {} 个测试文件, 目录 {}'.format(
-            len(filename_list), color(directory)))
-    else:
-        print('创建测试文件失败, 目录 {}'.format(color(directory)))
-
-
-# ================================ main =================================
-ap = argparse.ArgumentParser(description='用于在当前文件夹下进行批量重命名; e.g.: {} | {} | {} | {} | {} | {} | {} | {}'.format(color('rename foobar -x x1.txt x2.ini'), color('rename -w 3 -t img fast'), color(
-    'rename -w 3 -m add prefix'), color('rename interact'), color('rename -o \'-\' -n \'_\' replace'), color('rename show'), color('rename -w 3 sort'), color('rename test')))
-ap.add_argument('foobar', help='{} 执行快速重命名 | {} 执行前缀操作式重命名 | {} 执行交互式重命名 | {} 快速修改文件名中的指定字符 | {} 列出程序预处理文件队列 | {} 预览添加前缀并排序的文件队列 | {} 生成测试文件'.format(
-    color('fast'), color('prefix'), color('interact'), color('replace'), color('show'), color('sort'), color('test')))
-ap.add_argument('-w', '--width', type=int, default=3,
-                help='指定重命名前缀或快速重命名时, index 格式长度, 默认 3')
-ap.add_argument('-t', '--type', type=str, default='img',
-                help='指定快速重命名时要处理的类型, 默认 img, 可选 {} 或 {}'.format(color('img'), color('video')))
-ap.add_argument('-m', '--mode', type=str, default='add',
-                help='指定快速添加前缀重命名时的模式, 默认 add, 可选 {} 或 {}'.format(color('add'), color('remove')))
-ap.add_argument('--start_num', type=int, default=1,
-                help='指定快速添加前缀重命名时的起始数字, 默认 1')
-ap.add_argument('-x', '--exclude', nargs='+',
-                default=[], help='指定要排除的文件名, 必须写在 foobar 后面; {}'.format(color('e.g: rename foobar -x dont_1 dont_2 dont_3')))
-ap.add_argument('-o', '--old', type=str, help='要替换的旧字符')
-ap.add_argument('-n', '--new', type=str, default='', help='要替换成的新字符')
-ap.add_argument('-d', '--directory', action='store_true',
-                help='是否处理文件夹, 添加即处理')
-args = vars(ap.parse_args())
-
-# ignore some files
-if args['directory']:
-    assert input('{}'.format(color(
-        '注意, 指定了 --directory 选项, 这会包含文件夹, 是否继续? y / [n] '))) == 'y', '{}'.format('已取消操作')
-
-ignore_file_list = ignore_file_list + ex_ignore_file_list + args['exclude']
-
-temp_file_list = [
-    filename
-    for filename in os.listdir(work_dir)
-    if os.path.isfile(os.path.join(work_dir, filename)) or (args['directory'] and os.path.isdir(os.path.join(work_dir, filename)))
-]
-temp_file_list.sort()
-
-file_list = []
-for file_item in temp_file_list:
-    if is_ignore(file_item, ignore_file_list):
-        continue
-    file_list.append(file_item)
-
-if any(args.values()):
-    if args['foobar'] == 'fast':        # 快速重命名
-        fast_rename(work_dir, args['type'], args['width'])
-    elif args['foobar'] == 'prefix':    # 前缀操作式重命名
-        prefix_rename(file_list, args['width'], args['mode'], args['start_num'])
-    elif args['foobar'] == 'interact':  # 交互式重命名
-        show_files(file_list)
-        interact_rename(file_list)
-    elif args['foobar'] == 'replace':   # 替换文件名中字符
-        replace_file_name(file_list, args['old'], args['new'])
-    elif args['foobar'] == 'show':      # 列出将要操作文件目录列表
-        show_files(file_list)
-    elif args['foobar'] == 'sort':      # 排序，等待确认
-        sort_file(file_list, args['width'])
-    elif args['foobar'] == 'test':      # 生成测试文件
-        make_test_file(work_dir)
-    else:
-        fgx('参数错误', '=')
-else:
-    ap.print_help()
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(color("\nOperation cancelled by user", CLI_COLORS["ERROR"]))
+        sys.exit(0)
+    except Exception as e:
+        if DEBUG_MODE:
+            import traceback
+            traceback.print_exc()
+        print(color(f"\nError: {str(e)}", CLI_COLORS["ERROR"]))
+        sys.exit(1)

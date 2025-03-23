@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# need pip install shodan rich mmh3
+# pip install shodan rich mmh3
 
 import os
 import sys
@@ -44,15 +44,20 @@ def color(text, color_code=0):
     return color_table[color_code].format(text)
 
 def debug(*args, file=None, append=True, **kwargs):
-    '''
+    """
     打印传入的参数值，并显示其在源码的文件和行号
-    
-    参数:
-        *args: 要打印的参数
-        file: 输出文件路径，默认为None（输出到控制台）
-        append: 是否追加到文件，默认为True
-        **kwargs: 要打印的键值对参数
-    '''
+    ```python
+    debug(
+        'Hello',    # 要打印的参数 1
+        'World',    # 要打印的参数 2
+        file='debug.log',  # 输出文件路径，默认为 None（输出到控制台）
+        append=False,  # 是否追加到文件，默认为 True
+        **kwargs  # 要打印的键值对参数
+    )
+
+    return = None
+    ```
+    """
     if not DEBUG_MODE:
         return
         

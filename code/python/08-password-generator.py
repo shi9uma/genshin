@@ -81,27 +81,27 @@ def generate_password(seed: str, length: int, salt_file: str, char_set: str = No
     else:
         salt = seed
 
-    hash_bytes = hashlib.sha256(seed.encode()).digest()
-    hash_bytes = hashlib.pbkdf2_hmac(
-        'sha256',
-        hash_bytes,
-        salt.encode(),  # 如果没有 salt，则直接使用自身作为 salt
-        10000
-    )
-    base64_bytes = base64.b64encode(hash_bytes)
+    password = ''
+    current_seed = seed
     
-    password_filter = filter(lambda x: x in char_set, base64_bytes.decode()) if char_set else filter(lambda x: x.isalnum() or x in '-#.', base64_bytes.decode())
-    password = ''.join(password_filter)
+    while len(password) < length:
+        hash_bytes = hashlib.sha256(current_seed.encode()).digest()
+        hash_bytes = hashlib.pbkdf2_hmac(
+            'sha256',
+            hash_bytes,
+            salt.encode(),
+            10000
+        )
+        base64_str = base64.b64encode(hash_bytes).decode()
+        
+        # 过滤字符
+        if char_set:
+            password += ''.join(c for c in base64_str if c in char_set)
+        else:
+            password += ''.join(c for c in base64_str if c.isalnum() or c in '-#.')
+            
+        current_seed = base64_str  # 使用新的base64字符串作为下一次迭代的种子
     
-    # handle situation which first generated length not enough
-    if is_recursive:
-        return password[:length]
-    else:
-        length_to_add = check_length(length, password)
-        while length_to_add != 0:
-            password += generate_password(password, length_to_add, salt_file, char_set, True)
-            length_to_add = check_length(length, password)
-
     return password[:length]
 
 

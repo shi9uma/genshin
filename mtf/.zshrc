@@ -251,23 +251,24 @@ if [ -f /etc/zsh_command_not_found ]; then
     . /etc/zsh_command_not_found
 fi
 
-# ==============================================================
-# |                       custom script                       |
-# ==============================================================
+# ----------------------------------------- custom script ----------------------------------------- #
 
+# repo
 github_url_base="https://raw.githubusercontent.com/shi9uma/genshin/main"
+# local
+leader_path_name="cargo"
 
-# color
-# ${RED}xxx${NC}
+# color, usage: ${RED}xxx${NC}
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-## function
+# custom function
+## base on default cmd
 cmd() {
-    sed -n '/^# anchor$/,/^# end alias$/p' ~/.zshrc | awk '
+    sed -n '/^## alias_anchor$/,/^## end_alias_anchor$/p' ~/.zshrc | awk '
     BEGIN { 
         color_alias="\033[0;36m";
         color_alias_name="\033[0;32m";
@@ -289,7 +290,6 @@ cmd() {
 }
 
 tmp() {
-
     if [ $# -eq 0 ]; then
         mkdir -p '/tmp/tmp'
         cd /tmp/tmp
@@ -299,7 +299,6 @@ tmp() {
     else
         echo "usage: tmp [dir]"
     fi
-
 }
 
 tsh() {
@@ -328,29 +327,105 @@ clean_docker() {
 }
 
 _curl() {
-    curl -fLo $1 --create-dirs $2
+    curl --create-dirs -fLo $1 $2
+}
+
+w2u() {
+    windows_path_like="$1"
+    unix_path=$(echo "$windows_path_like" | sed 's|\\|/|g' | sed 's|^\([a-zA-Z]\):|/\L\1|')
+    echo "$unix_path"
+}
+
+update_zshrc() {
+    zshrc_path="$HOME/.zshrc"
+    _curl $zshrc_path $github_url_base/mtf/.zshrc
+}
+
+find_path() {
+    current_dir=$(pwd)
+	if [ $# -eq 1 ]; then
+		target_dir_name=$1
+	else
+		target_dir_name="$leader_path_name"
+	fi
+
+    while [[ "$current_dir" != "/" ]]; do
+        base_name=$(basename "$current_dir")
+        if [[ "$base_name" == "$target_dir_name" ]]; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir=$(dirname "$current_dir")
+    done
+
+    echo -e "${RED}Error: $target_dir_name directory not found${nc}"
+    return 1
+}
+
+exp() {
+    if [[ ! -f "/usr/bin/dolphin" ]]; then
+        echo "${RED}dolphin not found, try ${GREEN}sudo apt install dolphin-emu${NC}"
+        return 1
+    fi
+    if [[ $# -eq 0 ]]; then
+        dolphin . &>/dev/null &
+    else
+        dolphin "$@" &>/dev/null &
+    fi
+    return 0
+}
+
+## base on custom script, python, shellscript, etc.
+local_repo_path="$HOME/$leader_path_name/repo/04-flyMe2theStar/03-genshin"
+call_bridge() {
+    this_script_path="code/shellscript/07-call-bridge.sh"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        call_bridge_path="$local_repo_path/$this_script_path"
+    else
+        call_bridge_path="$HOME/.genshin/call-bridge.sh"
+        if [[ ! -f $call_bridge_path ]]; then
+            _curl $call_bridge_path $github_url_base/$this_script_path
+            chmod +x $call_bridge_path
+        fi
+    fi
+    eval "$call_bridge_path $@"
 }
 
 password() {
-    rename_path="$HOME/.genshin/password-generator.py"
-    if [[ ! -f $rename_path ]]; then
-        _curl $rename_path $github_url_base/code/python/08-password-generator.py
+    this_script_path="code/python/08-password-generator.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        rename_path="$local_repo_path/$this_script_path"
+    else
+        rename_path="$HOME/.genshin/password-generator.py"
+        if [[ ! -f $rename_path ]]; then
+            _curl $rename_path $github_url_base/$this_script_path
+        fi
     fi
     python3 $rename_path "$@"
 }
 
 cx() {
-    ip_status_path="$HOME/.genshin/ip-status.py"
-    if [[ ! -f $ip_status_path ]]; then
-        _curl $ip_status_path $github_url_base/code/python/09-ip-status.py
+    this_script_path="code/python/09-ip-status.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        ip_status_path="$local_repo_path/$this_script_path"
+    else
+        ip_status_path="$HOME/.genshin/ip-status.py"
+        if [[ ! -f $ip_status_path ]]; then
+            _curl $ip_status_path $github_url_base/$this_script_path
+        fi
     fi
     python3 $ip_status_path "$@"
 }
 
 lcd() {
-    lcd_path="$HOME/.genshin/lcd.py"
-    if [[ ! -f $lcd_path ]]; then
-        _curl $lcd_path $github_url_base/code/python/13-lcd.py
+    this_script_path="code/python/13-lcd.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        lcd_path="$local_repo_path/$this_script_path"
+    else
+        lcd_path="$HOME/.genshin/lcd.py"
+        if [[ ! -f $lcd_path ]]; then
+            _curl $lcd_path $github_url_base/$this_script_path
+        fi
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
         target_dir=$(python $lcd_path -pn "$2")
@@ -367,108 +442,60 @@ lcd() {
 }
 
 rename() {
-    rename_path="$HOME/.genshin/interact-rename.py"
-    if [[ ! -f $rename_path ]]; then
-        _curl $rename_path $github_url_base/code/python/14-interact-rename.py
+    this_script_path="code/python/14-interact-rename.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        rename_path="$local_repo_path/$this_script_path"
+    else
+        rename_path="$HOME/.genshin/interact-rename.py"
+        if [[ ! -f $rename_path ]]; then
+            _curl $rename_path $github_url_base/$this_script_path
+        fi
     fi
     python3 $rename_path "$@"
 }
 
-w2u() {
-    windows_path_like="$1"
-    unix_path=$(echo "$windows_path_like" | sed 's|\\|/|g' | sed 's|^\([a-zA-Z]\):|/\L\1|')
-    echo "$unix_path"
-}
-
 unblob() {
-    unblob_path="$HOME/.genshin/unblob.sh"
-    to_extract_file=$1
-    if [[ ! -f $unblob_path ]]; then
-        _curl $unblob_path $github_url_base/code/shellscript/04-unblob.sh
-        chmod +x $unblob_path
+    this_script_path="code/shellscript/04-unblob.sh"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        unblob_path="$local_repo_path/$this_script_path"
+    else
+        unblob_path="$HOME/.genshin/unblob.sh"
+        if [[ ! -f $unblob_path ]]; then
+            _curl $unblob_path $github_url_base/$this_script_path
+            chmod +x $unblob_path
+        fi
     fi
     eval $unblob_path $to_extract_file
 }
 
-call_bridge() {
-    call_bridge_path="$HOME/.genshin/call-bridge.sh"
-    if [[ ! -f $call_bridge_path ]]; then
-        _curl $call_bridge_path $github_url_base/code/shellscript/07-call-bridge.sh
-        chmod +x $call_bridge_path
-    fi
-    eval "$call_bridge_path $@"
-}
-
-update_zshrc() {
-    zshrc_path="$HOME/.zshrc"
-    _curl $zshrc_path $github_url_base/mtf/.zshrc
-}
-
-find_genshin() {
-    current_dir=$(pwd)
-	if [ $# -eq 1 ]; then
-		target_dir_name=$1
-	else
-		target_dir_name="genshin"
-	fi
-
-    while [[ "$current_dir" != "/" ]]; do
-        base_name=$(basename "$current_dir")
-        if [[ "$base_name" == "$target_dir_name" ]]; then
-            echo "$current_dir"
-            return 0
-        fi
-        current_dir=$(dirname "$current_dir")
-    done
-
-    echo -e "${RED}Error: $target_dir_name directory not found${nc}"
-    return 1
-}
-
 ollama() {
-    ollama_dir_path="$HOME/.ollama"
-    if [[ ! -d $ollama_dir_path ]]; then
-        mkdir -p $ollama_dir_path
-    fi
-    ollama_path="$ollama_dir_path/cli-ollama.py"
-    if [[ ! -f $ollama_path ]]; then
-        _curl $ollama_path $github_url_base/code/python/17-cli-ollama.py
+    this_script_path="code/python/17-cli-ollama.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        ollama_path="$local_repo_path/$this_script_path"
+    else
+        ollama_path="$HOME/.ollama/cli-ollama.py"
+        if [[ ! -f $ollama_path ]]; then
+            _curl $ollama_path $github_url_base/$this_script_path
+        fi
     fi
     python3 $ollama_path "$@"
 }
 
 sd() {
-    sd_path="$HOME/.genshin/sd.py"
-    if [[ ! -f $sd_path ]]; then
-        _curl $sd_path $github_url_base/code/python/10-shodan.py
+    this_script_path="code/python/10-shodan.py"
+    if [[ -f "$local_repo_path/$this_script_path" ]]; then
+        sd_path="$local_repo_path/$this_script_path"
+    else
+        sd_path="$HOME/.genshin/sd.py"
+        if [[ ! -f $sd_path ]]; then
+            _curl $sd_path $github_url_base/$this_script_path
+        fi
     fi
     python3 $sd_path "$@"
 }
 
-exp() {
-    if [[ ! -f "/usr/bin/dolphin" ]]; then
-        echo "${RED}dolphin not found, try ${GREEN}sudo apt install dolphin-emu${NC}"
-        return 1
-    fi
-    if [[ $# -eq 0 ]]; then
-        dolphin . &>/dev/null &
-    else
-        dolphin "$@" &>/dev/null &
-    fi
-    return 0
-}
-
-## file, dir
-if [[ -f "$HOME/$leader_path_name/game/minecraft/tool/rcon.py" ]]; then
-    alias mc="python $HOME/$leader_path_name/game/minecraft/tool/rcon.py"
-fi
-
-leader_path_name="cargo"
-if [[ -d "$HOME/$leader_path_name/repo" ]]; then
-    alias repo="cd $HOME/$leader_path_name/repo"
-fi
-
-## export
+# export
+## proxy
 proxy_ip_file="$HOME/.proxy-ip"
 if [[ -f $proxy_ip_file ]]; then
 
@@ -492,14 +519,29 @@ else
     fi
 fi
 
-### vim
+## vim
 export FZF_DEFAULT_COMMAND="rg --files"
 export FZF_DEFAULT_OPTS="-m --height 40% --reverse --border --ansi --preview '(highlight -O ansi {} || cat {}) 2> /dev/null | head -500'"
 
-### binary
+## app
 os_type=$(uname -o)
 export_path=$PATH
 case $os_type in
+    "GNU/Linux")
+        linux_path=(
+            "$HOME/.bin"
+            "$HOME/.local/bin"
+            "$HOME/.cargo/bin"
+            "/usr/lib/nodejs/bin"
+            "$export_path"
+        )
+
+        for path in "${linux_path[@]}"; do
+            if [[ -d "$path" ]]; then
+                export_path="$path:$export_path"
+            fi
+        done
+        ;;
     "Darwin")
         export CLICOLOR=1
         export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd
@@ -523,37 +565,24 @@ case $os_type in
             fi
         done
 
-        # alias python="/opt/homebrew/bin/python3"
-        # alias pip="/opt/homebrew/bin/pip3"
-
         alias typora="/Applications/Typora.app/Contents/MacOS/Typora"
         alias code="/Applications/VisualStudioCode.app/Contents/MacOS/Electron"
         alias bandizip="/Applications/Bandizip.app/Contents/MacOS/Bandizip"
         ;;
-    "GNU/Linux")
-        linux_path=(
-            "$HOME/.bin"
-            "$HOME/.local/bin"
-            "$HOME/.cargo/bin"
-            "/usr/lib/nodejs/bin"
-            "$export_path"
-        )
-
-        for path in "${linux_path[@]}"; do
-            if [[ -d "$path" ]]; then
-                export_path="$path:$export_path"
-            fi
-        done
-        ;;
 esac
 export PATH=$export_path
 
-# anchor
-# ==============================================================
-# |                       custom alias                         |
-# ==============================================================
-
 # alias
+## condition alias
+if [[ -f "$HOME/$leader_path_name/game/minecraft/tool/rcon.py" ]]; then
+    alias mc="python $HOME/$leader_path_name/game/minecraft/tool/rcon.py"
+fi
+
+if [[ -d "$HOME/$leader_path_name/repo" ]]; then
+    alias repo="cd $HOME/$leader_path_name/repo"
+fi
+
+## alias_anchor
 alias l="ls -ah"
 alias ll="ls -alh"
 alias lt="ls -alht"
@@ -575,4 +604,4 @@ alias zshrc="source ~/.zshrc"
 alias f="fastfetch"
 alias transfer="sd search http.favicon.hash:-620522584"
 alias random="cat /dev/urandom|head|base64|md5sum|cut -d \" \" -f 1"
-# end alias
+## end_alias_anchor

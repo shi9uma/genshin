@@ -37,8 +37,11 @@ salt_path="$genshin_dir_path/paimon"
 
 if [ -d "/d/software/mihomo-party" ]; then
     src_file_path="/d/software/mihomo-party/data/profiles/192281f8f10.yaml"
-else
+elif [ -d "/home/wkyuu/.config/mihomo-party" ]; then
     src_file_path="/home/wkyuu/.config/mihomo-party/profiles/magic.yaml"
+else
+    echo "${red}mihomo-party not found${nc}"
+    exit 1
 fi
 
 target_file_path="$workdir/magic.yaml"

@@ -55,8 +55,9 @@ frida 的运行需要 root 权限
 3.   使用 adb 进入 android 的 shell：`adb shell`，`su`，运行 frida clent：`/data/local/tmp/frida-server`
 4.   在电脑尝试查看 frida 是否成功连接：`frida-ps -U`，该指令列出当前系统正在运行的应用
 
-## references
+## refer
 
 1.   引子，[一篇文章带你领悟Frida的精髓（基于安卓8.1）](https://www.freebuf.com/articles/system/190565.html)
 2.   frida index，衍生项目、文章等，[dweinstein/awesome-frida](https://github.com/dweinstein/awesome-frida.git)
-3.   
+3.   [frida-all-in-one](https://github.com/hookmaster/frida-all-in-one.git)
+4.   

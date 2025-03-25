@@ -151,14 +151,7 @@ class FileRenamer:
     def _show_statistics(self) -> None:
         """Display operation statistics"""
         print()  # Empty line for better readability
-        stats = [
-            (f"Total Files", self.total_files),
-            (f"Modified Files", self.modified_files)
-        ]
-        print(color("Statistics:", CLI_COLORS["TITLE"]))
-        for label, value in stats:
-            print(f"  {color(label, CLI_COLORS['SUB_TITLE'])}: {color(str(value), CLI_COLORS['CONTENT'])}")
-        print()  # Empty line for better readability
+        print(f"{color('Total Files', CLI_COLORS['SUB_TITLE'])}: {color(str(self.total_files), CLI_COLORS['CONTENT'])} | {color('Modified Files', CLI_COLORS['SUB_TITLE'])}: {color(str(self.modified_files), CLI_COLORS['CONTENT'])}")
 
     def is_ignored(self, filename: str, ignore_list: list) -> bool:
         """Check if file should be ignored"""

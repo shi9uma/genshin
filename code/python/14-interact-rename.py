@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pip install rich
+# pip install argparse rich
 
 import os
 import sys
@@ -13,7 +13,7 @@ from rich.panel import Panel
 # Global variables
 DEBUG_MODE = False
 WORK_DIR = os.getcwd()
-VERSION = "1.0.0"
+VERSION = "1.1.4"
 
 # File extensions
 VIDEO_EXTENSIONS = (
@@ -207,26 +207,42 @@ class FileRenamer:
         default_ext = FileType.get_default_ext(file_type)
         self.modified_files = 0
         
+        # Preview changes to be made
+        changes = []
         for index, filename in enumerate(files, 1):
             new_name = f"{str(index).zfill(width)}{default_ext}"
             if new_name == filename:
                 continue
                 
-            try:
-                src = os.path.join(self.directory, filename)
-                dst = os.path.join(self.directory, new_name)
+            # Check if target file already exists
+            dst = os.path.join(self.directory, new_name)
+            if os.path.exists(dst) and dst != os.path.join(self.directory, filename):
+                print(color(f"Warning: '{new_name}' already exists, will be skipped", CLI_COLORS["WARNING"]))
+                continue
                 
-                if os.path.exists(dst):
-                    print(color(f"Warning: Skipping '{filename}' as '{new_name}' already exists", CLI_COLORS["WARNING"]))
-                    continue
-                    
-                os.rename(src, dst)
-                print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
-                self.modified_files += 1
-            except OSError as e:
-                print(color(f"Error renaming '{filename}': {str(e)}", CLI_COLORS["ERROR"]))
+            changes.append((filename, new_name))
+            print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
         
-        self._show_statistics()
+        if not changes:
+            print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
+            return
+        
+        # Request user confirmation
+        if self._confirm_changes():
+            # Apply changes
+            for old_name, new_name in changes:
+                try:
+                    src = os.path.join(self.directory, old_name)
+                    dst = os.path.join(self.directory, new_name)
+                    os.rename(src, dst)
+                    self.modified_files += 1
+                except OSError as e:
+                    print(color(f"Error renaming '{old_name}': {str(e)}", CLI_COLORS["ERROR"]))
+            
+            divider('Changes confirmed')
+            self._show_statistics()
+        else:
+            divider('Changes cancelled')
 
     def prefix_rename(self, file_list: list, width: int = 3, mode: str = 'add', start_num: int = 1) -> None:
         """
@@ -283,8 +299,8 @@ class FileRenamer:
             print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
             return
             
-        # Confirm changes
-        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+        # Use common confirmation function
+        if self._confirm_changes():
             try:
                 # Apply changes
                 for old_name, new_name in changes:
@@ -311,12 +327,14 @@ class FileRenamer:
         banner = Panel(
             "[cyan]Interactive Batch Rename[/cyan]\n\n"
             "Enter base name pattern with '>' symbol for custom input positions\n"
-            "Example files: ['24architecture15.pdf', '24architecture12.pdf', 'architecture11.pdf']\n"
-            "Target format: ['2024_architecture-11.pdf', '2024_architecture-12.pdf', '2024_architecture-15.pdf']\n"
-            "Base pattern: [yellow]2024_architecture->[/yellow]\n"
+            "[red]Example files: ['24architecture15.pdf', '24architecture12.pdf', 'architecture11.pdf'][/red]\n"
+            "[green]Target format: ['2024-architecture-11.pdf', '2024-architecture-12.pdf', '2024-architecture-15.pdf'][/green]\n"
+            "Base pattern: [yellow]2024-architecture->[/yellow]\n"
             "Notes: \n"
             "1. Use '>' symbol to mark positions for custom input\n"
-            "2. File extensions will be preserved automatically",
+            "2. Use placeholders like {name}, {ext}, {num} for automatic substitution\n"
+            "3. Regular expressions can be used with {regex:pattern:group}\n"
+            "4. File extensions will be preserved automatically",
             title="Instructions",
             border_style="cyan"
         )
@@ -328,52 +346,118 @@ class FileRenamer:
             base_name = input(color('Base pattern: ', CLI_COLORS["CONTENT"]))
             if not base_name:
                 continue
-                
-            check_name = base_name.replace('>', color('custom', CLI_COLORS["CONTENT"]))
-            print(f'Pattern preview: {check_name}')
+            
+            # Show pattern preview with placeholders
+            preview_pattern = base_name
+            preview_pattern = preview_pattern.replace('>', color('custom', CLI_COLORS["CONTENT"]))
+            preview_pattern = preview_pattern.replace('{name}', color('{filename}', CLI_COLORS["CONTENT"]))
+            preview_pattern = preview_pattern.replace('{ext}', color('{extension}', CLI_COLORS["CONTENT"]))
+            preview_pattern = preview_pattern.replace('{num}', color('{number}', CLI_COLORS["CONTENT"]))
+            
+            # Highlight regex patterns
+            regex_patterns = re.findall(r'\{regex:(.*?):(.*?)\}', preview_pattern)
+            for pattern, group in regex_patterns:
+                preview_pattern = preview_pattern.replace(
+                    f'{{regex:{pattern}:{group}}}',
+                    color(f'{{regex match of "{pattern}" group {group}}}', CLI_COLORS["CONTENT"])
+                )
+            
+            print(f'Pattern preview: {preview_pattern}')
             
             if input(f'Confirm pattern? ({color("[F]", CLI_COLORS["WARNING"])} to modify, ENTER to confirm): ').lower() != 'f':
                 break
-                
+            
         divider('Pattern confirmed')
         print()
 
+        # Process each file with the pattern
         for old_file in file_list:
-            while True:
-                file_name, ext = os.path.splitext(old_file)
-                if not ext:
-                    break
-                    
-                print(f'Processing: {color(old_file, CLI_COLORS["CONTENT"])}')
-                
-                new_parts = []
-                count = 1
-                for char in base_name:
-                    if char == '>':
-                        custom = input(f'Input {color(str(count), CLI_COLORS["CONTENT"])} => ')
-                        new_parts.append(custom)
-                        count += 1
+            if os.path.isdir(os.path.join(self.directory, old_file)):
+                print(f'Skipping directory: {color(old_file, CLI_COLORS["WARNING"])}')
+                print()
+                continue
+            
+            file_name, ext = os.path.splitext(old_file)
+            if not ext:
+                continue
+            
+            print(f'Processing: {color(old_file, CLI_COLORS["CONTENT"])}')
+            
+            # First, handle automatic replacements
+            new_parts = []
+            pattern_copy = base_name
+            
+            # Replace built-in placeholders
+            pattern_copy = pattern_copy.replace('{name}', file_name)
+            pattern_copy = pattern_copy.replace('{ext}', ext)
+            
+            # Handle regex patterns if present
+            regex_patterns = re.findall(r'\{regex:(.*?):(.*?)\}', pattern_copy)
+            for pattern, group in regex_patterns:
+                try:
+                    match = re.search(pattern, old_file)
+                    if match and group.isdigit():
+                        # Replace with the specified capture group
+                        group_value = match.group(int(group)) if int(group) <= len(match.groups()) else ''
+                        pattern_copy = pattern_copy.replace(f'{{regex:{pattern}:{group}}}', group_value)
+                    elif match and group == 'all':
+                        # Replace with the entire match
+                        pattern_copy = pattern_copy.replace(f'{{regex:{pattern}:{group}}}', match.group(0))
                     else:
-                        new_parts.append(char)
-                        
-                new_name = f'{"".join(new_parts)}{ext}'
-                print(f'New name: {color(new_name, CLI_COLORS["CONTENT"])}')
-                
-                choice = input(f'Action? ({color("[F]", CLI_COLORS["WARNING"])} to modify, '
-                             f'{color("[S]", CLI_COLORS["WARNING"])} to skip, ENTER to confirm): ').upper()
-                             
-                if choice == 'F':
-                    continue
-                elif choice == 'S':
-                    print(f'Skipped: {color(old_file, CLI_COLORS["CONTENT"])}')
-                    print()
-                    break
+                        # No match or invalid group
+                        pattern_copy = pattern_copy.replace(f'{{regex:{pattern}:{group}}}', '')
+                except re.error:
+                    print(color(f"Invalid regex pattern: {pattern}", CLI_COLORS["ERROR"]))
+                    pattern_copy = pattern_copy.replace(f'{{regex:{pattern}:{group}}}', '')
+            
+            # Handle custom input positions
+            count = 1
+            for char in pattern_copy:
+                if char == '>':
+                    custom = input(f'Input {color(str(count), CLI_COLORS["CONTENT"])} => ')
+                    new_parts.append(custom)
+                    count += 1
                 else:
-                    os.rename(old_file, os.path.join(self.directory, new_name))
+                    new_parts.append(char)
+                
+            # Create the new filename
+            new_name = f'{"".join(new_parts)}'
+            
+            # If extension was not explicitly included in the pattern, add it
+            if not new_name.endswith(ext):
+                new_name = f'{new_name}{ext}'
+            
+            print(f'New name: {color(new_name, CLI_COLORS["CONTENT"])}')
+            
+            choice = input(f'Action? ({color("[F]", CLI_COLORS["WARNING"])} to modify, '
+                         f'{color("[S]", CLI_COLORS["WARNING"])} to skip, ENTER to confirm): ').upper()
+                         
+            if choice == 'F':
+                continue
+            elif choice == 'S':
+                print(f'Skipped: {color(old_file, CLI_COLORS["CONTENT"])}')
+                print()
+                continue
+            else:
+                try:
+                    old_path = os.path.join(self.directory, old_file)
+                    new_path = os.path.join(self.directory, new_name)
+                    
+                    if os.path.exists(new_path) and old_path != new_path:
+                        print(color(f"Error: '{new_name}' already exists", CLI_COLORS["ERROR"]))
+                        choice = input(f'Overwrite? ({color("[Y]", CLI_COLORS["WARNING"])} to overwrite, any other key to skip): ').upper()
+                        if choice != 'Y':
+                            print(f'Skipped: {color(old_file, CLI_COLORS["CONTENT"])}')
+                            print()
+                            continue
+                    
+                    os.rename(old_path, new_path)
                     print(f'Renamed: {color(old_file, CLI_COLORS["CONTENT"])} => {color(new_name, CLI_COLORS["CONTENT"])}')
                     print()
                     self.modified_files += 1
-                    break
+                except OSError as e:
+                    print(color(f"Error renaming '{old_file}': {str(e)}", CLI_COLORS["ERROR"]))
+                    print()
         
         self._show_statistics()
 
@@ -392,19 +476,42 @@ class FileRenamer:
             print(color("Error: old text cannot be empty", CLI_COLORS["ERROR"]))
             return
             
+        changes = []
         self.modified_files = 0
+        
         for filename in file_list:
             new_name = filename.replace(old_text, new_text)
             if new_name == filename:
                 continue
-                
-            src = os.path.join(self.directory, filename)
-            dst = os.path.join(self.directory, new_name)
-            os.rename(src, dst)
-            print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
-            self.modified_files += 1
             
-        self._show_statistics()
+            # Check if target file already exists
+            dst = os.path.join(self.directory, new_name)
+            if os.path.exists(dst) and dst != os.path.join(self.directory, filename):
+                print(color(f"Error: '{new_name}' already exists", CLI_COLORS["ERROR"]))
+                return
+            
+            changes.append((filename, new_name))
+            print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
+        
+        if not changes:
+            print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
+            return
+        
+        # Request user confirmation
+        if self._confirm_changes():
+            for old_name, new_name in changes:
+                try:
+                    src = os.path.join(self.directory, old_name)
+                    dst = os.path.join(self.directory, new_name)
+                    os.rename(src, dst)
+                    self.modified_files += 1
+                except OSError as e:
+                    print(color(f"Error renaming '{old_name}': {str(e)}", CLI_COLORS["ERROR"]))
+                
+            divider('Changes confirmed')
+            self._show_statistics()
+        else:
+            divider('Changes cancelled')
 
     def sort_files(self, file_list: list, width: int = 3) -> None:
         """
@@ -423,13 +530,27 @@ class FileRenamer:
             new_name = f"{str(index).zfill(width)}-{filename}"
             src = os.path.join(self.directory, filename)
             dst = os.path.join(self.directory, new_name)
+            
+            if os.path.exists(dst) and dst != src:
+                print(color(f"Error: '{new_name}' already exists", CLI_COLORS["ERROR"]))
+                return
+            
             changes.append((src, dst))
             print(f"{filename} => {color(new_name, CLI_COLORS['CONTENT'])}")
-            
-        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+        
+        if not changes:
+            print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
+            return
+        
+        # Use common confirmation function
+        if self._confirm_changes():
             for src, dst in changes:
-                os.rename(src, dst)
-                self.modified_files += 1
+                try:
+                    os.rename(src, dst)
+                    self.modified_files += 1
+                except OSError as e:
+                    print(color(f"Error renaming file: {str(e)}", CLI_COLORS["ERROR"]))
+                
             divider('Changes confirmed')
             self._show_statistics()
         else:
@@ -446,6 +567,7 @@ class FileRenamer:
         """
         changes = []
         self.modified_files = 0
+        temp_changes = []  # Store temporary renames for Windows system
         
         # First pass: check for case conflicts
         case_conflicts = {}
@@ -470,30 +592,30 @@ class FileRenamer:
             if filename == lower_name:
                 continue
                 
-            src = os.path.join(self.directory, filename)
-            
             # For Windows, we need to use a temporary name first
             if sys.platform == 'win32' and filename.lower() == lower_name:
                 temp_name = f"{filename}.tmp"
-                temp_path = os.path.join(self.directory, temp_name)
-                try:
-                    os.rename(src, temp_path)
-                    changes.append((filename, temp_name))
-                    changes.append((temp_name, lower_name))
-                except OSError as e:
-                    print(color(f"Error renaming '{filename}': {str(e)}", CLI_COLORS["ERROR"]))
-                    continue
+                temp_changes.append((filename, temp_name))
+                changes.append((temp_name, lower_name))
             else:
                 changes.append((filename, lower_name))
             
             print(f"{filename} => {color(lower_name, CLI_COLORS['CONTENT'])}")
             
-        if not changes:
+        if not changes and not temp_changes:
             print(color("No files need to be renamed", CLI_COLORS["WARNING"]))
             return
             
-        if input(f'\nConfirm changes? ({color("[Y]", CLI_COLORS["CONTENT"])} to confirm, any other key to cancel): ').upper() == 'Y':
+        # Use common confirmation function
+        if self._confirm_changes():
             try:
+                # Handle temporary renames for Windows system
+                for old_name, temp_name in temp_changes:
+                    src = os.path.join(self.directory, old_name)
+                    temp_path = os.path.join(self.directory, temp_name)
+                    os.rename(src, temp_path)
+                    
+                # Process all renames
                 for old_name, new_name in changes:
                     src = os.path.join(self.directory, old_name)
                     dst = os.path.join(self.directory, new_name)
@@ -501,23 +623,24 @@ class FileRenamer:
                         os.rename(src, dst)
                         if not old_name.endswith('.tmp'):  # Don't count temporary renames
                             self.modified_files += 1
+                    
                 divider('Changes confirmed')
                 self._show_statistics()
             except OSError as e:
                 print(color(f"Error during rename: {str(e)}", CLI_COLORS["ERROR"]))
         else:
-            # If cancelled, we need to clean up any temporary files
-            if sys.platform == 'win32':
-                for old_name, new_name in changes:
-                    if old_name.endswith('.tmp'):
-                        try:
-                            temp_path = os.path.join(self.directory, old_name)
-                            orig_path = os.path.join(self.directory, old_name[:-4])  # Remove .tmp
-                            if os.path.exists(temp_path):
-                                os.rename(temp_path, orig_path)
-                        except OSError:
-                            pass
             divider('Changes cancelled')
+
+    def _confirm_changes(self, changes_message='Confirm the above changes?') -> bool:
+        """Request user confirmation for changes
+        
+        Args:
+            changes_message: Confirmation message to display to user
+            
+        Returns:
+            bool: Whether user confirmed the changes
+        """
+        return input(f'\n{changes_message} ({color("[y/N]", CLI_COLORS["CONTENT"])}): ').lower() == 'y'
 
 def create_example_text() -> str:
     """Create formatted example text for help menu"""
@@ -643,7 +766,7 @@ def create_command_help(parser: argparse.ArgumentParser, command: str) -> str:
             color("Options:", CLI_COLORS["TITLE"]),
             f"  {color('-w, --width', CLI_COLORS['SUB_TITLE'])} WIDTH   Number width [default: 3]",
             f"  {color('-m, --mode', CLI_COLORS['SUB_TITLE'])} MODE     Operation mode (add, remove) [default: add]",
-            f"  {color('-s, --start', CLI_COLORS['SUB_TITLE'])} START   Starting number [default: 1]"
+            f"  {color('--start_num', CLI_COLORS['SUB_TITLE'])} START NUMBER   Starting number [default: 1]"
         ])
     elif command == 'replace':
         help_parts.extend([
@@ -726,7 +849,7 @@ def main():
         help='Operation mode (default: add)'
     )
     prefix_parser.add_argument(
-        '-s', '--start',
+        '--start_num',
         type=int,
         default=1,
         help='Starting number (default: 1)'
@@ -777,7 +900,7 @@ def main():
     if args.command == 'fast':
         renamer.fast_rename(args.type, args.width)
     elif args.command == 'prefix':
-        renamer.prefix_rename(file_list, args.width, args.mode, args.start)
+        renamer.prefix_rename(file_list, args.width, args.mode, args.start_num)
     elif args.command == 'interactive':
         renamer.interactive_rename(file_list)
     elif args.command == 'replace':

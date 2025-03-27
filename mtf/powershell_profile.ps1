@@ -112,9 +112,9 @@ function rename { python $project_genshin_path/code/python/14-interact-rename.py
 function encrypt { python $project_genshin_path/code/python/02-ez-encrypt.py $args }
 function cx { python $project_genshin_path/code/python/09-ip-status.py $args }
 function ftp { python $project_genshin_path/code/python/16-fast-ftp-server.py $args }
-function l { python $project_genshin_path/code/python/12-ls-alh.py $args }
+function l { python $project_genshin_path/code/python/12-ls-alh.py $args --level 0 }
+function ls { python $project_genshin_path/code/python/12-ls-alh.py $args --level 0  }
 function ll { python $project_genshin_path/code/python/12-ls-alh.py $args }
-function ls { python $project_genshin_path/code/python/12-ls-alh.py $args }
 function la { python $project_genshin_path/code/python/12-ls-alh.py $args --all }
 function lt { python $project_genshin_path/code/python/12-ls-alh.py $args -s time }
 function lss { python $project_genshin_path/code/python/12-ls-alh.py $args -s size }

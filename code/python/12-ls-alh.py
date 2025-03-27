@@ -7,8 +7,28 @@ import ctypes
 from datetime import datetime
 import argparse
 from colorama import Fore, Style
-import pwd
-import grp
+
+# 根据操作系统导入相应的模块
+if sys.platform != 'win32':
+    import pwd
+    import grp
+else:
+    # Windows系统下创建空的pwd和grp模块
+    class PwdModule:
+        def getpwuid(self, uid):
+            class Passwd:
+                def __init__(self):
+                    self.pw_name = "Unknown"
+            return Passwd()
+    pwd = PwdModule()
+
+    class GrpModule:
+        def getgrgid(self, gid):
+            class Group:
+                def __init__(self):
+                    self.gr_name = "Unknown"
+            return Group()
+    grp = GrpModule()
 
 # Global variables
 DEBUG_MODE = False

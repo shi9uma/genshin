@@ -9,3 +9,4 @@
 3. https://github.com/swisskyrepo/PayloadsAllTheThings.git
 4. https://github.com/HackTricks-wiki/hacktricks.git
 5. https://github.com/Just-Hack-For-Fun/Linux-INCIDENT-RESPONSE-COOKBOOK.git
+6. 恶意软件分析，https://github.com/rshipp/awesome-malware-analysis/blob/main/%E6%81%B6%E6%84%8F%E8%BD%AF%E4%BB%B6%E5%88%86%E6%9E%90%E5%A4%A7%E5%90%88%E9%9B%86.md

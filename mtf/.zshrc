@@ -428,7 +428,7 @@ lcd() {
         fi
     fi
     if [[ "$1" == "cd" && ! -z "$2" ]]; then
-        target_dir=$(python $lcd_path -pn "$2")
+        target_dir=$(python $lcd_path -g "$2")
         cd "$target_dir"
     elif [[ "$1" == "l" ]]; then
         python3 $lcd_path -l

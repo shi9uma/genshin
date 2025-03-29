@@ -180,7 +180,7 @@
 
 get twrp src here：[TeamWin/android_bootable_recovery](https://github.com/TeamWin/android_bootable_recovery.git)，build doc：[How to compile TWRP touch recovery](https://xdaforums.com/t/dev-how-to-compile-twrp-touch-recovery.1943625/)
 
-## references
+## refer
 
 1.   [小米 rom 下载](https://xiaomirom.com/series/)
 2.   [Motorola 通用官方解锁 Bootloader 教程](https://bbs.ixmoe.com/t/topic/25562)

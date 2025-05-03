@@ -3,6 +3,7 @@
 .venv
 .devcontainer
 *.gdb_history
+*.cursorrules
 
 # dir
 online/archive
@@ -10,6 +11,14 @@ binary/archive
 artificial-intelligence/archive
 
 
+# zipfile
+*.zip
+*.rar
+*.7z
+*.tar
+*.tgz
+*.gz
+*.bz2
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,7 +1,6 @@
 
 .DS_Store
 .venv
-.devcontainer
 *.gdb_history
 *.cursorrules
 
